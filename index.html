@@ -19,6 +19,8 @@
 .bubble {
     background-color: #ddd;
     cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
     user-select: none;
     margin: 1px 3px;
     border-radius: 20px;
@@ -48,7 +50,7 @@ var REG_BEGINING;
 
 set.addEventListener('keydown', function (event) {
     var set = event.currentTarget;
-    var code = event.keyCode;
+    var code = event.charCode || event.keyCode;
 
     if (code === 13) {
         //event.preventDefault();
@@ -84,7 +86,7 @@ set.addEventListener('keydown', function (event) {
 
 set.addEventListener('keypress', function (event) {
     var set = event.currentTarget;
-    var code = event.keyCode;
+    var code = event.charCode || event.keyCode;
 
     // Enter
     if (code === 13) {
@@ -98,11 +100,11 @@ set.addEventListener('keypress', function (event) {
 
     // Enter || , || ;
     if (code === 13 || code === 44 || code === 59) {
+        event.preventDefault();
         bubbling(set);
         restoreCursor(set);
     }
 
-    //console.log(event.keyCode);
 }, false);
 
 set.addEventListener('paste', function (event) {
@@ -217,7 +219,11 @@ function restoreCursor(node) {
 
     if (node.hasChildNodes()) {
         var lastNode = node.childNodes[ node.childNodes.length - 1 ];
-        if (!lastNode.isEqualNode(fakeText)) {
+
+        if (lastNode.isEqualNode(fakeText)) {
+            fakeText = lastNode;
+
+        } else {
             node.appendChild(fakeText);
         }
 
@@ -227,7 +233,7 @@ function restoreCursor(node) {
 
     var sel = window.getSelection();
     sel.removeAllRanges();
-    sel.extend(node, node.childNodes.length);
+    sel.collapse(fakeText, 1);
 }
 
 function trimIterator(str) {
