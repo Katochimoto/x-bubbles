@@ -59,6 +59,20 @@ set.addEventListener('keydown', function (event) {
     // Backspace
     if (code === 8) {
         event.preventDefault();
+        if (isBubbleNode(event.target)) {
+            var previousBubble = event.target.previousSibling;
+            event.target.parentNode.removeChild(event.target);
+
+            if (isBubbleNode(previousBubble)) {
+                previousBubble.focus();
+
+            } else {
+                restoreCursor(set);
+            }
+
+        } else {
+            backSpace(set);
+        }
     }
 
     // Tab
@@ -125,6 +139,103 @@ set.addEventListener('focus', function (event) {
     var set = event.currentTarget;
     restoreCursor(set);
 }, false);
+
+
+function setStartOffset(range) {
+    var startContainer = range.startContainer;
+    var startOffset = range.startOffset - 1;
+    var setAfter = false;
+    var setBefore = false;
+
+    if (isBubbleNode(startContainer)) {
+        range.setStartAfter(startContainer);
+        return range;
+    }
+
+    if (startOffset >= 0 &&
+        startContainer.nodeType === Node.TEXT_NODE &&
+        checkZeroWidthSpace(startContainer.nodeValue[ startOffset ])) {
+
+        startOffset--;
+    }
+
+    while (startOffset < 0) {
+        var previousContainer = startContainer.previousSibling;
+        if (!previousContainer) {
+            setBefore = true;
+            break;
+        }
+
+        startContainer = previousContainer;
+
+        if (isBubbleNode(startContainer)) {
+            setAfter = true;
+            break;
+
+        } else if (startContainer.nodeType === Node.TEXT_NODE) {
+            startOffset = startContainer.nodeValue.length - 1;
+        }
+    }
+
+    if (setAfter) {
+        range.setStartAfter(startContainer);
+
+    } else if (setBefore) {
+        range.setStartBefore(startContainer);
+
+    } else {
+        range.setStart(startContainer, startOffset);
+    }
+
+    return range;
+}
+
+function backSpace(node) {
+    var sel = window.getSelection();
+    if (!sel) {
+        return;
+    }
+
+    var range;
+
+    if (sel.isCollapsed && sel.rangeCount) {
+        range = setStartOffset(sel.getRangeAt(0));
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    var startRange = sel.rangeCount && sel.getRangeAt(0);
+    var startContainer = startRange && startRange.startContainer;
+    if (startContainer === node) {
+        startContainer = startContainer.childNodes[ startRange.startOffset - 1 ];
+    }
+
+    if (sel.isCollapsed) {
+        if (isBubbleNode(startContainer)) {
+            startContainer.focus();
+        }
+
+    } else {
+        var text = sel.toString();
+        var hasZeroWidthSpace = checkZeroWidthSpace(text);
+
+        if (hasZeroWidthSpace && text.length === 1 && isBubbleNode(startContainer)) {
+            startContainer.focus();
+
+        } else {
+            sel.deleteFromDocument();
+            if (hasZeroWidthSpace && sel.rangeCount && sel.isCollapsed) {
+                var fakeText = createZeroWidthSpace();
+                range = sel.getRangeAt(0);
+
+                range.deleteContents();
+                range.insertNode(fakeText);
+                sel.removeAllRanges();
+                sel.collapse(fakeText, 1);
+            }
+        }
+    }
+}
 
 function bubbling(set) {
     var ranges = getBubbleRanges(set);
@@ -215,7 +326,7 @@ function isBubbleNode(node) {
 }
 
 function restoreCursor(node) {
-    var fakeText = document.createTextNode('\u200B');
+    var fakeText = createZeroWidthSpace();
 
     if (node.hasChildNodes()) {
         var lastNode = node.childNodes[ node.childNodes.length - 1 ];
@@ -284,6 +395,14 @@ function parseFragmentByBeginning(str, reg) {
 
     parts.push(str.substring(index, str.length));
     return parts;
+}
+
+function checkZeroWidthSpace(text) {
+    return /\u200B/.test(text);
+}
+
+function createZeroWidthSpace() {
+    return document.createTextNode('\u200B');
 }
 </script>
 </body>
