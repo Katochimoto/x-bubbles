@@ -5,17 +5,10 @@ var merge = require('lodash/merge');
 var srcPath = path.join(__dirname, 'src');
 var distPath = path.join(__dirname, 'dist');
 var isDev = (process.env.NODE_ENV === 'development');
-var nodeEnv = isDev ? 'development' : 'production';
-var preprocessParams = '?NODE_ENV=' + nodeEnv;
-
-if (isDev) {
-    distPath = path.join(__dirname, 'samples', 'dist');
-    preprocessParams = '?+DEBUG&NODE_ENV=' + nodeEnv;
-}
 
 var params = {
-    'debug': isDev,
-    'devtool': isDev ? 'eval' : undefined,
+    'debug': false,
+    'devtool': undefined,
     'target': 'web',
     'entry': {
         'x-bubbles': './index.js'
@@ -38,20 +31,11 @@ var params = {
         'loaders': [
             {
                 'test': /\.js$/,
-                'loader': 'babel!preprocess' + preprocessParams,
+                'loader': 'babel',
                 'include': [ srcPath ]
             }
         ]
-    },
-    'plugins': [
-        new webpack.DefinePlugin({
-            'NODE_ENV': JSON.stringify(nodeEnv),
-            'process.env.NODE_ENV': JSON.stringify(nodeEnv),
-            'process.env': {
-                'NODE_ENV': JSON.stringify(nodeEnv)
-            }
-        })
-    ]
+    }
 };
 
 var runs = [
@@ -64,13 +48,6 @@ if (!isDev) {
             'filename': '[name].min.js',
         },
         'plugins': [
-            new webpack.DefinePlugin({
-                'NODE_ENV': JSON.stringify(nodeEnv),
-                'process.env.NODE_ENV': JSON.stringify(nodeEnv),
-                'process.env': {
-                    'NODE_ENV': JSON.stringify(nodeEnv)
-                }
-            }),
             new webpack.optimize.UglifyJsPlugin({
                 'output': {
                     'comments': false
