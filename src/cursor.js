@@ -1,10 +1,10 @@
 const zws = require('./zws');
 
-exports.restoreCursor = function (node) {
-    var fakeText = zws.createElement();
+exports.restore = function (node) {
+    let fakeText = zws.createElement();
 
     if (node.hasChildNodes()) {
-        var lastNode = node.childNodes[ node.childNodes.length - 1 ];
+        const lastNode = node.childNodes[ node.childNodes.length - 1 ];
 
         if (lastNode.isEqualNode(fakeText)) {
             fakeText = lastNode;
@@ -17,7 +17,7 @@ exports.restoreCursor = function (node) {
         node.appendChild(fakeText);
     }
 
-    var sel = window.getSelection();
+    const sel = window.getSelection();
     sel.removeAllRanges();
     sel.collapse(fakeText, 1);
 };

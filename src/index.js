@@ -1,6 +1,6 @@
 const bubble = require('./bubble');
 const events = require('./events');
-const utils = require('./utils');
+const cursor = require('./cursor');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
@@ -12,21 +12,21 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     attachedCallback: {
         value: function () {
-            this.addEventListener('keydown', onKeydown, false);
-            this.addEventListener('keypress', onKeypress, false);
-            this.addEventListener('paste', onPaste, false);
-            this.addEventListener('blur', onBlur, false);
-            this.addEventListener('focus', onFocus, false);
+            this.addEventListener('keydown', onKeydown);
+            this.addEventListener('keypress', onKeypress);
+            this.addEventListener('paste', onPaste);
+            this.addEventListener('blur', onBlur);
+            this.addEventListener('focus', onFocus);
         }
     },
 
     detachedCallback: {
         value: function () {
-            this.removeEventListener('keydown', onKeydown, false);
-            this.removeEventListener('keypress', onKeypress, false);
-            this.removeEventListener('paste', onPaste, false);
-            this.removeEventListener('blur', onBlur, false);
-            this.removeEventListener('focus', onFocus, false);
+            this.removeEventListener('keydown', onKeydown);
+            this.removeEventListener('keypress', onKeypress);
+            this.removeEventListener('paste', onPaste);
+            this.removeEventListener('blur', onBlur);
+            this.removeEventListener('focus', onFocus);
         }
     },
 
@@ -41,12 +41,8 @@ module.exports = document.registerElement('x-bubbles', {
 });
 
 function onKeydown(event) {
-    var set = event.currentTarget;
-    var code = event.charCode || event.keyCode;
-
-    if (code === 13) {
-        // event.preventDefault();
-    }
+    const set = event.currentTarget;
+    const code = event.charCode || event.keyCode;
 
     // Backspace
     if (code === 8) {
@@ -73,24 +69,14 @@ function onKeydown(event) {
 }
 
 function onKeypress(event) {
-    var set = event.currentTarget;
-    var code = event.charCode || event.keyCode;
-
-    // Enter
-    if (code === 13) {
-        event.preventDefault();
-    }
-
-    // Backspace
-    if (code === 8) {
-        event.preventDefault();
-    }
+    const set = event.currentTarget;
+    const code = event.charCode || event.keyCode;
 
     // Enter || , || ;
     if (code === 13 || code === 44 || code === 59) {
         event.preventDefault();
         bubble.bubbling(set);
-        utils.restoreCursor(set);
+        cursor.restore(set);
     }
 }
 
@@ -98,16 +84,14 @@ function onPaste(event) {
     var set = event.currentTarget;
     setTimeout(function () {
         bubble.bubbling(set);
-        utils.restoreCursor(set);
+        cursor.restore(set);
     }, 0);
 }
 
 function onBlur(event) {
-    var set = event.currentTarget;
-    bubble.bubbling(set);
+    bubble.bubbling(event.currentTarget);
 }
 
 function onFocus(event) {
-    var set = event.currentTarget;
-    utils.restoreCursor(set);
+    cursor.restore(event.currentTarget);
 }

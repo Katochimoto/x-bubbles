@@ -1,31 +1,35 @@
 const bubble = require('../bubble');
-const utils = require('../utils');
+const cursor = require('../cursor');
 const zws = require('../zws');
 
 module.exports = function (event) {
-    if (bubble.isBubbleNode(event.target)) {
-        var previousBubble = event.target.previousSibling;
-        event.target.parentNode.removeChild(event.target);
+    const set = event.currentTarget;
+    const bubbleNode = event.target;
+
+    if (bubble.isBubbleNode(bubbleNode)) {
+        const previousBubble = bubbleNode.previousSibling;
+        bubbleNode.parentNode.removeChild(bubbleNode);
 
         if (bubble.isBubbleNode(previousBubble)) {
             previousBubble.focus();
 
         } else {
-            utils.restoreCursor(event.currentTarget);
+            set.focus();
+            cursor.restore(set);
         }
 
     } else {
-        backSpace(event.currentTarget);
+        backSpace(set);
     }
 };
 
 function backSpace(node) {
-    var sel = window.getSelection();
+    const sel = window.getSelection();
     if (!sel) {
         return;
     }
 
-    var range;
+    let range;
 
     if (sel.isCollapsed && sel.rangeCount) {
         range = setStartOffset(sel.getRangeAt(0), node);
@@ -33,8 +37,8 @@ function backSpace(node) {
         sel.addRange(range);
     }
 
-    var startRange = sel.rangeCount && sel.getRangeAt(0);
-    var startContainer = startRange && startRange.startContainer;
+    const startRange = sel.rangeCount && sel.getRangeAt(0);
+    let startContainer = startRange && startRange.startContainer;
     if (startContainer === node) {
         startContainer = startContainer.childNodes[ startRange.startOffset - 1 ];
     }
@@ -45,8 +49,8 @@ function backSpace(node) {
         }
 
     } else {
-        var text = sel.toString();
-        var hasZeroWidthSpace = zws.check(text);
+        const text = sel.toString();
+        const hasZeroWidthSpace = zws.check(text);
 
         if (hasZeroWidthSpace && text.length === 1 && bubble.isBubbleNode(startContainer)) {
             startContainer.focus();
@@ -54,7 +58,7 @@ function backSpace(node) {
         } else {
             sel.deleteFromDocument();
             if (hasZeroWidthSpace && sel.rangeCount && sel.isCollapsed) {
-                var fakeText = zws.createElement();
+                const fakeText = zws.createElement();
                 range = sel.getRangeAt(0);
 
                 range.deleteContents();
@@ -67,10 +71,10 @@ function backSpace(node) {
 }
 
 function setStartOffset(range, node) {
-    var startContainer = range.startContainer;
-    var startOffset = range.startOffset - 1;
-    var setAfter = false;
-    var setBefore = false;
+    let startContainer = range.startContainer;
+    let startOffset = range.startOffset - 1;
+    let setAfter = false;
+    let setBefore = false;
 
     if (node === startContainer) {
         startContainer = startContainer.childNodes[ startOffset - 1 ];
@@ -91,7 +95,7 @@ function setStartOffset(range, node) {
     }
 
     while (startOffset < 0) {
-        var previousContainer = startContainer.previousSibling;
+        const previousContainer = startContainer.previousSibling;
         if (!previousContainer) {
             setBefore = true;
             break;

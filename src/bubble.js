@@ -1,8 +1,9 @@
 const zws = require('./zws');
 
-var REG_SEPARATOR = /[,]/;
-var REG_ENDING; // = /\@ya\.ru/g;
-var REG_BEGINING;
+const REG_SEPARATOR = /[,]/;
+const REG_ENDING = null; // /\@ya\.ru/g;
+const REG_BEGINING = null;
+const NOOP = function () {};
 
 exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
@@ -11,66 +12,83 @@ function isBubbleNode(node) {
     return node && node.nodeType === Node.ELEMENT_NODE && node.classList.contains('bubble');
 }
 
-function bubbling(set) {
-    var ranges = getBubbleRanges(set);
-    var nodes = [];
+function bubbling(set, options) {
+    options = {
+        begining: REG_BEGINING,
+        ending: REG_ENDING,
+        separator: REG_SEPARATOR,
+        onBubble: NOOP,
+        ...options
+    };
+
+    const ranges = getBubbleRanges(set);
+    const nodes = [];
 
     ranges.forEach(function (range) {
-        var text = zws.textClean(range.toString()).trim();
+        const text = zws.textClean(range.toString()).trim();
 
-        if (text) {
-            var textParts = [ text ];
+        if (!text) {
+            range.deleteContents();
+            return;
+        }
 
-            if (REG_SEPARATOR) {
-                textParts = text.split(REG_SEPARATOR).map(trimIterator).filter(nonEmptyIterator);
-            }
+        let textParts = [ text ];
 
-            if (REG_ENDING) {
-                textParts = textParts.reduce(reduceByEnding, []).map(trimIterator).filter(nonEmptyIterator);
+        if (options.separator) {
+            textParts = text
+                .split(options.separator)
+                .map(trimIterator)
+                .filter(nonEmptyIterator);
+        }
 
-            } else if (REG_BEGINING) {
-                textParts = textParts.reduce(reduceByBeginning, []).map(trimIterator).filter(nonEmptyIterator);
-            }
+        if (options.ending) {
+            textParts = textParts
+                .reduce((parts, str) => parts.concat(parseFragmentByEnding(str, options.ending)), [])
+                .map(trimIterator)
+                .filter(nonEmptyIterator);
 
-            if (textParts.length) {
-                var fragment = document.createDocumentFragment();
+        } else if (options.begining) {
+            textParts = textParts
+                .reduce((parts, str) => parts.concat(parseFragmentByBeginning(str, options.begining)), [])
+                .map(trimIterator)
+                .filter(nonEmptyIterator);
+        }
 
-                textParts.forEach(function (textPart) {
-                    var wrap = document.createElement('span');
-                    wrap.innerText = textPart;
-                    // ...
-                    wrap.classList.add('bubble');
-                    wrap.setAttribute('contenteditable', 'false');
-                    wrap.setAttribute('tabindex', '-1');
-
-                    fragment.appendChild(wrap);
-                    nodes.push(wrap);
-                });
-
-                range.deleteContents();
-                range.insertNode(fragment);
-
-            } else {
-                range.deleteContents();
-            }
-
-        } else {
+        if (!textParts.length) {
             range.deleteContents();
         }
+
+        const fragment = document.createDocumentFragment();
+
+        textParts.forEach(function (textPart) {
+            const wrap = document.createElement('span');
+            wrap.innerText = textPart;
+            options.onBubble(wrap);
+
+            wrap.classList.add('bubble');
+            wrap.setAttribute('contenteditable', 'false');
+            wrap.setAttribute('tabindex', '-1');
+
+            fragment.appendChild(wrap);
+            nodes.push(wrap);
+        });
+
+        range.deleteContents();
+        range.insertNode(fragment);
     });
 
     return nodes;
 }
 
 function getBubbleRanges(set) {
-    var i;
-    var rng;
-    var node;
-    var ranges = [];
-    var children = set.childNodes;
+    let i;
+    let rng;
+    let node;
+    const ranges = [];
+    const children = set.childNodes;
 
     for (i = 0; i < children.length; i++) {
-        node = children[i];
+        node = children[ i ];
 
         if (isBubbleNode(node)) {
             if (rng) {
@@ -103,33 +121,26 @@ function nonEmptyIterator(str) {
     return Boolean(str);
 }
 
-function reduceByEnding(parts, str) {
-    return parts.concat(parseFragmentByEnding(str, REG_ENDING));
-}
-
-function reduceByBeginning(parts, str) {
-    return parts.concat(parseFragmentByBeginning(str, REG_BEGINING));
-}
-
 function parseFragmentByEnding(str, reg) {
-    var parts = [];
-    var lastIndex = 0;
-    var loop = 999;
+    const parts = [];
+    let lastIndex = 0;
+    let loop = 999;
 
     reg.lastIndex = 0;
     while (reg.exec(str) !== null && loop) {
         loop--;
         parts.push(str.substring(lastIndex, reg.lastIndex));
+        lastIndex = reg.lastIndex;
     }
 
     return parts;
 }
 
 function parseFragmentByBeginning(str, reg) {
-    var parts = [];
-    var res;
-    var index = 0;
-    var loop = 999;
+    const parts = [];
+    let res;
+    let index = 0;
+    let loop = 999;
 
     reg.lastIndex = 0;
     while ((res = reg.exec(str)) !== null && loop) {
