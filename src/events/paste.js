@@ -20,12 +20,15 @@ module.exports = function (event) {
 
 function pasteString(data) {
     data = zws.textClean(String(data || '').trim());
-
     if (!data) {
         return false;
     }
 
     const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) {
+        return;
+    }
+
     const anchor = document.createElement('span');
     const text = document.createTextNode(data);
 

@@ -527,12 +527,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function pasteString(data) {
 	    data = zws.textClean(String(data || '').trim());
-
 	    if (!data) {
 	        return false;
 	    }
 
 	    var sel = window.getSelection();
+	    if (!sel || !sel.rangeCount) {
+	        return;
+	    }
+
 	    var anchor = document.createElement('span');
 	    var text = document.createTextNode(data);
 
