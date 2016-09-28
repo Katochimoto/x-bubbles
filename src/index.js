@@ -15,6 +15,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.addEventListener('keydown', onKeydown);
             this.addEventListener('keypress', onKeypress);
             this.addEventListener('paste', onPaste);
+            this.addEventListener('drop', onDrop);
             this.addEventListener('blur', onBlur);
             this.addEventListener('focus', onFocus);
         }
@@ -25,6 +26,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.removeEventListener('keydown', onKeydown);
             this.removeEventListener('keypress', onKeypress);
             this.removeEventListener('paste', onPaste);
+            this.removeEventListener('drop', onDrop);
             this.removeEventListener('blur', onBlur);
             this.removeEventListener('focus', onFocus);
         }
@@ -80,12 +82,14 @@ function onKeypress(event) {
     }
 }
 
+function onDrop(event) {
+    event.preventDefault();
+    // var data = event.dataTransfer.getData('text/plain');
+}
+
 function onPaste(event) {
-    var set = event.currentTarget;
-    setTimeout(function () {
-        bubble.bubbling(set);
-        cursor.restore(set);
-    }, 0);
+    event.preventDefault();
+    events.paste(event);
 }
 
 function onBlur(event) {
