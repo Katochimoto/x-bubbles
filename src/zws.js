@@ -4,7 +4,7 @@ const REG_ZWS = /\u200B/;
 const TEXT_ZWS = '\u200B';
 
 exports.textClean = function (text) {
-    return String(text).replace(REG_REPLACE_NON_PRINTABLE, '');
+    return String(text || '').trim().replace(REG_REPLACE_NON_PRINTABLE, '');
 };
 
 exports.check = function (text) {

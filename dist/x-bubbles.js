@@ -70,23 +70,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    attachedCallback: {
 	        value: function value() {
+	            this.addEventListener('blur', onBlur);
+	            this.addEventListener('dblclick', onDblclick);
+	            this.addEventListener('drop', onDrop);
+	            this.addEventListener('focus', onFocus);
 	            this.addEventListener('keydown', onKeydown);
 	            this.addEventListener('keypress', onKeypress);
 	            this.addEventListener('paste', onPaste);
-	            this.addEventListener('drop', onDrop);
-	            this.addEventListener('blur', onBlur);
-	            this.addEventListener('focus', onFocus);
 	        }
 	    },
 
 	    detachedCallback: {
 	        value: function value() {
+	            this.removeEventListener('blur', onBlur);
+	            this.removeEventListener('dblclick', onDblclick);
+	            this.removeEventListener('drop', onDrop);
+	            this.removeEventListener('focus', onFocus);
 	            this.removeEventListener('keydown', onKeydown);
 	            this.removeEventListener('keypress', onKeypress);
 	            this.removeEventListener('paste', onPaste);
-	            this.removeEventListener('drop', onDrop);
-	            this.removeEventListener('blur', onBlur);
-	            this.removeEventListener('focus', onFocus);
 	        }
 	    },
 
@@ -104,28 +106,51 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var set = event.currentTarget;
 	    var code = event.charCode || event.keyCode;
 
-	    // Backspace
-	    if (code === 8) {
-	        event.preventDefault();
-	        events.backSpace(event);
-	    }
-
-	    // Tab
-	    if (code === 9) {
-	        if (bubble.isBubbleNode(event.target)) {
-	            event.preventDefault();
-	            set.focus();
-	        }
-	    }
-
-	    // Left
-	    // if (code === 37) {}
-
-	    // Right
-	    // if (code === 39) {}
-
-
 	    // console.log(event.keyCode);
+
+	    switch (code) {
+	        case 8:
+	            // Backspace
+	            event.preventDefault();
+	            events.backSpace(event);
+	            break;
+
+	        case 9:
+	            // Tab
+	            if (bubble.isBubbleNode(event.target)) {
+	                event.preventDefault();
+	                set.focus();
+	            }
+	            break;
+
+	        case 37:
+	            // Left
+	            events.arrowLeft(event);
+	            break;
+
+	        // сдвигаем курсор в начало списка
+	        case 38:
+	            // Top
+	            event.preventDefault();
+	            if (bubble.isBubbleNode(event.target)) {
+	                // TODO сделать выделение первого бабла
+	            }
+	            break;
+
+	        case 39:
+	            // Right
+	            events.arrowRight(event);
+	            break;
+
+	        // сдвигаем курсор в конец списка
+	        case 40:
+	            // Bottom
+	            if (bubble.isBubbleNode(event.target)) {
+	                event.preventDefault();
+	                cursor.restore(set);
+	            }
+	            break;
+	    }
 	}
 
 	function onKeypress(event) {
@@ -156,6 +181,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function onFocus(event) {
 	    cursor.restore(event.currentTarget);
+	}
+
+	function onDblclick(event) {
+	    if (bubble.isBubbleNode(event.target)) {
+	        event.preventDefault();
+	        console.log('>>');
+	    }
 	}
 
 /***/ },
@@ -192,7 +224,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var nodes = [];
 
 	    ranges.forEach(function (range) {
-	        var text = zws.textClean(range.toString()).trim();
+	        var text = zws.textClean(range.toString());
 
 	        if (!text) {
 	            range.deleteContents();
@@ -327,7 +359,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var TEXT_ZWS = '​';
 
 	exports.textClean = function (text) {
-	    return String(text).replace(REG_REPLACE_NON_PRINTABLE, '');
+	    return String(text || '').trim().replace(REG_REPLACE_NON_PRINTABLE, '');
 	};
 
 	exports.check = function (text) {
@@ -346,6 +378,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.backSpace = __webpack_require__(4);
 	exports.paste = __webpack_require__(6);
+	exports.arrowLeft = __webpack_require__(7);
+	exports.arrowRight = __webpack_require__(8);
 
 /***/ },
 /* 4 */
@@ -526,14 +560,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	function pasteString(data) {
-	    data = zws.textClean(String(data || '').trim());
+	    data = zws.textClean(data);
 	    if (!data) {
 	        return false;
 	    }
 
 	    var sel = window.getSelection();
 	    if (!sel || !sel.rangeCount) {
-	        return;
+	        return false;
 	    }
 
 	    var anchor = document.createElement('span');
@@ -545,6 +579,125 @@ return /******/ (function(modules) { // webpackBootstrap
 	    sel.collapse(text, text.nodeValue.length);
 
 	    return true;
+	}
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var bubble = __webpack_require__(1);
+	var zws = __webpack_require__(2);
+
+	module.exports = function (event) {
+	    if (bubble.isBubbleNode(event.target)) {
+	        var node = getPrevBubble(event.target);
+	        if (node) {
+	            node.focus();
+	        }
+
+	        return;
+	    }
+
+	    var sel = window.getSelection();
+	    moveTextCursorLeft(sel);
+	};
+
+	function moveTextCursorLeft(sel) {
+	    if (!sel || !sel.isCollapsed) {
+	        return;
+	    }
+
+	    if (sel.anchorNode.nodeType !== Node.TEXT_NODE) {
+	        return;
+	    }
+
+	    if (sel.anchorOffset === 0) {
+	        var node = getPrevBubble(sel.anchorNode);
+	        if (node) {
+	            node.focus();
+	        }
+	    } else {
+	        var zwsText = sel.anchorNode.nodeValue.substring(sel.anchorOffset - 1, sel.anchorOffset);
+	        if (zws.check(zwsText)) {
+	            sel.collapse(sel.anchorNode, sel.anchorOffset - 1);
+	            moveTextCursorLeft(sel);
+	        }
+	    }
+	}
+
+	function getPrevBubble(target) {
+	    var node = target.previousSibling;
+	    while (node) {
+	        if (bubble.isBubbleNode(node)) {
+	            return node;
+	        }
+
+	        node = node.previousSibling;
+	    }
+	}
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var bubble = __webpack_require__(1);
+	var cursor = __webpack_require__(5);
+	var zws = __webpack_require__(2);
+
+	module.exports = function (event) {
+	    if (bubble.isBubbleNode(event.target)) {
+	        var node = getNextBubble(event.target);
+	        if (node) {
+	            node.focus();
+	        } else {
+	            cursor.restore(event.currentTarget);
+	        }
+
+	        return;
+	    }
+
+	    var sel = window.getSelection();
+	    moveTextCursorRight(sel);
+	};
+
+	function moveTextCursorRight(sel) {
+	    if (!sel || !sel.isCollapsed) {
+	        return;
+	    }
+
+	    if (sel.anchorNode.nodeType !== Node.TEXT_NODE) {
+	        return;
+	    }
+
+	    var len = sel.anchorNode.nodeValue.length;
+
+	    if (sel.anchorOffset === len) {
+	        var node = getNextBubble(sel.anchorNode);
+	        if (node) {
+	            node.focus();
+	        }
+	    } else {
+	        var zwsText = sel.anchorNode.nodeValue.substring(sel.anchorOffset, sel.anchorOffset + 1);
+	        if (zws.check(zwsText)) {
+	            sel.collapse(sel.anchorNode, sel.anchorOffset + 1);
+	            moveTextCursorRight(sel);
+	        }
+	    }
+	}
+
+	function getNextBubble(target) {
+	    var node = target.nextSibling;
+	    while (node) {
+	        if (bubble.isBubbleNode(node)) {
+	            return node;
+	        }
+
+	        node = node.nextSibling;
+	    }
 	}
 
 /***/ }

@@ -25,7 +25,7 @@ function bubbling(set, options) {
     const nodes = [];
 
     ranges.forEach(function (range) {
-        const text = zws.textClean(range.toString()).trim();
+        const text = zws.textClean(range.toString());
 
         if (!text) {
             range.deleteContents();

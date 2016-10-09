@@ -12,23 +12,25 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     attachedCallback: {
         value: function () {
+            this.addEventListener('blur', onBlur);
+            this.addEventListener('dblclick', onDblclick);
+            this.addEventListener('drop', onDrop);
+            this.addEventListener('focus', onFocus);
             this.addEventListener('keydown', onKeydown);
             this.addEventListener('keypress', onKeypress);
             this.addEventListener('paste', onPaste);
-            this.addEventListener('drop', onDrop);
-            this.addEventListener('blur', onBlur);
-            this.addEventListener('focus', onFocus);
         }
     },
 
     detachedCallback: {
         value: function () {
+            this.removeEventListener('blur', onBlur);
+            this.removeEventListener('dblclick', onDblclick);
+            this.removeEventListener('drop', onDrop);
+            this.removeEventListener('focus', onFocus);
             this.removeEventListener('keydown', onKeydown);
             this.removeEventListener('keypress', onKeypress);
             this.removeEventListener('paste', onPaste);
-            this.removeEventListener('drop', onDrop);
-            this.removeEventListener('blur', onBlur);
-            this.removeEventListener('focus', onFocus);
         }
     },
 
@@ -46,28 +48,45 @@ function onKeydown(event) {
     const set = event.currentTarget;
     const code = event.charCode || event.keyCode;
 
-    // Backspace
-    if (code === 8) {
+    // console.log(event.keyCode);
+
+    switch (code) {
+    case 8: // Backspace
         event.preventDefault();
         events.backSpace(event);
-    }
+        break;
 
-    // Tab
-    if (code === 9) {
+    case 9: // Tab
         if (bubble.isBubbleNode(event.target)) {
             event.preventDefault();
             set.focus();
         }
+        break;
+
+    case 37: // Left
+        events.arrowLeft(event);
+        break;
+
+    // сдвигаем курсор в начало списка
+    case 38: // Top
+        event.preventDefault();
+        if (bubble.isBubbleNode(event.target)) {
+            // TODO сделать выделение первого бабла
+        }
+        break;
+
+    case 39: // Right
+        events.arrowRight(event);
+        break;
+
+    // сдвигаем курсор в конец списка
+    case 40: // Bottom
+        if (bubble.isBubbleNode(event.target)) {
+            event.preventDefault();
+            cursor.restore(set);
+        }
+        break;
     }
-
-    // Left
-    // if (code === 37) {}
-
-    // Right
-    // if (code === 39) {}
-
-
-    // console.log(event.keyCode);
 }
 
 function onKeypress(event) {
@@ -98,4 +117,11 @@ function onBlur(event) {
 
 function onFocus(event) {
     cursor.restore(event.currentTarget);
+}
+
+function onDblclick(event) {
+    if (bubble.isBubbleNode(event.target)) {
+        event.preventDefault();
+        console.log('>>');
+    }
 }

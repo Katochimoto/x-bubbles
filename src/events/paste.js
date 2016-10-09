@@ -19,14 +19,14 @@ module.exports = function (event) {
 };
 
 function pasteString(data) {
-    data = zws.textClean(String(data || '').trim());
+    data = zws.textClean(data);
     if (!data) {
         return false;
     }
 
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) {
-        return;
+        return false;
     }
 
     const anchor = document.createElement('span');
