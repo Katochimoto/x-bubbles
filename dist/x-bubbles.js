@@ -59,6 +59,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var bubble = __webpack_require__(1);
 	var events = __webpack_require__(3);
 	var cursor = __webpack_require__(5);
+	var select = __webpack_require__(6);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
 	    createdCallback: {
@@ -71,6 +72,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    attachedCallback: {
 	        value: function value() {
 	            this.addEventListener('blur', onBlur);
+	            this.addEventListener('click', onClick);
 	            this.addEventListener('dblclick', onDblclick);
 	            this.addEventListener('drop', onDrop);
 	            this.addEventListener('focus', onFocus);
@@ -83,6 +85,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    detachedCallback: {
 	        value: function value() {
 	            this.removeEventListener('blur', onBlur);
+	            this.removeEventListener('click', onClick);
 	            this.removeEventListener('dblclick', onDblclick);
 	            this.removeEventListener('drop', onDrop);
 	            this.removeEventListener('focus', onFocus);
@@ -103,7 +106,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 	function onKeydown(event) {
-	    var set = event.currentTarget;
 	    var code = event.charCode || event.keyCode;
 
 	    // console.log(event.keyCode);
@@ -111,16 +113,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    switch (code) {
 	        case 8:
 	            // Backspace
-	            event.preventDefault();
 	            events.backSpace(event);
 	            break;
 
 	        case 9:
 	            // Tab
-	            if (bubble.isBubbleNode(event.target)) {
-	                event.preventDefault();
-	                set.focus();
-	            }
+	            events.tab(event);
 	            break;
 
 	        case 37:
@@ -131,10 +129,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // сдвигаем курсор в начало списка
 	        case 38:
 	            // Top
-	            event.preventDefault();
-	            if (bubble.isBubbleNode(event.target)) {
-	                // TODO сделать выделение первого бабла
-	            }
+	            events.arrowTop(event);
 	            break;
 
 	        case 39:
@@ -145,23 +140,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // сдвигаем курсор в конец списка
 	        case 40:
 	            // Bottom
-	            if (bubble.isBubbleNode(event.target)) {
-	                event.preventDefault();
-	                cursor.restore(set);
-	            }
+	            events.arrowBottom(event);
 	            break;
 	    }
 	}
 
 	function onKeypress(event) {
-	    var set = event.currentTarget;
 	    var code = event.charCode || event.keyCode;
 
-	    // Enter || , || ;
-	    if (code === 13 || code === 44 || code === 59) {
-	        event.preventDefault();
-	        bubble.bubbling(set);
-	        cursor.restore(set);
+	    switch (code) {
+	        case 13: // Enter
+	        case 44: // ,
+	        case 59:
+	            // ;
+	            event.preventDefault();
+	            var set = event.currentTarget;
+	            bubble.bubbling(set);
+	            cursor.restore(set);
+	            break;
 	    }
 	}
 
@@ -187,6 +183,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (bubble.isBubbleNode(event.target)) {
 	        event.preventDefault();
 	        console.log('>>');
+	    }
+	}
+
+	function onClick(event) {
+	    var target = event.target;
+	    if (bubble.isBubbleNode(target)) {
+	        if (event.metaKey) {
+	            select.add(target);
+	        } else if (event.shiftKey) {
+	            select.range(target);
+	        } else {
+	            select.uniq(target);
+	        }
+	    } else {
+	        select.clear(event.currentTarget);
 	    }
 	}
 
@@ -260,7 +271,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            wrap.classList.add('bubble');
 	            wrap.setAttribute('contenteditable', 'false');
-	            wrap.setAttribute('tabindex', '-1');
+	            // wrap.setAttribute('tabindex', '-1');
 
 	            fragment.appendChild(wrap);
 	            nodes.push(wrap);
@@ -377,9 +388,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	exports.backSpace = __webpack_require__(4);
-	exports.paste = __webpack_require__(6);
-	exports.arrowLeft = __webpack_require__(7);
-	exports.arrowRight = __webpack_require__(8);
+	exports.paste = __webpack_require__(7);
+	exports.arrowLeft = __webpack_require__(8);
+	exports.arrowRight = __webpack_require__(9);
+	exports.arrowBottom = __webpack_require__(10);
+	exports.arrowTop = __webpack_require__(11);
+	exports.tab = __webpack_require__(12);
 
 /***/ },
 /* 4 */
@@ -389,18 +403,26 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var bubble = __webpack_require__(1);
 	var cursor = __webpack_require__(5);
+	var select = __webpack_require__(6);
 	var zws = __webpack_require__(2);
 
 	module.exports = function (event) {
+	    event.preventDefault();
+
 	    var set = event.currentTarget;
-	    var bubbleNode = event.target;
+	    var selectList = select.get(set);
 
-	    if (bubble.isBubbleNode(bubbleNode)) {
-	        var previousBubble = bubbleNode.previousSibling;
-	        bubbleNode.parentNode.removeChild(bubbleNode);
+	    if (selectList.length) {
+	        var prevBubble = selectList[0].previousSibling;
+	        var nextBubble = selectList[selectList.length - 1].nextSibling;
+	        selectList.forEach(function (node) {
+	            return node.parentNode.removeChild(node);
+	        });
 
-	        if (bubble.isBubbleNode(previousBubble)) {
-	            previousBubble.focus();
+	        if (bubble.isBubbleNode(prevBubble)) {
+	            select.uniq(prevBubble);
+	        } else if (bubble.isBubbleNode(nextBubble)) {
+	            select.uniq(nextBubble);
 	        } else {
 	            set.focus();
 	            cursor.restore(set);
@@ -432,14 +454,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    if (sel.isCollapsed) {
 	        if (bubble.isBubbleNode(startContainer)) {
-	            startContainer.focus();
+	            select.uniq(startContainer);
 	        }
 	    } else {
 	        var text = sel.toString();
 	        var hasZeroWidthSpace = zws.check(text);
 
 	        if (hasZeroWidthSpace && text.length === 1 && bubble.isBubbleNode(startContainer)) {
-	            startContainer.focus();
+	            select.uniq(startContainer);
 	        } else {
 	            sel.deleteFromDocument();
 	            if (hasZeroWidthSpace && sel.rangeCount && sel.isCollapsed) {
@@ -512,8 +534,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var zws = __webpack_require__(2);
+	var select = __webpack_require__(6);
 
 	exports.restore = function (node) {
+	    select.clear(node);
 	    var fakeText = zws.createElement();
 
 	    if (node.hasChildNodes()) {
@@ -539,7 +563,135 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	var bubble = __webpack_require__(1);
+
+	var slice = Array.prototype.slice;
+	var CLASS_SELECT = 'is-select';
+
+	exports.add = add;
+	exports.clear = clear;
+	exports.get = get;
+	exports.uniq = uniq;
+	exports.head = head;
+	exports.last = last;
+	exports.has = has;
+	exports.range = range;
+
+	function range(node) {
+	    if (!bubble.isBubbleNode(node)) {
+	        return;
+	    }
+
+	    var set = node.parentNode;
+	    var list = get(set);
+
+	    if (!list.length) {
+	        uniq(node);
+	        return;
+	    }
+
+	    clear(set);
+
+	    var headList = list[0];
+	    var lastList = list[list.length - 1];
+
+	    if (headList === lastList) {
+	        set.startRangeSelect = headList;
+	    }
+
+	    var headPosition = node.compareDocumentPosition(headList);
+	    var lastPosition = node.compareDocumentPosition(lastList);
+	    var fromNode = void 0;
+	    var toNode = void 0;
+
+	    // -->---<---+--
+	    if (headPosition & Node.DOCUMENT_POSITION_PRECEDING && lastPosition & Node.DOCUMENT_POSITION_PRECEDING) {
+	        fromNode = set.startRangeSelect === headList ? headList : lastList;
+	        toNode = node;
+
+	        // -->---+---<--
+	    } else if (headPosition & Node.DOCUMENT_POSITION_PRECEDING && lastPosition & Node.DOCUMENT_POSITION_FOLLOWING) {
+	        fromNode = set.startRangeSelect === headList ? headList : lastList;
+	        toNode = node;
+
+	        // --+--->---<--
+	    } else if (headPosition & Node.DOCUMENT_POSITION_FOLLOWING && lastPosition & Node.DOCUMENT_POSITION_FOLLOWING) {
+	        fromNode = node;
+	        toNode = set.startRangeSelect === headList ? headList : lastList;
+	    }
+
+	    if (fromNode && toNode) {
+	        var item = fromNode;
+
+	        while (item) {
+	            if (!add(item)) {
+	                break;
+	            }
+
+	            if (item === toNode) {
+	                break;
+	            }
+
+	            item = item.nextSibling;
+	        }
+	    }
+	}
+
+	function has(set) {
+	    return Boolean(set.querySelector('.bubble.' + CLASS_SELECT));
+	}
+
+	function head(set) {
+	    return get(set)[0];
+	}
+
+	function last(set) {
+	    var list = get(set);
+	    return list[list.length - 1];
+	}
+
+	function get(set) {
+	    return slice.call(set.querySelectorAll('.bubble.' + CLASS_SELECT));
+	}
+
+	function clear(set) {
+	    get(set).forEach(function (node) {
+	        return node.classList.remove(CLASS_SELECT);
+	    });
+	}
+
+	function add(node) {
+	    if (bubble.isBubbleNode(node)) {
+	        node.classList.add(CLASS_SELECT);
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function uniq(node) {
+	    if (bubble.isBubbleNode(node)) {
+	        var set = node.parentNode;
+	        var sel = window.getSelection();
+	        sel && sel.removeAllRanges();
+
+	        delete set.startRangeSelect;
+	        clear(set);
+	        return add(node);
+	    }
+
+	    return false;
+	}
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var zws = __webpack_require__(2);
+
+	var slice = Array.prototype.slice;
 
 	module.exports = function (event) {
 	    var clipboardData = event.clipboardData;
@@ -550,7 +702,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var data = clipboardData.getData && clipboardData.getData('text/plain');
 
 	    if (!pasteString(data) && clipboardData.items) {
-	        Array.prototype.slice.call(clipboardData.items).filter(function (item) {
+	        slice.call(clipboardData.items).filter(function (item) {
 	            return item.kind === 'string' && item.type === 'text/plain';
 	        }).some(function (item) {
 	            item.getAsString(pasteString);
@@ -582,26 +734,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var bubble = __webpack_require__(1);
+	var select = __webpack_require__(6);
 	var zws = __webpack_require__(2);
 
 	module.exports = function (event) {
-	    if (bubble.isBubbleNode(event.target)) {
-	        var node = getPrevBubble(event.target);
+	    var head = select.head(event.currentTarget);
+
+	    if (head) {
+	        var node = getPrevBubble(head);
 	        if (node) {
-	            node.focus();
+	            select.uniq(node);
 	        }
 
 	        return;
 	    }
 
-	    var sel = window.getSelection();
-	    moveTextCursorLeft(sel);
+	    moveTextCursorLeft(window.getSelection());
 	};
 
 	function moveTextCursorLeft(sel) {
@@ -616,7 +770,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (sel.anchorOffset === 0) {
 	        var node = getPrevBubble(sel.anchorNode);
 	        if (node) {
-	            node.focus();
+	            select.uniq(node);
 	        }
 	    } else {
 	        var zwsText = sel.anchorNode.nodeValue.substring(sel.anchorOffset - 1, sel.anchorOffset);
@@ -628,7 +782,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function getPrevBubble(target) {
-	    var node = target.previousSibling;
+	    var node = target && target.previousSibling;
 	    while (node) {
 	        if (bubble.isBubbleNode(node)) {
 	            return node;
@@ -639,29 +793,41 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var bubble = __webpack_require__(1);
 	var cursor = __webpack_require__(5);
+	var select = __webpack_require__(6);
 	var zws = __webpack_require__(2);
 
 	module.exports = function (event) {
-	    if (bubble.isBubbleNode(event.target)) {
-	        var node = getNextBubble(event.target);
-	        if (node) {
-	            node.focus();
-	        } else {
-	            cursor.restore(event.currentTarget);
-	        }
+	    var set = event.currentTarget;
+	    var last = select.head(set);
 
+	    if (!last) {
+	        moveTextCursorRight(window.getSelection());
 	        return;
 	    }
 
-	    var sel = window.getSelection();
-	    moveTextCursorRight(sel);
+	    var node = getNextBubble(last);
+
+	    if (node) {
+	        select.uniq(node);
+	    } else {
+	        var text = last.nextSibling;
+
+	        if (text && text.nodeType === Node.TEXT_NODE) {
+	            select.clear(set);
+
+	            var sel = window.getSelection();
+	            sel.collapse(text, 0);
+	        } else {
+	            cursor.restore(event.currentTarget);
+	        }
+	    }
 	};
 
 	function moveTextCursorRight(sel) {
@@ -678,7 +844,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (sel.anchorOffset === len) {
 	        var node = getNextBubble(sel.anchorNode);
 	        if (node) {
-	            node.focus();
+	            select.uniq(node);
 	        }
 	    } else {
 	        var zwsText = sel.anchorNode.nodeValue.substring(sel.anchorOffset, sel.anchorOffset + 1);
@@ -690,7 +856,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function getNextBubble(target) {
-	    var node = target.nextSibling;
+	    var node = target && target.nextSibling;
 	    while (node) {
 	        if (bubble.isBubbleNode(node)) {
 	            return node;
@@ -699,6 +865,57 @@ return /******/ (function(modules) { // webpackBootstrap
 	        node = node.nextSibling;
 	    }
 	}
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var select = __webpack_require__(6);
+	var cursor = __webpack_require__(5);
+
+	module.exports = function (event) {
+	    var set = event.currentTarget;
+	    if (select.has(set)) {
+	        event.preventDefault();
+	        cursor.restore(set);
+	    }
+	};
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var select = __webpack_require__(6);
+
+	module.exports = function (event) {
+	    event.preventDefault();
+	    var head = event.currentTarget.querySelector('.bubble');
+
+	    if (head) {
+	        select.uniq(head);
+	    }
+	};
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var select = __webpack_require__(6);
+	var cursor = __webpack_require__(5);
+
+	module.exports = function (event) {
+	    var set = event.currentTarget;
+	    if (select.has(set)) {
+	        event.preventDefault();
+	        cursor.restore(set);
+	    }
+	};
 
 /***/ }
 /******/ ])

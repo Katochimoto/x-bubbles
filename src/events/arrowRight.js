@@ -1,22 +1,35 @@
 const bubble = require('../bubble');
 const cursor = require('../cursor');
+const select = require('../select');
 const zws = require('../zws');
 
 module.exports = function (event) {
-    if (bubble.isBubbleNode(event.target)) {
-        const node = getNextBubble(event.target);
-        if (node) {
-            node.focus();
+    const set = event.currentTarget;
+    const last = select.head(set);
+
+    if (!last) {
+        moveTextCursorRight(window.getSelection());
+        return;
+    }
+
+    const node = getNextBubble(last);
+
+    if (node) {
+        select.uniq(node);
+
+    } else {
+        const text = last.nextSibling;
+
+        if (text && text.nodeType === Node.TEXT_NODE) {
+            select.clear(set);
+
+            const sel = window.getSelection();
+            sel.collapse(text, 0);
 
         } else {
             cursor.restore(event.currentTarget);
         }
-
-        return;
     }
-
-    const sel = window.getSelection();
-    moveTextCursorRight(sel);
 };
 
 function moveTextCursorRight(sel) {
@@ -33,7 +46,7 @@ function moveTextCursorRight(sel) {
     if (sel.anchorOffset === len) {
         const node = getNextBubble(sel.anchorNode);
         if (node) {
-            node.focus();
+            select.uniq(node);
         }
 
     } else {
@@ -46,7 +59,7 @@ function moveTextCursorRight(sel) {
 }
 
 function getNextBubble(target) {
-    let node = target.nextSibling;
+    let node = target && target.nextSibling;
     while (node) {
         if (bubble.isBubbleNode(node)) {
             return node;

@@ -1,18 +1,20 @@
 const bubble = require('../bubble');
+const select = require('../select');
 const zws = require('../zws');
 
 module.exports = function (event) {
-    if (bubble.isBubbleNode(event.target)) {
-        const node = getPrevBubble(event.target);
+    const head = select.head(event.currentTarget);
+
+    if (head) {
+        const node = getPrevBubble(head);
         if (node) {
-            node.focus();
+            select.uniq(node);
         }
 
         return;
     }
 
-    const sel = window.getSelection();
-    moveTextCursorLeft(sel);
+    moveTextCursorLeft(window.getSelection());
 };
 
 function moveTextCursorLeft(sel) {
@@ -27,7 +29,7 @@ function moveTextCursorLeft(sel) {
     if (sel.anchorOffset === 0) {
         const node = getPrevBubble(sel.anchorNode);
         if (node) {
-            node.focus();
+            select.uniq(node);
         }
 
     } else {
@@ -40,7 +42,7 @@ function moveTextCursorLeft(sel) {
 }
 
 function getPrevBubble(target) {
-    let node = target.previousSibling;
+    let node = target && target.previousSibling;
     while (node) {
         if (bubble.isBubbleNode(node)) {
             return node;

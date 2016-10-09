@@ -1,6 +1,8 @@
 const zws = require('./zws');
+const select = require('./select');
 
 exports.restore = function (node) {
+    select.clear(node);
     let fakeText = zws.createElement();
 
     if (node.hasChildNodes()) {

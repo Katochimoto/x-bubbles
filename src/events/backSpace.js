@@ -1,17 +1,24 @@
 const bubble = require('../bubble');
 const cursor = require('../cursor');
+const select = require('../select');
 const zws = require('../zws');
 
 module.exports = function (event) {
+    event.preventDefault();
+
     const set = event.currentTarget;
-    const bubbleNode = event.target;
+    const selectList = select.get(set);
 
-    if (bubble.isBubbleNode(bubbleNode)) {
-        const previousBubble = bubbleNode.previousSibling;
-        bubbleNode.parentNode.removeChild(bubbleNode);
+    if (selectList.length) {
+        const prevBubble = selectList[0].previousSibling;
+        const nextBubble = selectList[ selectList.length - 1 ].nextSibling;
+        selectList.forEach(node => node.parentNode.removeChild(node));
 
-        if (bubble.isBubbleNode(previousBubble)) {
-            previousBubble.focus();
+        if (bubble.isBubbleNode(prevBubble)) {
+            select.uniq(prevBubble);
+
+        } else if (bubble.isBubbleNode(nextBubble)) {
+            select.uniq(nextBubble);
 
         } else {
             set.focus();
@@ -45,7 +52,7 @@ function backSpace(node) {
 
     if (sel.isCollapsed) {
         if (bubble.isBubbleNode(startContainer)) {
-            startContainer.focus();
+            select.uniq(startContainer);
         }
 
     } else {
@@ -53,7 +60,7 @@ function backSpace(node) {
         const hasZeroWidthSpace = zws.check(text);
 
         if (hasZeroWidthSpace && text.length === 1 && bubble.isBubbleNode(startContainer)) {
-            startContainer.focus();
+            select.uniq(startContainer);
 
         } else {
             sel.deleteFromDocument();

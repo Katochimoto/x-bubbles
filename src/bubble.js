@@ -67,7 +67,7 @@ function bubbling(set, options) {
 
             wrap.classList.add('bubble');
             wrap.setAttribute('contenteditable', 'false');
-            wrap.setAttribute('tabindex', '-1');
+            // wrap.setAttribute('tabindex', '-1');
 
             fragment.appendChild(wrap);
             nodes.push(wrap);

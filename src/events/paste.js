@@ -1,5 +1,7 @@
 const zws = require('../zws');
 
+const slice = Array.prototype.slice;
+
 module.exports = function (event) {
     const clipboardData = event.clipboardData;
     if (!clipboardData) {
@@ -9,7 +11,7 @@ module.exports = function (event) {
     let data = clipboardData.getData && clipboardData.getData('text/plain');
 
     if (!pasteString(data) && clipboardData.items) {
-        Array.prototype.slice.call(clipboardData.items)
+        slice.call(clipboardData.items)
             .filter(item => item.kind === 'string' && item.type === 'text/plain')
             .some(function (item) {
                 item.getAsString(pasteString);
