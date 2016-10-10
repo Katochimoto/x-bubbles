@@ -5,35 +5,38 @@ const zws = require('../zws');
 
 module.exports = function (event) {
     const set = event.currentTarget;
-    const last = select.head(set);
+    const list = select.get(set);
 
-    if (!last) {
+    if (!list.length) {
         moveTextCursorRight(window.getSelection());
         return;
     }
 
-    const node = getNextBubble(last);
+    const begin = do {
+        if (list.length > 1 && list[ list.length - 1 ] === set.startRangeSelect) {
+            list[0];
+        } else {
+            list[ list.length - 1 ];
+        }
+    };
+
+    const node = getNextBubble(begin);
 
     if (node) {
-        select.uniq(node);
-
-    } else {
-        const text = last.nextSibling;
-
-        if (text && text.nodeType === Node.TEXT_NODE) {
-            select.clear(set);
-
-            const sel = window.getSelection();
-            sel.collapse(text, 0);
+        if (event.shiftKey) {
+            select.range(node);
 
         } else {
-            cursor.restore(event.currentTarget);
+            select.uniq(node);
         }
+
+    } else {
+        cursor.restore(set);
     }
 };
 
 function moveTextCursorRight(sel) {
-    if (!sel || !sel.isCollapsed) {
+    if (!sel || !sel.isCollapsed || !sel.anchorNode) {
         return;
     }
 

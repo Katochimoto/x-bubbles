@@ -50,7 +50,7 @@ module.exports = document.registerElement('x-bubbles', {
 function onKeydown(event) {
     const code = event.charCode || event.keyCode;
 
-    // console.log(event.keyCode);
+    // console.log(code, event.metaKey, event);
 
     switch (code) {
     case 8: // Backspace
@@ -77,6 +77,13 @@ function onKeydown(event) {
     // сдвигаем курсор в конец списка
     case 40: // Bottom
         events.arrowBottom(event);
+        break;
+
+    case 65: // a
+        if (event.metaKey) {
+            event.preventDefault();
+            select.all(event.currentTarget);
+        }
         break;
     }
 }
@@ -107,7 +114,9 @@ function onPaste(event) {
 }
 
 function onBlur(event) {
-    bubble.bubbling(event.currentTarget);
+    const set = event.currentTarget;
+    bubble.bubbling(set);
+    select.clear(set);
 }
 
 function onFocus(event) {
@@ -122,19 +131,26 @@ function onDblclick(event) {
 }
 
 function onClick(event) {
+    const set = event.currentTarget;
     const target = event.target;
+
     if (bubble.isBubbleNode(target)) {
         if (event.metaKey) {
             select.add(target);
 
         } else if (event.shiftKey) {
-            select.range(target);
+            if (!set.startRangeSelect) {
+                select.uniq(target);
+
+            } else {
+                select.range(target);
+            }
 
         } else {
             select.uniq(target);
         }
 
     } else {
-        select.clear(event.currentTarget);
+        select.clear(set);
     }
 }

@@ -108,7 +108,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function onKeydown(event) {
 	    var code = event.charCode || event.keyCode;
 
-	    // console.log(event.keyCode);
+	    // console.log(code, event.metaKey, event);
 
 	    switch (code) {
 	        case 8:
@@ -142,6 +142,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // Bottom
 	            events.arrowBottom(event);
 	            break;
+
+	        case 65:
+	            // a
+	            if (event.metaKey) {
+	                event.preventDefault();
+	                select.all(event.currentTarget);
+	            }
+	            break;
 	    }
 	}
 
@@ -172,7 +180,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function onBlur(event) {
-	    bubble.bubbling(event.currentTarget);
+	    var set = event.currentTarget;
+	    bubble.bubbling(set);
+	    select.clear(set);
 	}
 
 	function onFocus(event) {
@@ -187,17 +197,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function onClick(event) {
+	    var set = event.currentTarget;
 	    var target = event.target;
+
 	    if (bubble.isBubbleNode(target)) {
 	        if (event.metaKey) {
 	            select.add(target);
 	        } else if (event.shiftKey) {
-	            select.range(target);
+	            if (!set.startRangeSelect) {
+	                select.uniq(target);
+	            } else {
+	                select.range(target);
+	            }
 	        } else {
 	            select.uniq(target);
 	        }
 	    } else {
-	        select.clear(event.currentTarget);
+	        select.clear(set);
 	    }
 	}
 
@@ -567,7 +583,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var slice = Array.prototype.slice;
 	var CLASS_SELECT = 'is-select';
+	var CLASS_BUBBLE = 'bubble';
 
+	exports.all = all;
 	exports.add = add;
 	exports.clear = clear;
 	exports.get = get;
@@ -576,6 +594,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.last = last;
 	exports.has = has;
 	exports.range = range;
+	exports.fullLast = fullLast;
+	exports.fullHead = fullHead;
+
+	function fullLast(set) {
+	    return set.querySelector('.' + CLASS_BUBBLE + ':last-child');
+	}
+
+	function fullHead(set) {
+	    return set.querySelector('.' + CLASS_BUBBLE + ':first-child');
+	}
 
 	function range(node) {
 	    if (!bubble.isBubbleNode(node)) {
@@ -595,36 +623,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var headList = list[0];
 	    var lastList = list[list.length - 1];
 
-	    if (headList === lastList) {
+	    if (headList === lastList || !set.startRangeSelect) {
 	        set.startRangeSelect = headList;
 	    }
 
-	    var headPosition = node.compareDocumentPosition(headList);
-	    var lastPosition = node.compareDocumentPosition(lastList);
 	    var fromNode = void 0;
 	    var toNode = void 0;
+	    var position = node.compareDocumentPosition(set.startRangeSelect);
 
-	    // -->---<---+--
-	    if (headPosition & Node.DOCUMENT_POSITION_PRECEDING && lastPosition & Node.DOCUMENT_POSITION_PRECEDING) {
-	        fromNode = set.startRangeSelect === headList ? headList : lastList;
+	    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+	        fromNode = set.startRangeSelect;
 	        toNode = node;
-
-	        // -->---+---<--
-	    } else if (headPosition & Node.DOCUMENT_POSITION_PRECEDING && lastPosition & Node.DOCUMENT_POSITION_FOLLOWING) {
-	        fromNode = set.startRangeSelect === headList ? headList : lastList;
-	        toNode = node;
-
-	        // --+--->---<--
-	    } else if (headPosition & Node.DOCUMENT_POSITION_FOLLOWING && lastPosition & Node.DOCUMENT_POSITION_FOLLOWING) {
+	    } else {
 	        fromNode = node;
-	        toNode = set.startRangeSelect === headList ? headList : lastList;
+	        toNode = set.startRangeSelect;
 	    }
 
 	    if (fromNode && toNode) {
 	        var item = fromNode;
 
 	        while (item) {
-	            if (!add(item)) {
+	            if (!_add(item)) {
 	                break;
 	            }
 
@@ -637,8 +656,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
+	function all(set) {
+	    slice.call(set.querySelectorAll('.' + CLASS_BUBBLE + ':not(.' + CLASS_SELECT + ')')).forEach(function (item) {
+	        return _add(item);
+	    });
+	    set.startRangeSelect = set.querySelector('.' + CLASS_BUBBLE + '.' + CLASS_SELECT);
+	    var sel = window.getSelection();
+	    sel && sel.removeAllRanges();
+	}
+
 	function has(set) {
-	    return Boolean(set.querySelector('.bubble.' + CLASS_SELECT));
+	    return Boolean(set.querySelector('.' + CLASS_BUBBLE + '.' + CLASS_SELECT));
 	}
 
 	function head(set) {
@@ -651,7 +679,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function get(set) {
-	    return slice.call(set.querySelectorAll('.bubble.' + CLASS_SELECT));
+	    return slice.call(set.querySelectorAll('.' + CLASS_BUBBLE + '.' + CLASS_SELECT));
 	}
 
 	function clear(set) {
@@ -661,8 +689,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function add(node) {
-	    if (bubble.isBubbleNode(node)) {
-	        node.classList.add(CLASS_SELECT);
+	    if (_add(node)) {
+	        node.parentNode.startRangeSelect = node;
 	        return true;
 	    }
 
@@ -675,9 +703,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var sel = window.getSelection();
 	        sel && sel.removeAllRanges();
 
-	        delete set.startRangeSelect;
+	        // delete set.startRangeSelect;
 	        clear(set);
 	        return add(node);
+	    }
+
+	    return false;
+	}
+
+	function _add(node) {
+	    if (bubble.isBubbleNode(node)) {
+	        node.classList.add(CLASS_SELECT);
+	        return true;
 	    }
 
 	    return false;
@@ -744,22 +781,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	var zws = __webpack_require__(2);
 
 	module.exports = function (event) {
-	    var head = select.head(event.currentTarget);
+	    var set = event.currentTarget;
+	    var list = select.get(set);
 
-	    if (head) {
-	        var node = getPrevBubble(head);
-	        if (node) {
-	            select.uniq(node);
-	        }
-
+	    if (!list.length) {
+	        moveTextCursorLeft(window.getSelection());
 	        return;
 	    }
 
-	    moveTextCursorLeft(window.getSelection());
+	    var begin = list.length > 1 && list[0] === set.startRangeSelect ? list[list.length - 1] : list[0];
+
+	    var node = getPrevBubble(begin);
+	    if (!node) {
+	        return;
+	    }
+
+	    if (event.shiftKey) {
+	        select.range(node);
+	    } else {
+	        select.uniq(node);
+	    }
 	};
 
 	function moveTextCursorLeft(sel) {
-	    if (!sel || !sel.isCollapsed) {
+	    if (!sel || !sel.isCollapsed || !sel.anchorNode) {
 	        return;
 	    }
 
@@ -805,33 +850,30 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = function (event) {
 	    var set = event.currentTarget;
-	    var last = select.head(set);
+	    var list = select.get(set);
 
-	    if (!last) {
+	    if (!list.length) {
 	        moveTextCursorRight(window.getSelection());
 	        return;
 	    }
 
-	    var node = getNextBubble(last);
+	    var begin = list.length > 1 && list[list.length - 1] === set.startRangeSelect ? list[0] : list[list.length - 1];
+
+	    var node = getNextBubble(begin);
 
 	    if (node) {
-	        select.uniq(node);
-	    } else {
-	        var text = last.nextSibling;
-
-	        if (text && text.nodeType === Node.TEXT_NODE) {
-	            select.clear(set);
-
-	            var sel = window.getSelection();
-	            sel.collapse(text, 0);
+	        if (event.shiftKey) {
+	            select.range(node);
 	        } else {
-	            cursor.restore(event.currentTarget);
+	            select.uniq(node);
 	        }
+	    } else {
+	        cursor.restore(set);
 	    }
 	};
 
 	function moveTextCursorRight(sel) {
-	    if (!sel || !sel.isCollapsed) {
+	    if (!sel || !sel.isCollapsed || !sel.anchorNode) {
 	        return;
 	    }
 

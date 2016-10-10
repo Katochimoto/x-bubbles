@@ -2,7 +2,9 @@ const bubble = require('./bubble');
 
 const slice = Array.prototype.slice;
 const CLASS_SELECT = 'is-select';
+const CLASS_BUBBLE = 'bubble';
 
+exports.all = all;
 exports.add = add;
 exports.clear = clear;
 exports.get = get;
@@ -11,6 +13,16 @@ exports.head = head;
 exports.last = last;
 exports.has = has;
 exports.range = range;
+exports.fullLast = fullLast;
+exports.fullHead = fullHead;
+
+function fullLast(set) {
+    return set.querySelector(`.${CLASS_BUBBLE}:last-child`);
+}
+
+function fullHead(set) {
+    return set.querySelector(`.${CLASS_BUBBLE}:first-child`);
+}
 
 function range(node) {
     if (!bubble.isBubbleNode(node)) {
@@ -30,36 +42,28 @@ function range(node) {
     const headList = list[0];
     const lastList = list[ list.length - 1 ];
 
-    if (headList === lastList) {
+    if (headList === lastList || !set.startRangeSelect) {
         set.startRangeSelect = headList;
     }
 
-    const headPosition = node.compareDocumentPosition(headList);
-    const lastPosition = node.compareDocumentPosition(lastList);
     let fromNode;
     let toNode;
+    const position = node.compareDocumentPosition(set.startRangeSelect);
 
-    // -->---<---+--
-    if (headPosition & Node.DOCUMENT_POSITION_PRECEDING && lastPosition & Node.DOCUMENT_POSITION_PRECEDING) {
-        fromNode = set.startRangeSelect === headList ? headList : lastList;
+    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+        fromNode = set.startRangeSelect;
         toNode = node;
 
-    // -->---+---<--
-    } else if (headPosition & Node.DOCUMENT_POSITION_PRECEDING && lastPosition & Node.DOCUMENT_POSITION_FOLLOWING) {
-        fromNode = set.startRangeSelect === headList ? headList : lastList;
-        toNode = node;
-
-    // --+--->---<--
-    } else if (headPosition & Node.DOCUMENT_POSITION_FOLLOWING && lastPosition & Node.DOCUMENT_POSITION_FOLLOWING) {
+    } else {
         fromNode = node;
-        toNode = set.startRangeSelect === headList ? headList : lastList;
+        toNode = set.startRangeSelect;
     }
 
     if (fromNode && toNode) {
         let item = fromNode;
 
         while (item) {
-            if (!add(item)) {
+            if (!_add(item)) {
                 break;
             }
 
@@ -72,8 +76,15 @@ function range(node) {
     }
 }
 
+function all(set) {
+    slice.call(set.querySelectorAll(`.${CLASS_BUBBLE}:not(.${CLASS_SELECT})`)).forEach(item => _add(item));
+    set.startRangeSelect = set.querySelector(`.${CLASS_BUBBLE}.${CLASS_SELECT}`);
+    const sel = window.getSelection();
+    sel && sel.removeAllRanges();
+}
+
 function has(set) {
-    return Boolean(set.querySelector(`.bubble.${CLASS_SELECT}`));
+    return Boolean(set.querySelector(`.${CLASS_BUBBLE}.${CLASS_SELECT}`));
 }
 
 function head(set) {
@@ -86,7 +97,7 @@ function last(set) {
 }
 
 function get(set) {
-    return slice.call(set.querySelectorAll(`.bubble.${CLASS_SELECT}`));
+    return slice.call(set.querySelectorAll(`.${CLASS_BUBBLE}.${CLASS_SELECT}`));
 }
 
 function clear(set) {
@@ -94,8 +105,8 @@ function clear(set) {
 }
 
 function add(node) {
-    if (bubble.isBubbleNode(node)) {
-        node.classList.add(CLASS_SELECT);
+    if (_add(node)) {
+        node.parentNode.startRangeSelect = node;
         return true;
     }
 
@@ -108,9 +119,18 @@ function uniq(node) {
         const sel = window.getSelection();
         sel && sel.removeAllRanges();
 
-        delete set.startRangeSelect;
+        // delete set.startRangeSelect;
         clear(set);
         return add(node);
+    }
+
+    return false;
+}
+
+function _add(node) {
+    if (bubble.isBubbleNode(node)) {
+        node.classList.add(CLASS_SELECT);
+        return true;
     }
 
     return false;

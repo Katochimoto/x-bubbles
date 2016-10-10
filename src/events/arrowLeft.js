@@ -3,22 +3,37 @@ const select = require('../select');
 const zws = require('../zws');
 
 module.exports = function (event) {
-    const head = select.head(event.currentTarget);
+    const set = event.currentTarget;
+    const list = select.get(set);
 
-    if (head) {
-        const node = getPrevBubble(head);
-        if (node) {
-            select.uniq(node);
-        }
-
+    if (!list.length) {
+        moveTextCursorLeft(window.getSelection());
         return;
     }
 
-    moveTextCursorLeft(window.getSelection());
+    const begin = do {
+        if (list.length > 1 && list[0] === set.startRangeSelect) {
+            list[ list.length - 1 ];
+        } else {
+            list[0];
+        }
+    };
+
+    const node = getPrevBubble(begin);
+    if (!node) {
+        return;
+    }
+
+    if (event.shiftKey) {
+        select.range(node);
+
+    } else {
+        select.uniq(node);
+    }
 };
 
 function moveTextCursorLeft(sel) {
-    if (!sel || !sel.isCollapsed) {
+    if (!sel || !sel.isCollapsed || !sel.anchorNode) {
         return;
     }
 
