@@ -4,14 +4,15 @@ const select = require('../select');
 const zws = require('../zws');
 
 module.exports = function (event) {
-    const set = event.currentTarget;
-    const list = select.get(set);
+    const sel = window.getSelection();
 
-    if (!list.length) {
-        moveTextCursorRight(window.getSelection());
+    if (sel.anchorNode && sel.anchorNode.nodeType === Node.TEXT_NODE) {
+        moveTextCursorRight(sel);
         return;
     }
 
+    const set = event.currentTarget;
+    const list = select.get(set);
     const begin = do {
         if (list.length > 1 && list[ list.length - 1 ] === set.startRangeSelect) {
             list[0];
@@ -30,12 +31,17 @@ module.exports = function (event) {
             select.uniq(node);
         }
 
+    } else if (begin && begin.nextSibling && begin.nextSibling.nodeType === Node.TEXT_NODE) {
+        select.clear(set);
+        sel.collapse(begin.nextSibling, 0);
+
     } else {
         cursor.restore(set);
     }
 };
 
 function moveTextCursorRight(sel) {
+    // debugger;
     if (!sel || !sel.isCollapsed || !sel.anchorNode) {
         return;
     }

@@ -30,7 +30,8 @@ module.exports = function (event) {
     }
 };
 
-function backSpace(node) {
+function backSpace(set) {
+    set.normalize();
     const sel = window.getSelection();
     if (!sel) {
         return;
@@ -39,14 +40,14 @@ function backSpace(node) {
     let range;
 
     if (sel.isCollapsed && sel.rangeCount) {
-        range = setStartOffset(sel.getRangeAt(0), node);
+        range = setStartOffset(sel.getRangeAt(0), set);
         sel.removeAllRanges();
         sel.addRange(range);
     }
 
     const startRange = sel.rangeCount && sel.getRangeAt(0);
     let startContainer = startRange && startRange.startContainer;
-    if (startContainer === node) {
+    if (startContainer === set) {
         startContainer = startContainer.childNodes[ startRange.startOffset - 1 ];
     }
 
@@ -59,32 +60,42 @@ function backSpace(node) {
         const text = sel.toString();
         const hasZeroWidthSpace = zws.check(text);
 
-        if (hasZeroWidthSpace && text.length === 1 && bubble.isBubbleNode(startContainer)) {
+        if ((!text || (hasZeroWidthSpace && text.length === 1)) && bubble.isBubbleNode(startContainer)) {
             select.uniq(startContainer);
 
         } else {
-            sel.deleteFromDocument();
-            if (hasZeroWidthSpace && sel.rangeCount && sel.isCollapsed) {
-                const fakeText = zws.createElement();
-                range = sel.getRangeAt(0);
-
-                range.deleteContents();
-                range.insertNode(fakeText);
-                sel.removeAllRanges();
-                sel.collapse(fakeText, 1);
+            const len = sel.rangeCount;
+            for (let i = 0; i < len; i++) {
+                const rng = sel.getRangeAt(i);
+                rng.deleteContents();
             }
+
+            // if (hasZeroWidthSpace) {
+            // FIXME не хорошо добавлять пустой узел при каждом удалении....
+            const fakeText = zws.createElement();
+            range = sel.getRangeAt(0);
+            range.insertNode(fakeText);
+            range.collapse();
+
+            sel.removeAllRanges();
+            sel.addRange(range);
+            // }
         }
     }
 }
 
-function setStartOffset(range, node) {
+function setStartOffset(range, set) {
     let startContainer = range.startContainer;
     let startOffset = range.startOffset - 1;
     let setAfter = false;
     let setBefore = false;
 
-    if (node === startContainer) {
+    if (set === startContainer) {
         startContainer = startContainer.childNodes[ startOffset - 1 ];
+    }
+
+    if (!startContainer) {
+        return range;
     }
 
     if (bubble.isBubbleNode(startContainer)) {

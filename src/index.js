@@ -2,6 +2,7 @@ const bubble = require('./bubble');
 const events = require('./events');
 const cursor = require('./cursor');
 const select = require('./select');
+const zws = require('./zws');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
@@ -48,6 +49,7 @@ module.exports = document.registerElement('x-bubbles', {
 });
 
 function onKeydown(event) {
+    // const set = event.currentTarget;
     const code = event.charCode || event.keyCode;
 
     // console.log(code, event.metaKey, event);
@@ -81,8 +83,7 @@ function onKeydown(event) {
 
     case 65: // a
         if (event.metaKey) {
-            event.preventDefault();
-            select.all(event.currentTarget);
+            select.all(event);
         }
         break;
     }
@@ -126,7 +127,24 @@ function onFocus(event) {
 function onDblclick(event) {
     if (bubble.isBubbleNode(event.target)) {
         event.preventDefault();
-        console.log('>>');
+
+        const set = event.currentTarget;
+        const node = event.target;
+        const fakeText = zws.createElement();
+        const text = document.createTextNode(zws.textClean(node.innerText));
+
+        set.replaceChild(text, node);
+        set.insertBefore(fakeText, text);
+
+        const sel = window.getSelection();
+        if (sel) {
+            const range = document.createRange();
+            range.setStartBefore(fakeText);
+            range.setEndAfter(text);
+
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
     }
 }
 

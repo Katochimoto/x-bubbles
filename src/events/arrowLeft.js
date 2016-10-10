@@ -3,14 +3,15 @@ const select = require('../select');
 const zws = require('../zws');
 
 module.exports = function (event) {
-    const set = event.currentTarget;
-    const list = select.get(set);
+    const sel = window.getSelection();
 
-    if (!list.length) {
-        moveTextCursorLeft(window.getSelection());
+    if (sel.anchorNode && sel.anchorNode.nodeType === Node.TEXT_NODE) {
+        moveTextCursorLeft(sel);
         return;
     }
 
+    const set = event.currentTarget;
+    const list = select.get(set);
     const begin = do {
         if (list.length > 1 && list[0] === set.startRangeSelect) {
             list[ list.length - 1 ];
