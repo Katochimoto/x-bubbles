@@ -7,3 +7,4 @@ exports.arrowRight = require('./events/arrowRight');
 exports.arrowBottom = require('./events/arrowBottom');
 exports.arrowTop = require('./events/arrowTop');
 exports.tab = require('./events/tab');
+exports.selectAll = require('./events/selectAll');

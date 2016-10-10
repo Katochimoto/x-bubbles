@@ -49,7 +49,7 @@ module.exports = document.registerElement('x-bubbles', {
 });
 
 function onKeydown(event) {
-    // const set = event.currentTarget;
+    const set = event.currentTarget;
     const code = event.charCode || event.keyCode;
 
     // console.log(code, event.metaKey, event);
@@ -83,7 +83,9 @@ function onKeydown(event) {
 
     case 65: // a
         if (event.metaKey) {
-            select.all(event);
+            if (!events.selectAll(event)) {
+                select.all(set);
+            }
         }
         break;
     }

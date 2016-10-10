@@ -107,7 +107,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 	function onKeydown(event) {
-	    // const set = event.currentTarget;
+	    var set = event.currentTarget;
 	    var code = event.charCode || event.keyCode;
 
 	    // console.log(code, event.metaKey, event);
@@ -148,7 +148,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        case 65:
 	            // a
 	            if (event.metaKey) {
-	                select.all(event);
+	                if (!events.selectAll(event)) {
+	                    select.all(set);
+	                }
 	            }
 	            break;
 	    }
@@ -428,6 +430,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.arrowBottom = __webpack_require__(10);
 	exports.arrowTop = __webpack_require__(11);
 	exports.tab = __webpack_require__(12);
+	exports.selectAll = __webpack_require__(13);
 
 /***/ },
 /* 4 */
@@ -609,7 +612,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var bubble = __webpack_require__(1);
-	var zws = __webpack_require__(2);
 
 	var slice = Array.prototype.slice;
 	var CLASS_SELECT = 'is-select';
@@ -686,55 +688,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
-	function all(event) {
-	    event.preventDefault();
-	    var set = event.currentTarget;
-	    var sel = window.getSelection();
-	    var node = sel && sel.anchorNode;
-	    var hasBubble = Boolean(set.querySelector('.' + CLASS_BUBBLE));
-
-	    if (node && node.nodeType === Node.TEXT_NODE) {
-	        var fromNode = void 0;
-	        var toNode = void 0;
-	        var item = node;
-
-	        while (item && item.nodeType === Node.TEXT_NODE) {
-	            fromNode = item;
-	            item = item.previousSibling;
-	        }
-
-	        item = node;
-
-	        while (item && item.nodeType === Node.TEXT_NODE) {
-	            toNode = item;
-	            item = item.nextSibling;
-	        }
-
-	        var rng = document.createRange();
-	        rng.setStartBefore(fromNode);
-	        rng.setEndAfter(toNode);
-
-	        var text = zws.textClean(rng.toString());
-
-	        if (text || !text && !hasBubble) {
-	            if (!text) {
-	                rng.collapse();
-	            }
-
-	            sel.removeAllRanges();
-	            sel.addRange(rng);
-	            return;
-	        }
-	    }
-
+	function all(set) {
 	    slice.call(set.querySelectorAll('.' + CLASS_BUBBLE + ':not(.' + CLASS_SELECT + ')')).forEach(function (item) {
 	        return _add(item);
 	    });
 	    set.startRangeSelect = set.querySelector('.' + CLASS_BUBBLE + '.' + CLASS_SELECT);
-
-	    if (sel) {
-	        sel.removeAllRanges();
-	    }
+	    var sel = window.getSelection();
+	    sel && sel.removeAllRanges();
 	}
 
 	function has(set) {
@@ -1033,6 +993,60 @@ return /******/ (function(modules) { // webpackBootstrap
 	        event.preventDefault();
 	        cursor.restore(set);
 	    }
+	};
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var zws = __webpack_require__(2);
+
+	var CLASS_BUBBLE = 'bubble';
+
+	module.exports = function (event) {
+	    event.preventDefault();
+	    var set = event.currentTarget;
+	    var sel = window.getSelection();
+	    var node = sel && sel.anchorNode;
+	    var hasBubble = Boolean(set.querySelector('.' + CLASS_BUBBLE));
+
+	    if (node && node.nodeType === Node.TEXT_NODE) {
+	        var fromNode = void 0;
+	        var toNode = void 0;
+	        var item = node;
+
+	        while (item && item.nodeType === Node.TEXT_NODE) {
+	            fromNode = item;
+	            item = item.previousSibling;
+	        }
+
+	        item = node;
+
+	        while (item && item.nodeType === Node.TEXT_NODE) {
+	            toNode = item;
+	            item = item.nextSibling;
+	        }
+
+	        var rng = document.createRange();
+	        rng.setStartBefore(fromNode);
+	        rng.setEndAfter(toNode);
+
+	        var text = zws.textClean(rng.toString());
+
+	        if (text || !text && !hasBubble) {
+	            if (!text) {
+	                rng.collapse();
+	            }
+
+	            sel.removeAllRanges();
+	            sel.addRange(rng);
+	            return true;
+	        }
+	    }
+
+	    return false;
 	};
 
 /***/ }

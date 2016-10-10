@@ -1,5 +1,4 @@
 const bubble = require('./bubble');
-const zws = require('./zws');
 
 const slice = Array.prototype.slice;
 const CLASS_SELECT = 'is-select';
@@ -77,53 +76,11 @@ function range(node) {
     }
 }
 
-function all(event) {
-    event.preventDefault();
-    const set = event.currentTarget;
-    const sel = window.getSelection();
-    const node = sel && sel.anchorNode;
-    const hasBubble = Boolean(set.querySelector(`.${CLASS_BUBBLE}`));
-
-    if (node && node.nodeType === Node.TEXT_NODE) {
-        let fromNode;
-        let toNode;
-        let item = node;
-
-        while (item && item.nodeType === Node.TEXT_NODE) {
-            fromNode = item;
-            item = item.previousSibling;
-        }
-
-        item = node;
-
-        while (item && item.nodeType === Node.TEXT_NODE) {
-            toNode = item;
-            item = item.nextSibling;
-        }
-
-        const rng = document.createRange();
-        rng.setStartBefore(fromNode);
-        rng.setEndAfter(toNode);
-
-        const text = zws.textClean(rng.toString());
-
-        if (text || (!text && !hasBubble)) {
-            if (!text) {
-                rng.collapse();
-            }
-
-            sel.removeAllRanges();
-            sel.addRange(rng);
-            return;
-        }
-    }
-
+function all(set) {
     slice.call(set.querySelectorAll(`.${CLASS_BUBBLE}:not(.${CLASS_SELECT})`)).forEach(item => _add(item));
     set.startRangeSelect = set.querySelector(`.${CLASS_BUBBLE}.${CLASS_SELECT}`);
-
-    if (sel) {
-        sel.removeAllRanges();
-    }
+    const sel = window.getSelection();
+    sel && sel.removeAllRanges();
 }
 
 function has(set) {
