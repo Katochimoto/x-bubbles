@@ -60,6 +60,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var events = __webpack_require__(3);
 	var cursor = __webpack_require__(5);
 	var select = __webpack_require__(6);
+	var drag = __webpack_require__(14);
 	var zws = __webpack_require__(2);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
@@ -75,7 +76,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.addEventListener('blur', onBlur);
 	            this.addEventListener('click', onClick);
 	            this.addEventListener('dblclick', onDblclick);
-	            this.addEventListener('drop', onDrop);
+	            this.addEventListener('drop', drag.onDrop);
+	            this.addEventListener('dragover', drag.onDragover);
+	            this.addEventListener('dragenter', drag.onDragenter);
+	            this.addEventListener('dragleave', drag.onDragleave);
+	            this.addEventListener('dragstart', drag.onDragstart);
+	            this.addEventListener('dragend', drag.onDragend);
 	            this.addEventListener('focus', onFocus);
 	            this.addEventListener('keydown', onKeydown);
 	            this.addEventListener('keypress', onKeypress);
@@ -88,7 +94,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.removeEventListener('blur', onBlur);
 	            this.removeEventListener('click', onClick);
 	            this.removeEventListener('dblclick', onDblclick);
-	            this.removeEventListener('drop', onDrop);
+	            this.removeEventListener('drop', drag.onDrop);
+	            this.removeEventListener('dragover', drag.onDragover);
+	            this.removeEventListener('dragenter', drag.onDragenter);
+	            this.removeEventListener('dragleave', drag.onDragleave);
+	            this.removeEventListener('dragstart', drag.onDragstart);
+	            this.removeEventListener('dragend', drag.onDragend);
 	            this.removeEventListener('focus', onFocus);
 	            this.removeEventListener('keydown', onKeydown);
 	            this.removeEventListener('keypress', onKeypress);
@@ -170,11 +181,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            cursor.restore(set);
 	            break;
 	    }
-	}
-
-	function onDrop(event) {
-	    event.preventDefault();
-	    // var data = event.dataTransfer.getData('text/plain');
 	}
 
 	function onPaste(event) {
@@ -264,6 +270,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        begining: REG_BEGINING,
 	        ending: REG_ENDING,
 	        separator: REG_SEPARATOR,
+	        draggable: true,
 	        onBubble: NOOP
 	    }, options);
 
@@ -307,7 +314,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            wrap.classList.add('bubble');
 	            wrap.setAttribute('contenteditable', 'false');
-	            // wrap.setAttribute('tabindex', '-1');
+
+	            if (options.draggable) {
+	                wrap.setAttribute('draggable', 'true');
+	            }
 
 	            fragment.appendChild(wrap);
 	            nodes.push(wrap);
@@ -1047,6 +1057,147 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    return false;
+	};
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var select = __webpack_require__(6);
+	var bubble = __webpack_require__(1);
+	var set = __webpack_require__(15);
+
+	var CLASS_DRAGSTART = 'drag';
+	var CLASS_DROPZONE = 'dropzone';
+
+	var currentDragSet = null;
+
+	exports.onDragstart = function (event) {
+	    event.stopPropagation();
+
+	    var nodeBubble = event.target;
+	    var nodeSet = set.getBubbleSet(nodeBubble);
+
+	    if (!nodeSet || !bubble.isBubbleNode(nodeBubble)) {
+	        event.preventDefault();
+	        return;
+	    }
+
+	    currentDragSet = nodeSet;
+	    nodeSet.classList.add(CLASS_DRAGSTART);
+	    select.add(nodeBubble);
+
+	    event.dataTransfer.effectAllowed = 'move';
+	    event.dataTransfer.setData('text/plain', '');
+	};
+
+	exports.onDrop = function (event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = set.getBubbleSet(event.target);
+
+	    if (!nodeSet || nodeSet === currentDragSet) {
+	        return;
+	    }
+
+	    var list = select.get(currentDragSet);
+
+	    if (!list.length) {
+	        return;
+	    }
+
+	    list.forEach(function (item) {
+	        return nodeSet.appendChild(item);
+	    });
+	    nodeSet.focus();
+	};
+
+	exports.onDragover = function (event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    event.dataTransfer.dropEffect = 'move';
+	};
+
+	exports.onDragenter = function (event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = set.getBubbleSet(event.target);
+
+	    if (!nodeSet || nodeSet === currentDragSet) {
+	        return;
+	    }
+
+	    nodeSet.classList.add(CLASS_DROPZONE);
+	};
+
+	exports.onDragleave = function (event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = set.getBubbleSet(event.target);
+
+	    if (!nodeSet || nodeSet === currentDragSet) {
+	        return;
+	    }
+
+	    nodeSet.classList.remove(CLASS_DROPZONE);
+	};
+
+	exports.onDragend = function (event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    currentDragSet.classList.remove(CLASS_DRAGSTART);
+
+	    var nodeSet = set.getBubbleSet(event.target);
+
+	    if (nodeSet && nodeSet !== currentDragSet) {
+	        nodeSet.classList.remove(CLASS_DROPZONE);
+	    }
+
+	    currentDragSet = null;
+	};
+
+/***/ },
+/* 15 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.getBubbleSet = function (node) {
+	    while (node) {
+	        if (node.nodeType === Node.ELEMENT_NODE && node.getAttribute('is') === 'x-bubbles') {
+
+	            return node;
+	        }
+
+	        node = node.parentNode;
+	    }
 	};
 
 /***/ }

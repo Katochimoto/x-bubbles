@@ -2,6 +2,7 @@ const bubble = require('./bubble');
 const events = require('./events');
 const cursor = require('./cursor');
 const select = require('./select');
+const drag = require('./drag');
 const zws = require('./zws');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
@@ -17,7 +18,12 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.addEventListener('blur', onBlur);
             this.addEventListener('click', onClick);
             this.addEventListener('dblclick', onDblclick);
-            this.addEventListener('drop', onDrop);
+            this.addEventListener('drop', drag.onDrop);
+            this.addEventListener('dragover', drag.onDragover);
+            this.addEventListener('dragenter', drag.onDragenter);
+            this.addEventListener('dragleave', drag.onDragleave);
+            this.addEventListener('dragstart', drag.onDragstart);
+            this.addEventListener('dragend', drag.onDragend);
             this.addEventListener('focus', onFocus);
             this.addEventListener('keydown', onKeydown);
             this.addEventListener('keypress', onKeypress);
@@ -30,7 +36,12 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.removeEventListener('blur', onBlur);
             this.removeEventListener('click', onClick);
             this.removeEventListener('dblclick', onDblclick);
-            this.removeEventListener('drop', onDrop);
+            this.removeEventListener('drop', drag.onDrop);
+            this.removeEventListener('dragover', drag.onDragover);
+            this.removeEventListener('dragenter', drag.onDragenter);
+            this.removeEventListener('dragleave', drag.onDragleave);
+            this.removeEventListener('dragstart', drag.onDragstart);
+            this.removeEventListener('dragend', drag.onDragend);
             this.removeEventListener('focus', onFocus);
             this.removeEventListener('keydown', onKeydown);
             this.removeEventListener('keypress', onKeypress);
@@ -104,11 +115,6 @@ function onKeypress(event) {
         cursor.restore(set);
         break;
     }
-}
-
-function onDrop(event) {
-    event.preventDefault();
-    // var data = event.dataTransfer.getData('text/plain');
 }
 
 function onPaste(event) {

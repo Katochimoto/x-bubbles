@@ -17,6 +17,7 @@ function bubbling(set, options) {
         begining: REG_BEGINING,
         ending: REG_ENDING,
         separator: REG_SEPARATOR,
+        draggable: true,
         onBubble: NOOP,
         ...options
     };
@@ -67,7 +68,10 @@ function bubbling(set, options) {
 
             wrap.classList.add('bubble');
             wrap.setAttribute('contenteditable', 'false');
-            // wrap.setAttribute('tabindex', '-1');
+
+            if (options.draggable) {
+                wrap.setAttribute('draggable', 'true');
+            }
 
             fragment.appendChild(wrap);
             nodes.push(wrap);
