@@ -33,6 +33,11 @@ module.exports = function(config) {
 
         webpack: {
             'devtool': '#inline-source-map',
+            'resolve': {
+                'alias': {
+                    'x-bubbles': path.join(src, 'x-bubbles')
+                }
+            },
             'module': {
                 'loaders': [
                     {
@@ -83,7 +88,8 @@ module.exports = function(config) {
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: [
-            'PhantomJS'
+            'PhantomJS',
+            'Chromium'
         ],
 
         // Continuous Integration mode

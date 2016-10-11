@@ -76,16 +76,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.addEventListener('blur', onBlur);
 	            this.addEventListener('click', onClick);
 	            this.addEventListener('dblclick', onDblclick);
-	            this.addEventListener('drop', drag.onDrop);
-	            this.addEventListener('dragover', drag.onDragover);
-	            this.addEventListener('dragenter', drag.onDragenter);
-	            this.addEventListener('dragleave', drag.onDragleave);
-	            this.addEventListener('dragstart', drag.onDragstart);
-	            this.addEventListener('dragend', drag.onDragend);
 	            this.addEventListener('focus', onFocus);
 	            this.addEventListener('keydown', onKeydown);
 	            this.addEventListener('keypress', onKeypress);
 	            this.addEventListener('paste', onPaste);
+
+	            drag.init(this);
 	        }
 	    },
 
@@ -94,16 +90,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.removeEventListener('blur', onBlur);
 	            this.removeEventListener('click', onClick);
 	            this.removeEventListener('dblclick', onDblclick);
-	            this.removeEventListener('drop', drag.onDrop);
-	            this.removeEventListener('dragover', drag.onDragover);
-	            this.removeEventListener('dragenter', drag.onDragenter);
-	            this.removeEventListener('dragleave', drag.onDragleave);
-	            this.removeEventListener('dragstart', drag.onDragstart);
-	            this.removeEventListener('dragend', drag.onDragend);
 	            this.removeEventListener('focus', onFocus);
 	            this.removeEventListener('keydown', onKeydown);
 	            this.removeEventListener('keypress', onKeypress);
 	            this.removeEventListener('paste', onPaste);
+
+	            drag.destroy(this);
 	        }
 	    },
 
@@ -695,6 +687,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            item = item.nextSibling;
 	        }
+
+	        bubble.bubbling(set);
 	    }
 	}
 
@@ -703,6 +697,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return _add(item);
 	    });
 	    set.startRangeSelect = set.querySelector('.' + CLASS_BUBBLE + '.' + CLASS_SELECT);
+	    bubble.bubbling(set);
 	    var sel = window.getSelection();
 	    sel && sel.removeAllRanges();
 	}
@@ -733,6 +728,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function add(node) {
 	    if (_add(node)) {
 	        node.parentNode.startRangeSelect = node;
+	        bubble.bubbling(node.parentNode);
 	        return true;
 	    }
 
@@ -887,21 +883,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	var bubble = __webpack_require__(1);
 	var cursor = __webpack_require__(5);
 	var select = __webpack_require__(6);
-	var zws = __webpack_require__(2);
+	var text = __webpack_require__(17);
+	var bubbleset = __webpack_require__(15);
 
 	module.exports = function (event) {
-	    var sel = window.getSelection();
+	    event.preventDefault();
 
-	    if (sel.anchorNode && sel.anchorNode.nodeType === Node.TEXT_NODE) {
-	        moveTextCursorRight(sel);
+	    var selection = window.getSelection();
+
+	    if (text.arrowRight(selection, event.shiftKey)) {
 	        return;
 	    }
 
-	    var set = event.currentTarget;
-	    var list = select.get(set);
-	    var begin = list.length > 1 && list[list.length - 1] === set.startRangeSelect ? list[0] : list[list.length - 1];
+	    if (selection.focusNode && selection.focusNode.nodeType === Node.TEXT_NODE) {
+	        var nodeBubble = nextBubble(selection.focusNode);
+	        nodeBubble && select.uniq(nodeBubble);
+	        return;
+	    }
 
-	    var node = getNextBubble(begin);
+	    var nodeSet = bubbleset.findNode(event.currentTarget);
+
+	    if (!nodeSet) {
+	        return;
+	    }
+
+	    var list = select.get(nodeSet);
+	    var begin = list.length > 1 && list[list.length - 1] === nodeSet.startRangeSelect ? list[0] : list[list.length - 1];
+
+	    var node = nextBubble(begin);
 
 	    if (node) {
 	        if (event.shiftKey) {
@@ -910,40 +919,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            select.uniq(node);
 	        }
 	    } else if (begin && begin.nextSibling && begin.nextSibling.nodeType === Node.TEXT_NODE) {
-	        select.clear(set);
-	        sel.collapse(begin.nextSibling, 0);
+	        select.clear(nodeSet);
+	        selection.collapse(begin.nextSibling, 0);
 	    } else {
-	        cursor.restore(set);
+	        cursor.restore(nodeSet);
 	    }
 	};
 
-	function moveTextCursorRight(sel) {
-	    // debugger;
-	    if (!sel || !sel.isCollapsed || !sel.anchorNode) {
-	        return;
-	    }
-
-	    if (sel.anchorNode.nodeType !== Node.TEXT_NODE) {
-	        return;
-	    }
-
-	    var len = sel.anchorNode.nodeValue.length;
-
-	    if (sel.anchorOffset === len) {
-	        var node = getNextBubble(sel.anchorNode);
-	        if (node) {
-	            select.uniq(node);
-	        }
-	    } else {
-	        var zwsText = sel.anchorNode.nodeValue.substring(sel.anchorOffset, sel.anchorOffset + 1);
-	        if (zws.check(zwsText)) {
-	            sel.collapse(sel.anchorNode, sel.anchorOffset + 1);
-	            moveTextCursorRight(sel);
-	        }
-	    }
-	}
-
-	function getNextBubble(target) {
+	function nextBubble(target) {
 	    var node = target && target.nextSibling;
 	    while (node) {
 	        if (bubble.isBubbleNode(node)) {
@@ -1067,18 +1050,34 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var select = __webpack_require__(6);
 	var bubble = __webpack_require__(1);
-	var set = __webpack_require__(15);
-
-	var CLASS_DRAGSTART = 'drag';
-	var CLASS_DROPZONE = 'dropzone';
+	var bubbleset = __webpack_require__(15);
+	var classes = __webpack_require__(16);
 
 	var currentDragSet = null;
 
-	exports.onDragstart = function (event) {
+	exports.init = function (nodeSet) {
+	    nodeSet.addEventListener('drop', onDrop);
+	    nodeSet.addEventListener('dragover', onDragover);
+	    nodeSet.addEventListener('dragenter', onDragenter);
+	    nodeSet.addEventListener('dragleave', onDragleave);
+	    nodeSet.addEventListener('dragstart', onDragstart);
+	    nodeSet.addEventListener('dragend', onDragend);
+	};
+
+	exports.destroy = function (nodeSet) {
+	    nodeSet.removeEventListener('drop', onDrop);
+	    nodeSet.removeEventListener('dragover', onDragover);
+	    nodeSet.removeEventListener('dragenter', onDragenter);
+	    nodeSet.removeEventListener('dragleave', onDragleave);
+	    nodeSet.removeEventListener('dragstart', onDragstart);
+	    nodeSet.removeEventListener('dragend', onDragend);
+	};
+
+	function onDragstart(event) {
 	    event.stopPropagation();
 
 	    var nodeBubble = event.target;
-	    var nodeSet = set.getBubbleSet(nodeBubble);
+	    var nodeSet = bubbleset.findNode(nodeBubble);
 
 	    if (!nodeSet || !bubble.isBubbleNode(nodeBubble)) {
 	        event.preventDefault();
@@ -1086,14 +1085,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    currentDragSet = nodeSet;
-	    nodeSet.classList.add(CLASS_DRAGSTART);
+	    nodeSet.classList.add(classes.DRAGSTART);
 	    select.add(nodeBubble);
 
 	    event.dataTransfer.effectAllowed = 'move';
 	    event.dataTransfer.setData('text/plain', '');
-	};
+	}
 
-	exports.onDrop = function (event) {
+	function onDrop(event) {
 	    event.stopPropagation();
 	    event.preventDefault();
 
@@ -1101,7 +1100,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return;
 	    }
 
-	    var nodeSet = set.getBubbleSet(event.target);
+	    var nodeSet = bubbleset.findNode(event.target);
 
 	    if (!nodeSet || nodeSet === currentDragSet) {
 	        return;
@@ -1117,9 +1116,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return nodeSet.appendChild(item);
 	    });
 	    nodeSet.focus();
-	};
+	}
 
-	exports.onDragover = function (event) {
+	function onDragover(event) {
 	    event.stopPropagation();
 	    event.preventDefault();
 
@@ -1128,9 +1127,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    event.dataTransfer.dropEffect = 'move';
-	};
+	}
 
-	exports.onDragenter = function (event) {
+	function onDragenter(event) {
 	    event.stopPropagation();
 	    event.preventDefault();
 
@@ -1138,16 +1137,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return;
 	    }
 
-	    var nodeSet = set.getBubbleSet(event.target);
+	    var nodeSet = bubbleset.findNode(event.target);
 
 	    if (!nodeSet || nodeSet === currentDragSet) {
 	        return;
 	    }
 
-	    nodeSet.classList.add(CLASS_DROPZONE);
-	};
+	    nodeSet.classList.add(classes.DROPZONE);
+	}
 
-	exports.onDragleave = function (event) {
+	function onDragleave(event) {
 	    event.stopPropagation();
 	    event.preventDefault();
 
@@ -1155,16 +1154,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return;
 	    }
 
-	    var nodeSet = set.getBubbleSet(event.target);
+	    var nodeSet = bubbleset.findNode(event.target);
 
 	    if (!nodeSet || nodeSet === currentDragSet) {
 	        return;
 	    }
 
-	    nodeSet.classList.remove(CLASS_DROPZONE);
-	};
+	    nodeSet.classList.remove(classes.DROPZONE);
+	}
 
-	exports.onDragend = function (event) {
+	function onDragend(event) {
 	    event.stopPropagation();
 	    event.preventDefault();
 
@@ -1172,16 +1171,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return;
 	    }
 
-	    currentDragSet.classList.remove(CLASS_DRAGSTART);
+	    currentDragSet.classList.remove(classes.DRAGSTART);
 
-	    var nodeSet = set.getBubbleSet(event.target);
+	    var nodeSet = bubbleset.findNode(event.target);
 
 	    if (nodeSet && nodeSet !== currentDragSet) {
-	        nodeSet.classList.remove(CLASS_DROPZONE);
+	        nodeSet.classList.remove(classes.DROPZONE);
 	    }
 
 	    currentDragSet = null;
-	};
+	}
 
 /***/ },
 /* 15 */
@@ -1189,7 +1188,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	exports.getBubbleSet = function (node) {
+	exports.findNode = function (node) {
 	    while (node) {
 	        if (node.nodeType === Node.ELEMENT_NODE && node.getAttribute('is') === 'x-bubbles') {
 
@@ -1199,6 +1198,105 @@ return /******/ (function(modules) { // webpackBootstrap
 	        node = node.parentNode;
 	    }
 	};
+
+/***/ },
+/* 16 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.DRAGSTART = 'drag';
+	exports.DROPZONE = 'dropzone';
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(18);
+	var zws = __webpack_require__(2);
+
+	exports.arrowRight = arrowRight;
+
+	function arrowRight(selection, append) {
+	    selection = selection || context.getSelection();
+
+	    if (!selection) {
+	        return false;
+	    }
+
+	    if (!selection.focusNode || selection.focusNode.nodeType !== Node.TEXT_NODE) {
+	        return false;
+	    }
+
+	    if (!selection.isCollapsed && !append) {
+	        var node = selection.focusNode;
+	        var _offset = selection.focusOffset;
+
+	        if (selection.focusNode === selection.anchorNode) {
+	            _offset = Math.max(selection.focusOffset, selection.anchorOffset);
+	        } else {
+	            var position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
+	            if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+	                _offset = selection.anchorOffset;
+	                node = selection.anchorNode;
+	            }
+	        }
+
+	        selection.collapse(node, _offset);
+	        return true;
+	    }
+
+	    var item = selection.focusNode;
+	    var offset = selection.focusOffset;
+
+	    while (item) {
+	        if (item.nodeType !== Node.TEXT_NODE) {
+	            return false;
+	        }
+
+	        var len = item.nodeValue.length;
+
+	        if (offset + 1 > len) {
+	            item = item.nextSibling;
+	            offset = 0;
+	            continue;
+	        }
+
+	        var text = item.nodeValue.substring(offset, offset + 1);
+
+	        if (zws.check(text)) {
+	            offset = offset + 1;
+	            continue;
+	        }
+
+	        break;
+	    }
+
+	    if (!item) {
+	        return false;
+	    }
+
+	    if (append) {
+	        selection.extend(item, offset + 1);
+	    } else {
+	        selection.collapse(item, offset + 1);
+	    }
+
+	    return true;
+	}
+
+/***/ },
+/* 18 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = function () {
+	    /* eslint no-eval: 0 */
+	    return this || (1, eval)('this');
+	}();
 
 /***/ }
 /******/ ])

@@ -73,12 +73,15 @@ function range(node) {
 
             item = item.nextSibling;
         }
+
+        bubble.bubbling(set);
     }
 }
 
 function all(set) {
     slice.call(set.querySelectorAll(`.${CLASS_BUBBLE}:not(.${CLASS_SELECT})`)).forEach(item => _add(item));
     set.startRangeSelect = set.querySelector(`.${CLASS_BUBBLE}.${CLASS_SELECT}`);
+    bubble.bubbling(set);
     const sel = window.getSelection();
     sel && sel.removeAllRanges();
 }
@@ -107,6 +110,7 @@ function clear(set) {
 function add(node) {
     if (_add(node)) {
         node.parentNode.startRangeSelect = node;
+        bubble.bubbling(node.parentNode);
         return true;
     }
 

@@ -1,11 +1,12 @@
 const bubble = require('../bubble');
 const cursor = require('../cursor');
 const select = require('../select');
-const text = require('../x-bubbles/text');
-const bubbleset = require('../x-bubbles/bubbleset');
+const text = require('../text');
+const bubbleset = require('../bubbleset');
 
 module.exports = function (event) {
     event.preventDefault();
+
     const selection = window.getSelection();
 
     if (text.arrowRight(selection, event.shiftKey)) {

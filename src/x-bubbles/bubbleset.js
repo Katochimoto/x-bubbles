@@ -1,6 +1,6 @@
 
 
-exports.getBubbleSet = function (node) {
+exports.findNode = function (node) {
     while (node) {
         if (node.nodeType === Node.ELEMENT_NODE &&
             node.getAttribute('is') === 'x-bubbles') {
