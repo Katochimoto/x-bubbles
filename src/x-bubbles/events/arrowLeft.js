@@ -1,63 +1,52 @@
 const bubble = require('../bubble');
 const select = require('../select');
-const zws = require('../zws');
+const text = require('../text');
+const bubbleset = require('../bubbleset');
 
 module.exports = function (event) {
-    const sel = window.getSelection();
+    event.preventDefault();
 
-    if (sel.anchorNode && sel.anchorNode.nodeType === Node.TEXT_NODE) {
-        moveTextCursorLeft(sel);
+    const selection = window.getSelection();
+
+    if (text.arrowLeft(selection, event.shiftKey)) {
         return;
     }
 
-    const set = event.currentTarget;
-    const list = select.get(set);
+    if (selection.anchorNode && selection.anchorNode.nodeType === Node.TEXT_NODE) {
+        const nodeBubble = prevBubble(selection.anchorNode);
+        nodeBubble && select.uniq(nodeBubble);
+        return;
+    }
+
+    const nodeSet = bubbleset.findNode(event.currentTarget);
+
+    if (!nodeSet) {
+        return;
+    }
+
+    const list = select.get(nodeSet);
     const begin = do {
-        if (list.length > 1 && list[0] === set.startRangeSelect) {
+        if (list.length > 1 && list[ 0 ] === nodeSet.startRangeSelect) {
             list[ list.length - 1 ];
+
         } else {
-            list[0];
+            list[ 0 ];
         }
     };
 
-    const node = getPrevBubble(begin);
-    if (!node) {
-        return;
-    }
+    const node = prevBubble(begin);
 
-    if (event.shiftKey) {
-        select.range(node);
+    if (node) {
+        if (event.shiftKey) {
+            select.range(node);
 
-    } else {
-        select.uniq(node);
+        } else {
+            select.uniq(node);
+        }
     }
 };
 
-function moveTextCursorLeft(sel) {
-    if (!sel || !sel.isCollapsed || !sel.anchorNode) {
-        return;
-    }
-
-    if (sel.anchorNode.nodeType !== Node.TEXT_NODE) {
-        return;
-    }
-
-    if (sel.anchorOffset === 0) {
-        const node = getPrevBubble(sel.anchorNode);
-        if (node) {
-            select.uniq(node);
-        }
-
-    } else {
-        const zwsText = sel.anchorNode.nodeValue.substring(sel.anchorOffset - 1, sel.anchorOffset);
-        if (zws.check(zwsText)) {
-            sel.collapse(sel.anchorNode, sel.anchorOffset - 1);
-            moveTextCursorLeft(sel);
-        }
-    }
-}
-
-function getPrevBubble(target) {
+function prevBubble(target) {
     let node = target && target.previousSibling;
     while (node) {
         if (bubble.isBubbleNode(node)) {
