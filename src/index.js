@@ -43,6 +43,20 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     attributeChangedCallback: {
         value: function () {} // name, previousValue, value
+    },
+
+    options: {
+        value: function (name) {
+            if (!this._options) {
+                this._options = {
+                    classBubble: 'bubble',
+                    classBubbleSelect: 'is-select',
+                    ...this.dataset
+                };
+            }
+
+            return this._options[ name ];
+        }
     }
 });
 

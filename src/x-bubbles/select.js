@@ -1,8 +1,7 @@
 const bubble = require('./bubble');
+const bubbleset = require('./bubbleset');
 
 const slice = Array.prototype.slice;
-const CLASS_SELECT = 'is-select';
-const CLASS_BUBBLE = 'bubble';
 
 exports.all = all;
 exports.add = add;
@@ -13,16 +12,6 @@ exports.head = head;
 exports.last = last;
 exports.has = has;
 exports.range = range;
-exports.fullLast = fullLast;
-exports.fullHead = fullHead;
-
-function fullLast(set) {
-    return set.querySelector(`.${CLASS_BUBBLE}:last-child`);
-}
-
-function fullHead(set) {
-    return set.querySelector(`.${CLASS_BUBBLE}:first-child`);
-}
 
 function range(node) {
     if (!bubble.isBubbleNode(node)) {
@@ -78,16 +67,23 @@ function range(node) {
     }
 }
 
-function all(set) {
-    slice.call(set.querySelectorAll(`.${CLASS_BUBBLE}:not(.${CLASS_SELECT})`)).forEach(item => _add(item));
-    set.startRangeSelect = set.querySelector(`.${CLASS_BUBBLE}.${CLASS_SELECT}`);
-    bubble.bubbling(set);
-    const sel = window.getSelection();
-    sel && sel.removeAllRanges();
+function all(nodeSet) {
+    const classBubble = nodeSet.options('classBubble');
+    const classBubbleSelect = nodeSet.options('classBubbleSelect');
+
+    slice.call(nodeSet.querySelectorAll(`.${classBubble}:not(.${classBubbleSelect})`)).forEach(item => _add(item));
+    nodeSet.startRangeSelect = nodeSet.querySelector(`.${classBubble}.${classBubbleSelect}`);
+
+    bubble.bubbling(nodeSet);
+
+    const selection = window.getSelection();
+    selection && selection.removeAllRanges();
 }
 
-function has(set) {
-    return Boolean(set.querySelector(`.${CLASS_BUBBLE}.${CLASS_SELECT}`));
+function has(nodeSet) {
+    const classBubble = nodeSet.options('classBubble');
+    const classBubbleSelect = nodeSet.options('classBubbleSelect');
+    return Boolean(nodeSet.querySelector(`.${classBubble}.${classBubbleSelect}`));
 }
 
 function head(set) {
@@ -99,12 +95,15 @@ function last(set) {
     return list[ list.length - 1 ];
 }
 
-function get(set) {
-    return slice.call(set.querySelectorAll(`.${CLASS_BUBBLE}.${CLASS_SELECT}`));
+function get(nodeSet) {
+    const classBubble = nodeSet.options('classBubble');
+    const classBubbleSelect = nodeSet.options('classBubbleSelect');
+    return slice.call(nodeSet.querySelectorAll(`.${classBubble}.${classBubbleSelect}`));
 }
 
-function clear(set) {
-    get(set).forEach(node => node.classList.remove(CLASS_SELECT));
+function clear(nodeSet) {
+    const classBubbleSelect = nodeSet.options('classBubbleSelect');
+    get(nodeSet).forEach(item => item.classList.remove(classBubbleSelect));
 }
 
 function add(node) {
@@ -131,7 +130,10 @@ function uniq(node) {
 
 function _add(node) {
     if (bubble.isBubbleNode(node)) {
-        node.classList.add(CLASS_SELECT);
+        const nodeSet = bubbleset.findNode(node);
+        const classBubbleSelect = nodeSet.options('classBubbleSelect');
+
+        node.classList.add(classBubbleSelect);
         return true;
     }
 

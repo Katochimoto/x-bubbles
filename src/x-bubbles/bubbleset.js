@@ -2,6 +2,16 @@ const bubble = require('./bubble');
 const zws = require('./zws');
 const context = require('../context');
 
+exports.lastBubble = function (nodeSet) {
+    const classBubble = nodeSet.options('classBubble');
+    return nodeSet.querySelector(`.${classBubble}:last-child`);
+};
+
+exports.headBubble = function (nodeSet) {
+    const classBubble = nodeSet.options('classBubble');
+    return nodeSet.querySelector(`.${classBubble}:first-child`);
+};
+
 exports.findNode = function (node) {
     while (node) {
         if (node.nodeType === Node.ELEMENT_NODE &&

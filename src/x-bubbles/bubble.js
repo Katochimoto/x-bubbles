@@ -1,4 +1,6 @@
+const bubbleset = require('./bubbleset');
 const zws = require('./zws');
+const { dispatch } = require('./event');
 
 const REG_SEPARATOR = /[,]/;
 const REG_ENDING = null; // /\@ya\.ru/g;
@@ -9,20 +11,33 @@ exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
 
 function isBubbleNode(node) {
-    return node && node.nodeType === Node.ELEMENT_NODE && node.classList.contains('bubble');
+    if (!node || node.nodeType !== Node.ELEMENT_NODE) {
+        return false;
+    }
+
+    const nodeSet = bubbleset.findNode(node);
+
+    if (!nodeSet) {
+        return false;
+    }
+
+    const classBubble = nodeSet.options('classBubble');
+
+    return node.classList.contains(classBubble);
 }
 
-function bubbling(set, options) {
+function bubbling(nodeSet, options) {
     options = {
         begining: REG_BEGINING,
         ending: REG_ENDING,
         separator: REG_SEPARATOR,
         draggable: true,
-        onBubble: NOOP,
+        bubbleFormation: nodeSet.bubbleFormation || NOOP,
         ...options
     };
 
-    const ranges = getBubbleRanges(set);
+    const classBubble = nodeSet.options('classBubble');
+    const ranges = getBubbleRanges(nodeSet);
     const nodes = [];
 
     ranges.forEach(function (range) {
@@ -64,14 +79,15 @@ function bubbling(set, options) {
         textParts.forEach(function (textPart) {
             const wrap = document.createElement('span');
             wrap.innerText = textPart;
-            options.onBubble(wrap);
-
-            wrap.classList.add('bubble');
-            wrap.setAttribute('contenteditable', 'false');
 
             if (options.draggable) {
                 wrap.setAttribute('draggable', 'true');
             }
+
+            options.bubbleFormation(wrap);
+
+            wrap.classList.add(classBubble);
+            wrap.setAttribute('contenteditable', 'false');
 
             fragment.appendChild(wrap);
             nodes.push(wrap);
@@ -80,6 +96,14 @@ function bubbling(set, options) {
         range.deleteContents();
         range.insertNode(fragment);
     });
+
+    if (nodes.length) {
+        dispatch(nodeSet, 'bubble', {
+            bubbles: false,
+            cancelable: false,
+            detail: { data: nodes }
+        });
+    }
 
     return nodes;
 }

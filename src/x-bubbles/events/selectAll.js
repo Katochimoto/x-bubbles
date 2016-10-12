@@ -1,13 +1,12 @@
 const zws = require('../zws');
 
-const CLASS_BUBBLE = 'bubble';
-
 module.exports = function (event) {
     event.preventDefault();
     const set = event.currentTarget;
     const sel = window.getSelection();
     const node = sel && sel.anchorNode;
-    const hasBubble = Boolean(set.querySelector(`.${CLASS_BUBBLE}`));
+    const classBubble = set.options('classBubble');
+    const hasBubble = Boolean(set.querySelector(`.${classBubble}`));
 
     if (node && node.nodeType === Node.TEXT_NODE) {
         let fromNode;
