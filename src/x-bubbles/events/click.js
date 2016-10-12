@@ -27,6 +27,6 @@ module.exports = function (event) {
         }
 
     } else {
-        select.uniq(nodeBubble);
+        select.toggleUniq(nodeBubble);
     }
 };

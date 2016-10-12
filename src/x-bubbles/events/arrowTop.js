@@ -5,7 +5,7 @@ module.exports = function (event) {
     event.preventDefault();
 
     const nodeSet = bubbleset.closestNodeSet(event.currentTarget);
-    const headBubble = bubbleset.headBubble(nodeSet);
+    const headBubble = nodeSet && bubbleset.headBubble(nodeSet);
 
     if (headBubble) {
         select.uniq(headBubble);

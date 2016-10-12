@@ -1,3 +1,4 @@
+const context = require('../../context');
 const zws = require('../zws');
 const bubbleset = require('../bubbleset');
 
@@ -22,7 +23,7 @@ module.exports = function (event) {
     nodeSet.replaceChild(text, nodeBubble);
     nodeSet.insertBefore(fakeText, text);
 
-    const selection = window.getSelection();
+    const selection = context.getSelection();
 
     if (selection) {
         const range = document.createRange();

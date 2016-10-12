@@ -1,3 +1,4 @@
+const context = require('../../context');
 const bubble = require('../bubble');
 const cursor = require('../cursor');
 const select = require('../select');
@@ -15,7 +16,7 @@ module.exports = function (event) {
 
     nodeSet.normalize();
 
-    const selection = window.getSelection();
+    const selection = context.getSelection();
     if (!selection) {
         return;
     }

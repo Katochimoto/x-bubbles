@@ -1,3 +1,4 @@
+const context = require('../context');
 const zws = require('./zws');
 const select = require('./select');
 
@@ -19,7 +20,7 @@ exports.restore = function (node) {
         node.appendChild(fakeText);
     }
 
-    const sel = window.getSelection();
+    const sel = context.getSelection();
     sel.removeAllRanges();
     sel.collapse(fakeText, 1);
 };

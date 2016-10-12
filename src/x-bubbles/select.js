@@ -1,7 +1,10 @@
+const context = require('../context');
 const bubble = require('./bubble');
 const bubbleset = require('./bubbleset');
 
 const slice = Array.prototype.slice;
+const PATH_SELECTED = '[bubble][selected]';
+const PATH_NOT_SELECTED = '[bubble]:not([selected])';
 
 exports.all = all;
 exports.add = add;
@@ -12,6 +15,7 @@ exports.head = head;
 exports.last = last;
 exports.has = has;
 exports.range = range;
+exports.toggleUniq = toggleUniq;
 
 function range(node) {
     if (!bubble.isBubbleNode(node)) {
@@ -52,7 +56,7 @@ function range(node) {
         let item = fromNode;
 
         while (item) {
-            if (!_add(item)) {
+            if (!setSelected(item)) {
                 break;
             }
 
@@ -68,22 +72,17 @@ function range(node) {
 }
 
 function all(nodeSet) {
-    const classBubble = nodeSet.options('classBubble');
-    const classBubbleSelect = nodeSet.options('classBubbleSelect');
-
-    slice.call(nodeSet.querySelectorAll(`.${classBubble}:not(.${classBubbleSelect})`)).forEach(item => _add(item));
-    nodeSet.startRangeSelect = nodeSet.querySelector(`.${classBubble}.${classBubbleSelect}`);
+    slice.call(nodeSet.querySelectorAll(PATH_NOT_SELECTED)).forEach(item => setSelected(item));
+    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
 
     bubble.bubbling(nodeSet);
 
-    const selection = window.getSelection();
+    const selection = context.getSelection();
     selection && selection.removeAllRanges();
 }
 
 function has(nodeSet) {
-    const classBubble = nodeSet.options('classBubble');
-    const classBubbleSelect = nodeSet.options('classBubbleSelect');
-    return Boolean(nodeSet.querySelector(`.${classBubble}.${classBubbleSelect}`));
+    return Boolean(nodeSet.querySelector(PATH_SELECTED));
 }
 
 function head(set) {
@@ -96,20 +95,21 @@ function last(set) {
 }
 
 function get(nodeSet) {
-    const classBubble = nodeSet.options('classBubble');
-    const classBubbleSelect = nodeSet.options('classBubbleSelect');
-    return slice.call(nodeSet.querySelectorAll(`.${classBubble}.${classBubbleSelect}`));
+    return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
 }
 
 function clear(nodeSet) {
-    const classBubbleSelect = nodeSet.options('classBubbleSelect');
-    get(nodeSet).forEach(item => item.classList.remove(classBubbleSelect));
+    get(nodeSet).forEach(item => item.removeAttribute('selected'));
 }
 
 function add(node) {
-    if (_add(node)) {
-        node.parentNode.startRangeSelect = node;
-        bubble.bubbling(node.parentNode);
+    if (setSelected(node)) {
+        const nodeSet = bubbleset.closestNodeSet(node);
+
+        nodeSet.startRangeSelect = node;
+        // ???
+        bubble.bubbling(nodeSet);
+
         return true;
     }
 
@@ -117,23 +117,47 @@ function add(node) {
 }
 
 function uniq(node) {
+    if (!bubble.isBubbleNode(node)) {
+        return false;
+    }
+
+    const nodeSet = bubbleset.closestNodeSet(node);
+    const selection = context.getSelection();
+
+    selection && selection.removeAllRanges();
+    clear(nodeSet);
+
+    return add(node);
+}
+
+function toggleUniq(node) {
+    if (isSelected(node)) {
+        const nodeSet = bubbleset.closestNodeSet(node);
+
+        if (get(nodeSet).length === 1) {
+            return removeSelected(node);
+        }
+    }
+
+    return uniq(node);
+}
+
+function isSelected(node) {
+    return bubble.isBubbleNode(node) && node.hasAttribute('selected') || false;
+}
+
+function setSelected(node) {
     if (bubble.isBubbleNode(node)) {
-        const set = node.parentNode;
-        const sel = window.getSelection();
-        sel && sel.removeAllRanges();
-        clear(set);
-        return add(node);
+        node.setAttribute('selected', '');
+        return true;
     }
 
     return false;
 }
 
-function _add(node) {
+function removeSelected(node) {
     if (bubble.isBubbleNode(node)) {
-        const nodeSet = bubbleset.closestNodeSet(node);
-        const classBubbleSelect = nodeSet.options('classBubbleSelect');
-
-        node.classList.add(classBubbleSelect);
+        node.removeAttribute('selected');
         return true;
     }
 

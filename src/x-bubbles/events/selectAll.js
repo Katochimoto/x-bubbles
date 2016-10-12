@@ -1,12 +1,13 @@
+const context = require('../../context');
 const zws = require('../zws');
 
 module.exports = function (event) {
     event.preventDefault();
-    const set = event.currentTarget;
-    const sel = window.getSelection();
-    const node = sel && sel.anchorNode;
-    const classBubble = set.options('classBubble');
-    const hasBubble = Boolean(set.querySelector(`.${classBubble}`));
+
+    const nodeSet = event.currentTarget;
+    const selection = context.getSelection();
+    const node = selection && selection.anchorNode;
+    const hasBubble = Boolean(nodeSet.querySelector('[bubble]'));
 
     if (node && node.nodeType === Node.TEXT_NODE) {
         let fromNode;
@@ -25,19 +26,19 @@ module.exports = function (event) {
             item = item.nextSibling;
         }
 
-        const rng = document.createRange();
-        rng.setStartBefore(fromNode);
-        rng.setEndAfter(toNode);
+        const range = document.createRange();
+        range.setStartBefore(fromNode);
+        range.setEndAfter(toNode);
 
-        const text = zws.textClean(rng.toString());
+        const text = zws.textClean(range.toString());
 
         if (text || (!text && !hasBubble)) {
             if (!text) {
-                rng.collapse();
+                range.collapse();
             }
 
-            sel.removeAllRanges();
-            sel.addRange(rng);
+            selection.removeAllRanges();
+            selection.addRange(range);
             return true;
         }
     }

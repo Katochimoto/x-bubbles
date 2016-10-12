@@ -1,3 +1,4 @@
+const context = require('../../context');
 const zws = require('../zws');
 
 const slice = Array.prototype.slice;
@@ -29,7 +30,7 @@ function pasteString(data) {
         return false;
     }
 
-    const sel = window.getSelection();
+    const sel = context.getSelection();
     if (!sel || !sel.rangeCount) {
         return false;
     }

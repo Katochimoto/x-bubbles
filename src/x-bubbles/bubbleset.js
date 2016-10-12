@@ -3,13 +3,11 @@ const zws = require('./zws');
 const context = require('../context');
 
 exports.lastBubble = function (nodeSet) {
-    const classBubble = nodeSet.options('classBubble');
-    return nodeSet.querySelector(`.${classBubble}:last-child`);
+    return nodeSet.querySelector('[bubble]:last-child');
 };
 
 exports.headBubble = function (nodeSet) {
-    const classBubble = nodeSet.options('classBubble');
-    return nodeSet.querySelector(`.${classBubble}:first-child`);
+    return nodeSet.querySelector('[bubble]:first-child');
 };
 
 exports.closestNodeSet = closestNodeSet;
@@ -50,17 +48,9 @@ function closestNodeSet(node) {
 }
 
 function closestNodeBubble(node) {
-    const nodeSet = closestNodeSet(node);
-
-    if (!nodeSet) {
-        return;
-    }
-
-    const classBubble = nodeSet.options('classBubble');
-
     while (node) {
         if (node.nodeType === Node.ELEMENT_NODE &&
-            node.classList.contains(classBubble)) {
+            node.hasAttribute('bubble')) {
 
             return node;
         }

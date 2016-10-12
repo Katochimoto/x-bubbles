@@ -1,3 +1,4 @@
+const context = require('../../context');
 const bubble = require('../bubble');
 const cursor = require('../cursor');
 const select = require('../select');
@@ -7,7 +8,7 @@ const bubbleset = require('../bubbleset');
 module.exports = function (event) {
     event.preventDefault();
 
-    const selection = window.getSelection();
+    const selection = context.getSelection();
 
     if (text.arrowRight(selection, event.shiftKey)) {
         return;

@@ -1,4 +1,3 @@
-const bubbleset = require('./bubbleset');
 const zws = require('./zws');
 const { dispatch } = require('./event');
 
@@ -15,15 +14,7 @@ function isBubbleNode(node) {
         return false;
     }
 
-    const nodeSet = bubbleset.closestNodeSet(node);
-
-    if (!nodeSet) {
-        return false;
-    }
-
-    const classBubble = nodeSet.options('classBubble');
-
-    return node.classList.contains(classBubble);
+    return node.hasAttribute('bubble');
 }
 
 function bubbling(nodeSet, options) {
@@ -87,6 +78,7 @@ function bubbling(nodeSet, options) {
             options.bubbleFormation(wrap);
 
             wrap.classList.add(classBubble);
+            wrap.setAttribute('bubble', '');
             wrap.setAttribute('contenteditable', 'false');
 
             fragment.appendChild(wrap);

@@ -46,7 +46,6 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             if (!this._options) {
                 this._options = {
                     classBubble: 'bubble',
-                    classBubbleSelect: 'is-select',
                     ...this.dataset
                 };
             }
