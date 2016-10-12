@@ -85,6 +85,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             }
 
             this.appendChild(document.createTextNode(value));
+            bubble.bubbling(this);
         }
     },
 
@@ -99,14 +100,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             }
 
             this.appendChild(document.createTextNode(value));
-        }
-    },
-
-    appendChild: {
-        value: function () {
-            const out = HTMLElement.prototype.appendChild.apply(this, arguments);
             bubble.bubbling(this);
-            return out;
         }
     }
 });

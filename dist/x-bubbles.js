@@ -134,6 +134,7 @@ var XBubbles =
 	            }
 
 	            this.appendChild(document.createTextNode(value));
+	            bubble.bubbling(this);
 	        }
 	    },
 
@@ -148,14 +149,7 @@ var XBubbles =
 	            }
 
 	            this.appendChild(document.createTextNode(value));
-	        }
-	    },
-
-	    appendChild: {
-	        value: function value() {
-	            var out = HTMLElement.prototype.appendChild.apply(this, arguments);
 	            bubble.bubbling(this);
-	            return out;
 	        }
 	    }
 	});
