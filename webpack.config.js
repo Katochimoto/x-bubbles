@@ -17,7 +17,7 @@ var params = {
     'output': {
         'filename': '[name].js',
         'library': 'XBubbles',
-        'libraryTarget': 'umd',
+        'libraryTarget': 'var',
         'path': distPath
     },
     'module': {
