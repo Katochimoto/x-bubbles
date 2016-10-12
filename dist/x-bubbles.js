@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["x-bubbles"] = factory();
+		exports["XBubbles"] = factory();
 	else
-		root["x-bubbles"] = factory();
+		root["XBubbles"] = factory();
 })(this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -235,6 +235,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
+	module.exports = XBubbles;
+
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
@@ -426,8 +428,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	exports.backSpace = __webpack_require__(4);
-	exports.paste = __webpack_require__(7);
-	exports.arrowLeft = __webpack_require__(8);
+	exports.paste = __webpack_require__(10);
+	exports.arrowLeft = __webpack_require__(11);
 	exports.arrowRight = __webpack_require__(12);
 	exports.arrowBottom = __webpack_require__(13);
 	exports.arrowTop = __webpack_require__(14);
@@ -443,8 +445,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var bubble = __webpack_require__(1);
 	var cursor = __webpack_require__(5);
 	var select = __webpack_require__(6);
-	var text = __webpack_require__(9);
-	var bubbleset = __webpack_require__(11);
+	var text = __webpack_require__(7);
+	var bubbleset = __webpack_require__(9);
 
 	module.exports = function (event) {
 	    event.preventDefault();
@@ -683,114 +685,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var zws = __webpack_require__(2);
-
-	var slice = Array.prototype.slice;
-
-	module.exports = function (event) {
-	    var clipboardData = event.clipboardData;
-	    if (!clipboardData) {
-	        return;
-	    }
-
-	    var data = clipboardData.getData && clipboardData.getData('text/plain');
-
-	    if (!pasteString(data) && clipboardData.items) {
-	        slice.call(clipboardData.items).filter(function (item) {
-	            return item.kind === 'string' && item.type === 'text/plain';
-	        }).some(function (item) {
-	            item.getAsString(pasteString);
-	            return true;
-	        });
-	    }
-	};
-
-	function pasteString(data) {
-	    data = zws.textClean(data);
-	    if (!data) {
-	        return false;
-	    }
-
-	    var sel = window.getSelection();
-	    if (!sel || !sel.rangeCount) {
-	        return false;
-	    }
-
-	    var anchor = document.createElement('span');
-	    var text = document.createTextNode(data);
-
-	    sel.getRangeAt(0).surroundContents(anchor);
-	    anchor.parentNode.replaceChild(text, anchor);
-	    sel.removeAllRanges();
-	    sel.collapse(text, text.nodeValue.length);
-
-	    return true;
-	}
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var bubble = __webpack_require__(1);
-	var select = __webpack_require__(6);
-	var text = __webpack_require__(9);
-	var bubbleset = __webpack_require__(11);
-
-	module.exports = function (event) {
-	    event.preventDefault();
-
-	    var selection = window.getSelection();
-
-	    if (text.arrowLeft(selection, event.shiftKey)) {
-	        return;
-	    }
-
-	    if (selection.anchorNode && selection.anchorNode.nodeType === Node.TEXT_NODE) {
-	        var nodeBubble = prevBubble(selection.anchorNode);
-	        nodeBubble && select.uniq(nodeBubble);
-	        return;
-	    }
-
-	    var nodeSet = bubbleset.findNode(event.currentTarget);
-
-	    if (!nodeSet) {
-	        return;
-	    }
-
-	    var list = select.get(nodeSet);
-	    var begin = list.length > 1 && list[0] === nodeSet.startRangeSelect ? list[list.length - 1] : list[0];
-
-	    var node = prevBubble(begin);
-
-	    if (node) {
-	        if (event.shiftKey) {
-	            select.range(node);
-	        } else {
-	            select.uniq(node);
-	        }
-	    }
-	};
-
-	function prevBubble(target) {
-	    var node = target && target.previousSibling;
-	    while (node) {
-	        if (bubble.isBubbleNode(node)) {
-	            return node;
-	        }
-
-	        node = node.previousSibling;
-	    }
-	}
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var context = __webpack_require__(10);
+	var context = __webpack_require__(8);
 	var zws = __webpack_require__(2);
 
 	exports.arrowRight = arrowRight;
@@ -960,7 +855,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 10 */
+/* 8 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -971,14 +866,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	}();
 
 /***/ },
-/* 11 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var bubble = __webpack_require__(1);
 	var zws = __webpack_require__(2);
-	var context = __webpack_require__(10);
+	var context = __webpack_require__(8);
 
 	exports.findNode = function (node) {
 	    while (node) {
@@ -1014,6 +909,113 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var zws = __webpack_require__(2);
+
+	var slice = Array.prototype.slice;
+
+	module.exports = function (event) {
+	    var clipboardData = event.clipboardData;
+	    if (!clipboardData) {
+	        return;
+	    }
+
+	    var data = clipboardData.getData && clipboardData.getData('text/plain');
+
+	    if (!pasteString(data) && clipboardData.items) {
+	        slice.call(clipboardData.items).filter(function (item) {
+	            return item.kind === 'string' && item.type === 'text/plain';
+	        }).some(function (item) {
+	            item.getAsString(pasteString);
+	            return true;
+	        });
+	    }
+	};
+
+	function pasteString(data) {
+	    data = zws.textClean(data);
+	    if (!data) {
+	        return false;
+	    }
+
+	    var sel = window.getSelection();
+	    if (!sel || !sel.rangeCount) {
+	        return false;
+	    }
+
+	    var anchor = document.createElement('span');
+	    var text = document.createTextNode(data);
+
+	    sel.getRangeAt(0).surroundContents(anchor);
+	    anchor.parentNode.replaceChild(text, anchor);
+	    sel.removeAllRanges();
+	    sel.collapse(text, text.nodeValue.length);
+
+	    return true;
+	}
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var bubble = __webpack_require__(1);
+	var select = __webpack_require__(6);
+	var text = __webpack_require__(7);
+	var bubbleset = __webpack_require__(9);
+
+	module.exports = function (event) {
+	    event.preventDefault();
+
+	    var selection = window.getSelection();
+
+	    if (text.arrowLeft(selection, event.shiftKey)) {
+	        return;
+	    }
+
+	    if (selection.anchorNode && selection.anchorNode.nodeType === Node.TEXT_NODE) {
+	        var nodeBubble = prevBubble(selection.anchorNode);
+	        nodeBubble && select.uniq(nodeBubble);
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.findNode(event.currentTarget);
+
+	    if (!nodeSet) {
+	        return;
+	    }
+
+	    var list = select.get(nodeSet);
+	    var begin = list.length > 1 && list[0] === nodeSet.startRangeSelect ? list[list.length - 1] : list[0];
+
+	    var node = prevBubble(begin);
+
+	    if (node) {
+	        if (event.shiftKey) {
+	            select.range(node);
+	        } else {
+	            select.uniq(node);
+	        }
+	    }
+	};
+
+	function prevBubble(target) {
+	    var node = target && target.previousSibling;
+	    while (node) {
+	        if (bubble.isBubbleNode(node)) {
+	            return node;
+	        }
+
+	        node = node.previousSibling;
+	    }
+	}
+
+/***/ },
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1022,8 +1024,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var bubble = __webpack_require__(1);
 	var cursor = __webpack_require__(5);
 	var select = __webpack_require__(6);
-	var text = __webpack_require__(9);
-	var bubbleset = __webpack_require__(11);
+	var text = __webpack_require__(7);
+	var bubbleset = __webpack_require__(9);
 
 	module.exports = function (event) {
 	    event.preventDefault();
@@ -1189,7 +1191,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var select = __webpack_require__(6);
 	var bubble = __webpack_require__(1);
-	var bubbleset = __webpack_require__(11);
+	var bubbleset = __webpack_require__(9);
 	var classes = __webpack_require__(18);
 
 	var currentDragSet = null;

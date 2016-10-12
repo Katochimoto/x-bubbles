@@ -16,7 +16,7 @@ var params = {
     'context': srcPath,
     'output': {
         'filename': '[name].js',
-        'library': '[name]',
+        'library': 'XBubbles',
         'libraryTarget': 'umd',
         'path': distPath
     },

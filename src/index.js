@@ -172,3 +172,5 @@ function onClick(event) {
         select.clear(set);
     }
 }
+
+module.exports = XBubbles;
