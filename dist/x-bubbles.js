@@ -51,6 +51,7 @@ var XBubbles =
 
 	var events = __webpack_require__(1);
 	var drag = __webpack_require__(25);
+	var bubble = __webpack_require__(4);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
 	    createdCallback: {
@@ -71,6 +72,8 @@ var XBubbles =
 	            this.addEventListener('paste', events.paste);
 
 	            drag.init(this);
+
+	            bubble.bubbling(this);
 	        }
 	    },
 
@@ -93,15 +96,46 @@ var XBubbles =
 	    },
 
 	    options: {
-	        value: function value(name) {
+	        value: function value(name, _value) {
 	            if (!this._options) {
 	                this._options = _extends({
-	                    classBubble: 'bubble'
+	                    classBubble: 'bubble',
+	                    draggable: true,
+	                    separator: /[,]/,
+	                    ending: null, // /\@ya\.ru/g;
+	                    begining: null,
+	                    bubbleFormation: function bubbleFormation() {}
 	                }, this.dataset);
 	            }
 
-	            return this._options[name];
+	            if (typeof _value !== 'undefined') {
+	                this._options[name] = _value;
+	            } else {
+	                return this._options[name];
+	            }
 	        }
+	    },
+
+	    items: {
+	        get: function get() {
+	            return [];
+	        }
+	    },
+
+	    innerText: {
+	        get: function get() {
+	            return '';
+	        },
+
+	        set: function set() {}
+	    },
+
+	    innerHtml: {
+	        get: function get() {
+	            return '';
+	        },
+
+	        set: function set() {}
 	    }
 	});
 
@@ -132,6 +166,8 @@ var XBubbles =
 	exports.blur = __webpack_require__(22);
 	exports.keypress = __webpack_require__(23);
 	exports.keydown = __webpack_require__(24);
+
+	exports.EV_BUBBLING = 'bubbling';
 
 /***/ },
 /* 2 */
@@ -215,19 +251,16 @@ var XBubbles =
 
 	'use strict';
 
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 	var zws = __webpack_require__(5);
 
 	var _require = __webpack_require__(6);
 
 	var dispatch = _require.dispatch;
 
+	var _require2 = __webpack_require__(1);
 
-	var REG_SEPARATOR = /[,]/;
-	var REG_ENDING = null; // /\@ya\.ru/g;
-	var REG_BEGINING = null;
-	var NOOP = function NOOP() {};
+	var EV_BUBBLING = _require2.EV_BUBBLING;
+
 
 	exports.isBubbleNode = isBubbleNode;
 	exports.bubbling = bubbling;
@@ -240,16 +273,13 @@ var XBubbles =
 	    return node.hasAttribute('bubble');
 	}
 
-	function bubbling(nodeSet, options) {
-	    options = _extends({
-	        begining: REG_BEGINING,
-	        ending: REG_ENDING,
-	        separator: REG_SEPARATOR,
-	        draggable: true,
-	        bubbleFormation: nodeSet.bubbleFormation || NOOP
-	    }, options);
-
+	function bubbling(nodeSet) {
 	    var classBubble = nodeSet.options('classBubble');
+	    var bubbleFormation = nodeSet.options('bubbleFormation');
+	    var draggable = nodeSet.options('draggable');
+	    var separator = nodeSet.options('separator');
+	    var ending = nodeSet.options('ending');
+	    var begining = nodeSet.options('begining');
 	    var ranges = getBubbleRanges(nodeSet);
 	    var nodes = [];
 
@@ -263,17 +293,17 @@ var XBubbles =
 
 	        var textParts = [text];
 
-	        if (options.separator) {
-	            textParts = text.split(options.separator).map(trimIterator).filter(nonEmptyIterator);
+	        if (separator) {
+	            textParts = text.split(separator).map(trimIterator).filter(nonEmptyIterator);
 	        }
 
-	        if (options.ending) {
+	        if (ending) {
 	            textParts = textParts.reduce(function (parts, str) {
-	                return parts.concat(parseFragmentByEnding(str, options.ending));
+	                return parts.concat(parseFragmentByEnding(str, ending));
 	            }, []).map(trimIterator).filter(nonEmptyIterator);
-	        } else if (options.begining) {
+	        } else if (begining) {
 	            textParts = textParts.reduce(function (parts, str) {
-	                return parts.concat(parseFragmentByBeginning(str, options.begining));
+	                return parts.concat(parseFragmentByBeginning(str, begining));
 	            }, []).map(trimIterator).filter(nonEmptyIterator);
 	        }
 
@@ -287,11 +317,11 @@ var XBubbles =
 	            var wrap = document.createElement('span');
 	            wrap.innerText = textPart;
 
-	            if (options.draggable) {
+	            if (draggable) {
 	                wrap.setAttribute('draggable', 'true');
 	            }
 
-	            options.bubbleFormation(wrap);
+	            bubbleFormation(wrap);
 
 	            wrap.classList.add(classBubble);
 	            wrap.setAttribute('bubble', '');
@@ -306,7 +336,7 @@ var XBubbles =
 	    });
 
 	    if (nodes.length) {
-	        dispatch(nodeSet, 'bubble', {
+	        dispatch(nodeSet, EV_BUBBLING, {
 	            bubbles: false,
 	            cancelable: false,
 	            detail: { data: nodes }

@@ -1,5 +1,6 @@
 const events = require('./x-bubbles/events');
 const drag = require('./x-bubbles/drag');
+const bubble = require('./x-bubbles/bubble');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
@@ -20,6 +21,8 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.addEventListener('paste', events.paste);
 
             drag.init(this);
+
+            bubble.bubbling(this);
         }
     },
 
@@ -42,16 +45,48 @@ const XBubbles = Object.create(HTMLElement.prototype, {
     },
 
     options: {
-        value: function (name) {
+        value: function (name, value) {
             if (!this._options) {
                 this._options = {
                     classBubble: 'bubble',
+                    draggable: true,
+                    separator: /[,]/,
+                    ending: null, // /\@ya\.ru/g;
+                    begining: null,
+                    bubbleFormation: function () {},
                     ...this.dataset
                 };
             }
 
-            return this._options[ name ];
+            if (typeof value !== 'undefined') {
+                this._options[ name ] = value;
+
+            } else {
+                return this._options[ name ];
+            }
         }
+    },
+
+    items: {
+        get: function () {
+            return [];
+        }
+    },
+
+    innerText: {
+        get: function () {
+            return '';
+        },
+
+        set: function () {}
+    },
+
+    innerHtml: {
+        get: function () {
+            return '';
+        },
+
+        set: function () {}
     }
 });
 

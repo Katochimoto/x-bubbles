@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Katochimoto">
+    <title>bubble</title>
+    <style type="text/css">
+.bubbles {
+    line-height: 18px;
+    border: 1px solid;
+    height: 100px;
+    padding: 2px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.bubble {
+    background-color: #ddd;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    margin: 1px 3px;
+    border-radius: 20px;
+    padding: 0 5px;
+    outline: none;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.bubble:focus, .bubble[selected] {
+    background-color: #aaa;
+}
+
+.drag > .bubble[selected] {
+    opacity: 0.7;
+}
+
+.dropzone {
+    border-color: #00f;
+    border-width: 5px;
+}
+
+[draggable=true] {
+  -khtml-user-drag: element;
+}
+
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* Required to make elements draggable in old WebKit */
+  -khtml-user-drag: element;
+  -webkit-user-drag: element;
+}
+    </style>
+    <script src="../node_modules/document-register-element/build/document-register-element.js"></script>
+    <script src="../dist/x-bubbles.js"></script>
+</head>
+<body>
+<div class="bubbles" is="x-bubbles" tabindex="0">123,456</div>
+<br/>
+<div class="bubbles" is="x-bubbles" tabindex="0"></div>
+</body>
+</html>

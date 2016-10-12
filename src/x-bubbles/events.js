@@ -14,3 +14,5 @@ exports.focus = require('./events/focus');
 exports.blur = require('./events/blur');
 exports.keypress = require('./events/keypress');
 exports.keydown = require('./events/keydown');
+
+exports.EV_BUBBLING = 'bubbling';

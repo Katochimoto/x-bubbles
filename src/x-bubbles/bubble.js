@@ -1,10 +1,6 @@
 const zws = require('./zws');
 const { dispatch } = require('./event');
-
-const REG_SEPARATOR = /[,]/;
-const REG_ENDING = null; // /\@ya\.ru/g;
-const REG_BEGINING = null;
-const NOOP = function () {};
+const { EV_BUBBLING } = require('./events');
 
 exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
@@ -17,17 +13,13 @@ function isBubbleNode(node) {
     return node.hasAttribute('bubble');
 }
 
-function bubbling(nodeSet, options) {
-    options = {
-        begining: REG_BEGINING,
-        ending: REG_ENDING,
-        separator: REG_SEPARATOR,
-        draggable: true,
-        bubbleFormation: nodeSet.bubbleFormation || NOOP,
-        ...options
-    };
-
+function bubbling(nodeSet) {
     const classBubble = nodeSet.options('classBubble');
+    const bubbleFormation = nodeSet.options('bubbleFormation');
+    const draggable = nodeSet.options('draggable');
+    const separator = nodeSet.options('separator');
+    const ending = nodeSet.options('ending');
+    const begining = nodeSet.options('begining');
     const ranges = getBubbleRanges(nodeSet);
     const nodes = [];
 
@@ -41,22 +33,22 @@ function bubbling(nodeSet, options) {
 
         let textParts = [ text ];
 
-        if (options.separator) {
+        if (separator) {
             textParts = text
-                .split(options.separator)
+                .split(separator)
                 .map(trimIterator)
                 .filter(nonEmptyIterator);
         }
 
-        if (options.ending) {
+        if (ending) {
             textParts = textParts
-                .reduce((parts, str) => parts.concat(parseFragmentByEnding(str, options.ending)), [])
+                .reduce((parts, str) => parts.concat(parseFragmentByEnding(str, ending)), [])
                 .map(trimIterator)
                 .filter(nonEmptyIterator);
 
-        } else if (options.begining) {
+        } else if (begining) {
             textParts = textParts
-                .reduce((parts, str) => parts.concat(parseFragmentByBeginning(str, options.begining)), [])
+                .reduce((parts, str) => parts.concat(parseFragmentByBeginning(str, begining)), [])
                 .map(trimIterator)
                 .filter(nonEmptyIterator);
         }
@@ -71,11 +63,11 @@ function bubbling(nodeSet, options) {
             const wrap = document.createElement('span');
             wrap.innerText = textPart;
 
-            if (options.draggable) {
+            if (draggable) {
                 wrap.setAttribute('draggable', 'true');
             }
 
-            options.bubbleFormation(wrap);
+            bubbleFormation(wrap);
 
             wrap.classList.add(classBubble);
             wrap.setAttribute('bubble', '');
@@ -90,7 +82,7 @@ function bubbling(nodeSet, options) {
     });
 
     if (nodes.length) {
-        dispatch(nodeSet, 'bubble', {
+        dispatch(nodeSet, EV_BUBBLING, {
             bubbles: false,
             cancelable: false,
             detail: { data: nodes }
