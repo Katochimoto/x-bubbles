@@ -12,17 +12,8 @@ exports.headBubble = function (nodeSet) {
     return nodeSet.querySelector(`.${classBubble}:first-child`);
 };
 
-exports.findNode = function (node) {
-    while (node) {
-        if (node.nodeType === Node.ELEMENT_NODE &&
-            node.getAttribute('is') === 'x-bubbles') {
-
-            return node;
-        }
-
-        node = node.parentNode;
-    }
-};
+exports.closestNodeSet = closestNodeSet;
+exports.closestNodeBubble = closestNodeBubble;
 
 exports.findBubbleLeft = function (selection) {
     selection = selection || context.getSelection();
@@ -45,3 +36,35 @@ exports.findBubbleLeft = function (selection) {
         node = node.previousSibling;
     }
 };
+
+function closestNodeSet(node) {
+    while (node) {
+        if (node.nodeType === Node.ELEMENT_NODE &&
+            node.getAttribute('is') === 'x-bubbles') {
+
+            return node;
+        }
+
+        node = node.parentNode;
+    }
+}
+
+function closestNodeBubble(node) {
+    const nodeSet = closestNodeSet(node);
+
+    if (!nodeSet) {
+        return;
+    }
+
+    const classBubble = nodeSet.options('classBubble');
+
+    while (node) {
+        if (node.nodeType === Node.ELEMENT_NODE &&
+            node.classList.contains(classBubble)) {
+
+            return node;
+        }
+
+        node = node.parentNode;
+    }
+}

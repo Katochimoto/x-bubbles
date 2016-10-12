@@ -15,7 +15,7 @@ function isBubbleNode(node) {
         return false;
     }
 
-    const nodeSet = bubbleset.findNode(node);
+    const nodeSet = bubbleset.closestNodeSet(node);
 
     if (!nodeSet) {
         return false;

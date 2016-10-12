@@ -27,7 +27,7 @@ function onDragstart(event) {
     event.stopPropagation();
 
     const nodeBubble = event.target;
-    const nodeSet = bubbleset.findNode(nodeBubble);
+    const nodeSet = bubbleset.closestNodeSet(nodeBubble);
 
     if (!nodeSet || !bubble.isBubbleNode(nodeBubble)) {
         event.preventDefault();
@@ -50,7 +50,7 @@ function onDrop(event) {
         return;
     }
 
-    const nodeSet = bubbleset.findNode(event.target);
+    const nodeSet = bubbleset.closestNodeSet(event.target);
 
     if (!nodeSet || nodeSet === currentDragSet) {
         return;
@@ -85,7 +85,7 @@ function onDragenter(event) {
         return;
     }
 
-    const nodeSet = bubbleset.findNode(event.target);
+    const nodeSet = bubbleset.closestNodeSet(event.target);
 
     if (!nodeSet || nodeSet === currentDragSet) {
         return;
@@ -102,7 +102,7 @@ function onDragleave(event) {
         return;
     }
 
-    const nodeSet = bubbleset.findNode(event.target);
+    const nodeSet = bubbleset.closestNodeSet(event.target);
 
     if (!nodeSet || nodeSet === currentDragSet) {
         return;
@@ -121,7 +121,7 @@ function onDragend(event) {
 
     currentDragSet.classList.remove(classes.DRAGSTART);
 
-    const nodeSet = bubbleset.findNode(event.target);
+    const nodeSet = bubbleset.closestNodeSet(event.target);
 
     if (nodeSet && nodeSet !== currentDragSet) {
         nodeSet.classList.remove(classes.DROPZONE);

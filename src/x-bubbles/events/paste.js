@@ -3,7 +3,10 @@ const zws = require('../zws');
 const slice = Array.prototype.slice;
 
 module.exports = function (event) {
+    event.preventDefault();
+
     const clipboardData = event.clipboardData;
+
     if (!clipboardData) {
         return;
     }

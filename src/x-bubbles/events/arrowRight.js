@@ -19,7 +19,7 @@ module.exports = function (event) {
         return;
     }
 
-    const nodeSet = bubbleset.findNode(event.currentTarget);
+    const nodeSet = bubbleset.closestNodeSet(event.currentTarget);
 
     if (!nodeSet) {
         return;

@@ -130,7 +130,7 @@ function uniq(node) {
 
 function _add(node) {
     if (bubble.isBubbleNode(node)) {
-        const nodeSet = bubbleset.findNode(node);
+        const nodeSet = bubbleset.closestNodeSet(node);
         const classBubbleSelect = nodeSet.options('classBubbleSelect');
 
         node.classList.add(classBubbleSelect);

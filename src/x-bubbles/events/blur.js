@@ -1,13 +1,14 @@
 const bubbleset = require('../bubbleset');
+const bubble = require('../bubble');
 const select = require('../select');
 
 module.exports = function (event) {
-    event.preventDefault();
-
     const nodeSet = bubbleset.closestNodeSet(event.currentTarget);
-    const headBubble = bubbleset.headBubble(nodeSet);
 
-    if (headBubble) {
-        select.uniq(headBubble);
+    if (!nodeSet) {
+        return;
     }
+
+    bubble.bubbling(nodeSet);
+    select.clear(nodeSet);
 };
