@@ -1,6 +1,7 @@
 const events = require('./x-bubbles/events');
 const drag = require('./x-bubbles/drag');
 const bubble = require('./x-bubbles/bubble');
+const bubbleset = require('./x-bubbles/bubbleset');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
@@ -69,7 +70,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     items: {
         get: function () {
-            return [];
+            return bubbleset.getBubbles(this);
         }
     },
 
@@ -78,15 +79,35 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             return '';
         },
 
-        set: function () {}
+        set: function (value) {
+            while (this.firstChild) {
+                this.removeChild(this.firstChild);
+            }
+
+            this.appendChild(document.createTextNode(value));
+        }
     },
 
-    innerHtml: {
+    innerHTML: {
         get: function () {
             return '';
         },
 
-        set: function () {}
+        set: function (value) {
+            while (this.firstChild) {
+                this.removeChild(this.firstChild);
+            }
+
+            this.appendChild(document.createTextNode(value));
+        }
+    },
+
+    appendChild: {
+        value: function () {
+            const out = HTMLElement.prototype.appendChild.apply(this, arguments);
+            bubble.bubbling(this);
+            return out;
+        }
     }
 });
 

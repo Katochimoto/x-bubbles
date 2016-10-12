@@ -2,12 +2,18 @@ const bubble = require('./bubble');
 const zws = require('./zws');
 const context = require('../context');
 
+const slice = Array.prototype.slice;
+
 exports.lastBubble = function (nodeSet) {
     return nodeSet.querySelector('[bubble]:last-child');
 };
 
 exports.headBubble = function (nodeSet) {
     return nodeSet.querySelector('[bubble]:first-child');
+};
+
+exports.getBubbles = function (nodeSet) {
+    return slice.call(nodeSet.querySelectorAll('[bubble]'));
 };
 
 exports.closestNodeSet = closestNodeSet;

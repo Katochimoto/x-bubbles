@@ -52,6 +52,7 @@ var XBubbles =
 	var events = __webpack_require__(1);
 	var drag = __webpack_require__(25);
 	var bubble = __webpack_require__(4);
+	var bubbleset = __webpack_require__(10);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
 	    createdCallback: {
@@ -118,7 +119,7 @@ var XBubbles =
 
 	    items: {
 	        get: function get() {
-	            return [];
+	            return bubbleset.getBubbles(this);
 	        }
 	    },
 
@@ -127,15 +128,35 @@ var XBubbles =
 	            return '';
 	        },
 
-	        set: function set() {}
+	        set: function set(value) {
+	            while (this.firstChild) {
+	                this.removeChild(this.firstChild);
+	            }
+
+	            this.appendChild(document.createTextNode(value));
+	        }
 	    },
 
-	    innerHtml: {
+	    innerHTML: {
 	        get: function get() {
 	            return '';
 	        },
 
-	        set: function set() {}
+	        set: function set(value) {
+	            while (this.firstChild) {
+	                this.removeChild(this.firstChild);
+	            }
+
+	            this.appendChild(document.createTextNode(value));
+	        }
+	    },
+
+	    appendChild: {
+	        value: function value() {
+	            var out = HTMLElement.prototype.appendChild.apply(this, arguments);
+	            bubble.bubbling(this);
+	            return out;
+	        }
 	    }
 	});
 
@@ -836,12 +857,18 @@ var XBubbles =
 	var zws = __webpack_require__(5);
 	var context = __webpack_require__(3);
 
+	var slice = Array.prototype.slice;
+
 	exports.lastBubble = function (nodeSet) {
 	    return nodeSet.querySelector('[bubble]:last-child');
 	};
 
 	exports.headBubble = function (nodeSet) {
 	    return nodeSet.querySelector('[bubble]:first-child');
+	};
+
+	exports.getBubbles = function (nodeSet) {
+	    return slice.call(nodeSet.querySelectorAll('[bubble]'));
 	};
 
 	exports.closestNodeSet = closestNodeSet;
