@@ -56,6 +56,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
                     ending: null, // /\@ya\.ru/g;
                     begining: null,
                     bubbleFormation: function () {},
+                    bubbleDeformation: function () {},
                     ...this.dataset
                 };
 
@@ -120,6 +121,7 @@ module.exports = XBubbles;
 
 function optionsPrepare(options) {
     const typeBubbleFormation = typeof options.bubbleFormation;
+    const typeBubbleDeformation = typeof options.bubbleDeformation;
 
     switch (typeBubbleFormation) {
     case 'string':
@@ -129,5 +131,15 @@ function optionsPrepare(options) {
         break;
     default:
         options.bubbleFormation = function () {};
+    }
+
+    switch (typeBubbleDeformation) {
+    case 'string':
+        options.bubbleDeformation = new Function('wrap', `return (function(wrap) { return ${options.bubbleDeformation}(wrap); }(wrap));`);
+        break;
+    case 'function':
+        break;
+    default:
+        options.bubbleDeformation = function () {};
     }
 }

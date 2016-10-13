@@ -108,7 +108,8 @@ var XBubbles =
 	                    separator: /[,;]/,
 	                    ending: null, // /\@ya\.ru/g;
 	                    begining: null,
-	                    bubbleFormation: function bubbleFormation() {}
+	                    bubbleFormation: function bubbleFormation() {},
+	                    bubbleDeformation: function bubbleDeformation() {}
 	                }, this.dataset);
 
 	                optionsPrepare(this._options);
@@ -171,6 +172,7 @@ var XBubbles =
 
 	function optionsPrepare(options) {
 	    var typeBubbleFormation = _typeof(options.bubbleFormation);
+	    var typeBubbleDeformation = _typeof(options.bubbleDeformation);
 
 	    switch (typeBubbleFormation) {
 	        case 'string':
@@ -180,6 +182,16 @@ var XBubbles =
 	            break;
 	        default:
 	            options.bubbleFormation = function () {};
+	    }
+
+	    switch (typeBubbleDeformation) {
+	        case 'string':
+	            options.bubbleDeformation = new Function('wrap', 'return (function(wrap) { return ' + options.bubbleDeformation + '(wrap); }(wrap));');
+	            break;
+	        case 'function':
+	            break;
+	        default:
+	            options.bubbleDeformation = function () {};
 	    }
 	}
 
@@ -1432,24 +1444,39 @@ var XBubbles =
 	        return;
 	    }
 
-	    event.preventDefault();
-
-	    var fakeText = zws.createElement();
-	    var text = document.createTextNode(zws.textClean(nodeBubble.innerText));
-
-	    nodeSet.replaceChild(text, nodeBubble);
-	    nodeSet.insertBefore(fakeText, text);
-
 	    var selection = context.getSelection();
 
-	    if (selection) {
-	        var range = document.createRange();
-	        range.setStartBefore(fakeText);
-	        range.setEndAfter(text);
-
-	        selection.removeAllRanges();
-	        selection.addRange(range);
+	    if (!selection) {
+	        return;
 	    }
+
+	    event.preventDefault();
+
+	    var bubbleDeformation = nodeSet.options('bubbleDeformation');
+	    var rangeParams = bubbleDeformation(nodeBubble);
+
+	    if (!rangeParams) {
+	        var text = zws.textClean(nodeBubble.innerText);
+
+	        rangeParams = {
+	            text: text,
+	            startOffset: 0,
+	            endOffset: text.length
+	        };
+	    }
+
+	    var textFake = zws.createElement();
+	    var textNode = context.document.createTextNode(rangeParams.text);
+
+	    nodeSet.replaceChild(textNode, nodeBubble);
+	    nodeSet.insertBefore(textFake, textNode);
+
+	    var range = context.document.createRange();
+	    range.setStart(textNode, rangeParams.startOffset);
+	    range.setEnd(textNode, rangeParams.endOffset);
+
+	    selection.removeAllRanges();
+	    selection.addRange(range);
 	};
 
 /***/ },

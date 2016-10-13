@@ -62,12 +62,16 @@
 </head>
 <body>
 <script>
-function test(a) {
-    console.log('>>', a);
+function test() {
+    return {
+        text: '123',
+        startOffset: 1,
+        endOffset: 2
+    };
 }
 </script>
-<div class="bubbles" is="x-bubbles" tabindex="0" data-bubble-formation="test">
-    123,456
+<div class="bubbles" is="x-bubbles" tabindex="0" data-bubble-deformation="test">
+    123,456,789
 </div>
 <br/>
 <div class="bubbles" is="x-bubbles" tabindex="0"></div>
