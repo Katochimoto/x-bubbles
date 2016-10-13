@@ -14,21 +14,33 @@ function currentTextRange(selection) {
         return;
     }
 
-    if (!selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+    const pointNode = do {
+        if (selection.focusNode && selection.focusNode.nodeType === Node.TEXT_NODE) {
+            selection.focusNode;
+
+        } else if (selection.anchorNode && selection.anchorNode.nodeType === Node.TEXT_NODE) {
+            selection.anchorNode;
+
+        } else {
+            undefined;
+        }
+    };
+
+    if (!pointNode) {
         return;
     }
 
     const range = context.document.createRange();
-    let startNode = selection.anchorNode;
-    let endNode = selection.anchorNode;
-    let item = selection.anchorNode;
+    let startNode = pointNode;
+    let endNode = pointNode;
+    let item = pointNode;
 
     while (item && item.nodeType === Node.TEXT_NODE) {
         startNode = item;
         item = item.previousSibling;
     }
 
-    item = selection.anchorNode;
+    item = pointNode;
 
     while (item && item.nodeType === Node.TEXT_NODE) {
         endNode = item;
@@ -57,7 +69,8 @@ function remove(selection) {
     const fakeText = zws.createElement();
     const range = selection.getRangeAt(0);
     range.insertNode(fakeText);
-    range.collapse();
+    // FIXME хорошо бы false, тогда zws в конце удаляется, но в ФФ при этом слетает выделение
+    range.collapse(true);
 
     selection.removeAllRanges();
     selection.addRange(range);

@@ -1,5 +1,6 @@
 const context = require('../../context');
 const zws = require('../zws');
+const text = require('../text');
 
 const slice = Array.prototype.slice;
 
@@ -30,18 +31,18 @@ function pasteString(data) {
         return false;
     }
 
-    const sel = context.getSelection();
-    if (!sel || !sel.rangeCount) {
+    const selection = context.getSelection();
+    if (!selection || !selection.rangeCount) {
         return false;
     }
 
     const anchor = document.createElement('span');
     const text = document.createTextNode(data);
 
-    sel.getRangeAt(0).surroundContents(anchor);
+    selection.getRangeAt(0).surroundContents(anchor);
     anchor.parentNode.replaceChild(text, anchor);
-    sel.removeAllRanges();
-    sel.collapse(text, text.nodeValue.length);
+    selection.removeAllRanges();
+    selection.collapse(text, text.nodeValue.length);
 
     return true;
 }
