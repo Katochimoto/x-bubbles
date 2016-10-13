@@ -95,9 +95,11 @@ var XBubbles =
 	        }
 	    },
 
+	    /*
 	    attributeChangedCallback: {
-	        value: function value() {} // name, previousValue, value
+	        value: function (name, previousValue, value) {}
 	    },
+	    */
 
 	    options: {
 	        value: function value(name, _value) {
@@ -201,6 +203,8 @@ var XBubbles =
 
 	'use strict';
 
+	var EV_CHANGE = 'change';
+
 	exports.backSpace = __webpack_require__(2);
 	exports.paste = __webpack_require__(12);
 	exports.arrowLeft = __webpack_require__(13);
@@ -216,7 +220,7 @@ var XBubbles =
 	exports.keypress = __webpack_require__(23);
 	exports.keydown = __webpack_require__(24);
 
-	exports.EV_BUBBLING = 'bubbling';
+	exports.EV_CHANGE = EV_CHANGE;
 
 /***/ },
 /* 2 */
@@ -230,6 +234,12 @@ var XBubbles =
 	var select = __webpack_require__(9);
 	var text = __webpack_require__(11);
 	var bubbleset = __webpack_require__(10);
+
+	var _require = __webpack_require__(6);
+
+	var dispatch = _require.dispatch;
+
+	var events = __webpack_require__(1);
 
 	module.exports = function (event) {
 	    event.preventDefault();
@@ -279,6 +289,11 @@ var XBubbles =
 	        } else {
 	            nodeSet.focus();
 	            cursor.restore(nodeSet);
+
+	            dispatch(nodeSet, events.EV_CHANGE, {
+	                bubbles: false,
+	                cancelable: false
+	            });
 	        }
 	    }
 	};
@@ -306,10 +321,7 @@ var XBubbles =
 
 	var dispatch = _require.dispatch;
 
-	var _require2 = __webpack_require__(1);
-
-	var EV_BUBBLING = _require2.EV_BUBBLING;
-
+	var events = __webpack_require__(1);
 
 	exports.isBubbleNode = isBubbleNode;
 	exports.bubbling = bubbling;
@@ -384,13 +396,10 @@ var XBubbles =
 	        range.insertNode(fragment);
 	    });
 
-	    if (nodes.length) {
-	        dispatch(nodeSet, EV_BUBBLING, {
-	            bubbles: false,
-	            cancelable: false,
-	            detail: { data: nodes }
-	        });
-	    }
+	    dispatch(nodeSet, events.EV_CHANGE, {
+	        bubbles: false,
+	        cancelable: false
+	    });
 
 	    return nodes;
 	}

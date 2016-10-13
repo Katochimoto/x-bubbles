@@ -1,4 +1,4 @@
-
+const EV_CHANGE = 'change';
 
 exports.backSpace = require('./events/backSpace');
 exports.paste = require('./events/paste');
@@ -15,4 +15,4 @@ exports.blur = require('./events/blur');
 exports.keypress = require('./events/keypress');
 exports.keydown = require('./events/keydown');
 
-exports.EV_BUBBLING = 'bubbling';
+exports.EV_CHANGE = EV_CHANGE;

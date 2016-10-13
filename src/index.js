@@ -42,9 +42,11 @@ const XBubbles = Object.create(HTMLElement.prototype, {
         }
     },
 
+    /*
     attributeChangedCallback: {
-        value: function () {} // name, previousValue, value
+        value: function (name, previousValue, value) {}
     },
+    */
 
     options: {
         value: function (name, value) {

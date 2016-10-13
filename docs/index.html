@@ -70,10 +70,16 @@ function test() {
     };
 }
 </script>
-<div class="bubbles" is="x-bubbles" tabindex="0" data-bubble-deformation="test">
+<div class="bubbles" id="test" is="x-bubbles" tabindex="0" data-bubble-deformation="test">
     123,456,789
 </div>
 <br/>
 <div class="bubbles" is="x-bubbles" tabindex="0"></div>
+<script>
+document.getElementById('test')
+.addEventListener('change', function(event) {
+    console.log(event.target.items);
+}, false);
+</script>
 </body>
 </html>
