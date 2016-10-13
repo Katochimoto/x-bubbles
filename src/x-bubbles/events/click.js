@@ -1,5 +1,6 @@
 const bubbleset = require('../bubbleset');
 const select = require('../select');
+const cursor = require('../cursor');
 
 module.exports = function (event) {
     const nodeSet = bubbleset.closestNodeSet(event.target);
@@ -12,6 +13,7 @@ module.exports = function (event) {
 
     if (!nodeBubble) {
         select.clear(nodeSet);
+        cursor.restore(nodeSet);
         return;
     }
 

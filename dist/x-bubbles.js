@@ -1460,6 +1460,7 @@ var XBubbles =
 
 	var bubbleset = __webpack_require__(10);
 	var select = __webpack_require__(9);
+	var cursor = __webpack_require__(8);
 
 	module.exports = function (event) {
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
@@ -1472,6 +1473,7 @@ var XBubbles =
 
 	    if (!nodeBubble) {
 	        select.clear(nodeSet);
+	        cursor.restore(nodeSet);
 	        return;
 	    }
 
