@@ -1,12 +1,12 @@
 const context = require('../context');
 const zws = require('./zws');
-// const select = require('./select');
+const select = require('./select');
 
 exports.restore = restore;
 exports.restoreBasis = restoreBasis;
 
 function restore(nodeSet) {
-    // select.clear(nodeSet);
+    select.clear(nodeSet);
     const basis = restoreBasis(nodeSet);
     const selection = context.getSelection();
     selection.removeAllRanges();

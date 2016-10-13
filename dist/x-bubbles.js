@@ -677,13 +677,13 @@ var XBubbles =
 
 	var context = __webpack_require__(3);
 	var zws = __webpack_require__(5);
-	// const select = require('./select');
+	var select = __webpack_require__(9);
 
 	exports.restore = restore;
 	exports.restoreBasis = restoreBasis;
 
 	function restore(nodeSet) {
-	    // select.clear(nodeSet);
+	    select.clear(nodeSet);
 	    var basis = restoreBasis(nodeSet);
 	    var selection = context.getSelection();
 	    selection.removeAllRanges();
