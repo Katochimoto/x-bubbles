@@ -50,6 +50,7 @@
     "mocha": "3.0.2",
     "preprocess": "3.1.0",
     "preprocess-loader": "0.2.0",
+    "raf": "3.3.0",
     "sinon": "1.17.5",
     "sinon-chai": "2.8.0",
     "webpack": "1.13.2"

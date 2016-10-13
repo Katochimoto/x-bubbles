@@ -1,14 +1,23 @@
 const events = require('./x-bubbles/events');
+const { dispatch } = require('./x-bubbles/event');
 const drag = require('./x-bubbles/drag');
 const bubble = require('./x-bubbles/bubble');
 const bubbleset = require('./x-bubbles/bubbleset');
 const text = require('./x-bubbles/text');
+const throttleAnimationFrame = require('./x-bubbles/utils/throttleAnimationFrame');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
         value: function () {
             this.setAttribute('contenteditable', 'true');
             this.setAttribute('spellcheck', 'false');
+
+            this.fireChange = throttleAnimationFrame(function () {
+                dispatch(this, events.EV_CHANGE, {
+                    bubbles: false,
+                    cancelable: false
+                });
+            }, this);
         }
     },
 

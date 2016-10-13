@@ -4,8 +4,6 @@ const cursor = require('../cursor');
 const select = require('../select');
 const text = require('../text');
 const bubbleset = require('../bubbleset');
-const { dispatch } = require('../event');
-const events = require('../events');
 
 module.exports = function (event) {
     event.preventDefault();
@@ -56,11 +54,7 @@ module.exports = function (event) {
         } else {
             nodeSet.focus();
             cursor.restore(nodeSet);
-
-            dispatch(nodeSet, events.EV_CHANGE, {
-                bubbles: false,
-                cancelable: false
-            });
+            nodeSet.fireChange();
         }
     }
 };

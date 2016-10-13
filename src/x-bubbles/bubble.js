@@ -1,6 +1,4 @@
 const zws = require('./zws');
-const { dispatch } = require('./event');
-const events = require('./events');
 
 exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
@@ -81,11 +79,7 @@ function bubbling(nodeSet) {
         range.insertNode(fragment);
     });
 
-    dispatch(nodeSet, events.EV_CHANGE, {
-        bubbles: false,
-        cancelable: false
-    });
-
+    nodeSet.fireChange();
     return nodes;
 }
 
