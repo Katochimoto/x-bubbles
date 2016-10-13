@@ -61,7 +61,14 @@
     <script src="../dist/x-bubbles.js"></script>
 </head>
 <body>
-<div class="bubbles" is="x-bubbles" tabindex="0">123,456</div>
+<script>
+function test(a) {
+    console.log('>>', a);
+}
+</script>
+<div class="bubbles" is="x-bubbles" tabindex="0" data-bubble-formation="test">
+    123,456
+</div>
 <br/>
 <div class="bubbles" is="x-bubbles" tabindex="0"></div>
 </body>

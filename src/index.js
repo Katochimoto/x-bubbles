@@ -51,16 +51,19 @@ const XBubbles = Object.create(HTMLElement.prototype, {
                 this._options = {
                     classBubble: 'bubble',
                     draggable: true,
-                    separator: /[,]/,
+                    separator: /[,;]/,
                     ending: null, // /\@ya\.ru/g;
                     begining: null,
                     bubbleFormation: function () {},
                     ...this.dataset
                 };
+
+                optionsPrepare(this._options);
             }
 
             if (typeof value !== 'undefined') {
                 this._options[ name ] = value;
+                optionsPrepare(this._options);
 
             } else {
                 return this._options[ name ];
@@ -111,3 +114,17 @@ module.exports = document.registerElement('x-bubbles', {
 });
 
 module.exports = XBubbles;
+
+function optionsPrepare(options) {
+    const typeBubbleFormation = typeof options.bubbleFormation;
+
+    switch (typeBubbleFormation) {
+    case 'string':
+        options.bubbleFormation = new Function('wrap', `(function(wrap) { ${options.bubbleFormation}(wrap); }(wrap));`);
+        break;
+    case 'function':
+        break;
+    default:
+        options.bubbleFormation = function () {};
+    }
+}

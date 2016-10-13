@@ -4,6 +4,24 @@ const zws = require('./zws');
 exports.arrowRight = arrowRight;
 exports.arrowLeft = arrowLeft;
 exports.remove = remove;
+exports.html2text = html2text;
+
+function html2text(value) {
+    if (!value) {
+        return '';
+    }
+
+    // @see http://stackoverflow.com/questions/7738046/what-for-to-use-document-implementation-createhtmldocument
+    // создает nonrendered документ, скрипты не выполняются, картинки не грузит
+    // вариант DOMParse, но поддержка меньше
+    var DOMContainer = document.implementation.createHTMLDocument('').body;
+    DOMContainer.innerHTML = value;
+
+    return DOMContainer.innerText
+        .replace(/^[\u0020\u00a0]+$/gm, '')
+        .replace(/\n/gm, ' ')
+        .trim();
+}
 
 function remove(selection) {
     selection = selection || context.getSelection();
