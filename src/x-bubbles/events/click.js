@@ -1,3 +1,4 @@
+const context = require('../../context');
 const bubbleset = require('../bubbleset');
 const select = require('../select');
 const cursor = require('../cursor');
@@ -13,7 +14,16 @@ module.exports = function (event) {
 
     if (!nodeBubble) {
         select.clear(nodeSet);
-        cursor.restore(nodeSet);
+
+        const selection = context.getSelection();
+
+        if (!selection ||
+            !selection.anchorNode ||
+            selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+
+            cursor.restore(nodeSet);
+        }
+
         return;
     }
 

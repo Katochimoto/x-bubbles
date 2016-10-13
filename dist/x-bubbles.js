@@ -677,28 +677,36 @@ var XBubbles =
 
 	var context = __webpack_require__(3);
 	var zws = __webpack_require__(5);
-	var select = __webpack_require__(9);
+	// const select = require('./select');
 
-	exports.restore = function (node) {
-	    select.clear(node);
+	exports.restore = restore;
+	exports.restoreBasis = restoreBasis;
+
+	function restore(nodeSet) {
+	    // select.clear(nodeSet);
+	    var basis = restoreBasis(nodeSet);
+	    var selection = context.getSelection();
+	    selection.removeAllRanges();
+	    selection.collapse(basis, 1);
+	}
+
+	function restoreBasis(nodeSet) {
 	    var fakeText = zws.createElement();
 
-	    if (node.hasChildNodes()) {
-	        var lastNode = node.childNodes[node.childNodes.length - 1];
+	    if (nodeSet.hasChildNodes()) {
+	        var lastNode = nodeSet.childNodes[nodeSet.childNodes.length - 1];
 
 	        if (lastNode.isEqualNode(fakeText)) {
 	            fakeText = lastNode;
 	        } else {
-	            node.appendChild(fakeText);
+	            nodeSet.appendChild(fakeText);
 	        }
 	    } else {
-	        node.appendChild(fakeText);
+	        nodeSet.appendChild(fakeText);
 	    }
 
-	    var sel = context.getSelection();
-	    sel.removeAllRanges();
-	    sel.collapse(fakeText, 1);
-	};
+	    return fakeText;
+	}
 
 /***/ },
 /* 9 */
@@ -1485,6 +1493,7 @@ var XBubbles =
 
 	'use strict';
 
+	var context = __webpack_require__(3);
 	var bubbleset = __webpack_require__(10);
 	var select = __webpack_require__(9);
 	var cursor = __webpack_require__(8);
@@ -1500,7 +1509,14 @@ var XBubbles =
 
 	    if (!nodeBubble) {
 	        select.clear(nodeSet);
-	        cursor.restore(nodeSet);
+
+	        var selection = context.getSelection();
+
+	        if (!selection || !selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+
+	            cursor.restore(nodeSet);
+	        }
+
 	        return;
 	    }
 
