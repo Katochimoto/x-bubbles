@@ -2,6 +2,7 @@ const events = require('./x-bubbles/events');
 const drag = require('./x-bubbles/drag');
 const bubble = require('./x-bubbles/bubble');
 const bubbleset = require('./x-bubbles/bubbleset');
+const text = require('./x-bubbles/text');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
@@ -87,6 +88,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
                 this.removeChild(this.firstChild);
             }
 
+            value = text.html2text(value);
             this.appendChild(document.createTextNode(value));
             bubble.bubbling(this);
         }
@@ -102,6 +104,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
                 this.removeChild(this.firstChild);
             }
 
+            value = text.html2text(value);
             this.appendChild(document.createTextNode(value));
             bubble.bubbling(this);
         }

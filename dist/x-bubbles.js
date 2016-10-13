@@ -55,6 +55,7 @@ var XBubbles =
 	var drag = __webpack_require__(25);
 	var bubble = __webpack_require__(4);
 	var bubbleset = __webpack_require__(10);
+	var text = __webpack_require__(11);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
 	    createdCallback: {
@@ -138,6 +139,7 @@ var XBubbles =
 	                this.removeChild(this.firstChild);
 	            }
 
+	            value = text.html2text(value);
 	            this.appendChild(document.createTextNode(value));
 	            bubble.bubbling(this);
 	        }
@@ -153,6 +155,7 @@ var XBubbles =
 	                this.removeChild(this.firstChild);
 	            }
 
+	            value = text.html2text(value);
 	            this.appendChild(document.createTextNode(value));
 	            bubble.bubbling(this);
 	        }
