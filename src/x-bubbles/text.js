@@ -15,7 +15,7 @@ function html2text(value) {
     // создает nonrendered документ, скрипты не выполняются, картинки не грузит
     // вариант DOMParse, но поддержка меньше
     var DOMContainer = document.implementation.createHTMLDocument('').body;
-    DOMContainer.innerHTML = value;
+    DOMContainer.innerText = value;
 
     return DOMContainer.innerText
         .replace(/^[\u0020\u00a0]+$/gm, '')

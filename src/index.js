@@ -4,7 +4,6 @@ const drag = require('./x-bubbles/drag');
 const bubble = require('./x-bubbles/bubble');
 const bubbleset = require('./x-bubbles/bubbleset');
 const text = require('./x-bubbles/text');
-const raf = require('raf');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
@@ -16,12 +15,9 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     fireChange: {
         value: function () {
-            const that = this;
-            raf(function () {
-                dispatch(that, events.EV_CHANGE, {
-                    bubbles: false,
-                    cancelable: false
-                });
+            dispatch(this, events.EV_CHANGE, {
+                bubbles: false,
+                cancelable: false
             });
         }
     },
