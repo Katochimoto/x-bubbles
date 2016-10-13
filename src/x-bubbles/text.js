@@ -5,22 +5,40 @@ exports.arrowRight = arrowRight;
 exports.arrowLeft = arrowLeft;
 exports.remove = remove;
 exports.html2text = html2text;
+exports.currentTextRange = currentTextRange;
 
-function html2text(value) {
-    if (!value) {
-        return '';
+function currentTextRange(selection) {
+    selection = selection || context.getSelection();
+
+    if (!selection) {
+        return;
     }
 
-    // @see http://stackoverflow.com/questions/7738046/what-for-to-use-document-implementation-createhtmldocument
-    // создает nonrendered документ, скрипты не выполняются, картинки не грузит
-    // вариант DOMParse, но поддержка меньше
-    var DOMContainer = document.implementation.createHTMLDocument('').body;
-    DOMContainer.innerText = value;
+    if (!selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+        return;
+    }
 
-    return DOMContainer.innerText
-        .replace(/^[\u0020\u00a0]+$/gm, '')
-        .replace(/\n/gm, ' ')
-        .trim();
+    const range = context.document.createRange();
+    let startNode = selection.anchorNode;
+    let endNode = selection.anchorNode;
+    let item = selection.anchorNode;
+
+    while (item && item.nodeType === Node.TEXT_NODE) {
+        startNode = item;
+        item = item.previousSibling;
+    }
+
+    item = selection.anchorNode;
+
+    while (item && item.nodeType === Node.TEXT_NODE) {
+        endNode = item;
+        item = item.nextSibling;
+    }
+
+    range.setStartBefore(startNode);
+    range.setEndAfter(endNode);
+
+    return range;
 }
 
 function remove(selection) {
@@ -187,4 +205,18 @@ function arrowRight(selection, extend) {
     }
 
     return true;
+}
+
+function html2text(value) {
+    if (!value) {
+        return '';
+    }
+
+    var DOMContainer = document.implementation.createHTMLDocument('').body;
+    DOMContainer.innerText = value;
+
+    return DOMContainer.innerText
+        .replace(/^[\u0020\u00a0]+$/gm, '')
+        .replace(/\n/gm, ' ')
+        .trim();
 }

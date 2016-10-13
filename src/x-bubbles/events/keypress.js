@@ -13,7 +13,6 @@ module.exports = function (event) {
         event.preventDefault();
 
         const nodeSet = bubbleset.closestNodeSet(event.currentTarget);
-
         if (!nodeSet) {
             return;
         }

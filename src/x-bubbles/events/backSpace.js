@@ -24,11 +24,13 @@ module.exports = function (event) {
     if (selection.isCollapsed) {
         if (text.arrowLeft(selection, true)) {
             text.remove(selection);
+            nodeSet.fireInput();
             return;
         }
 
     } else {
         text.remove(selection);
+        nodeSet.fireInput();
         return;
     }
 

@@ -1,24 +1,20 @@
+const raf = require('raf');
 const events = require('./x-bubbles/events');
 const { dispatch } = require('./x-bubbles/event');
 const drag = require('./x-bubbles/drag');
 const bubble = require('./x-bubbles/bubble');
 const bubbleset = require('./x-bubbles/bubbleset');
 const text = require('./x-bubbles/text');
+const zws = require('./x-bubbles/zws');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
         value: function () {
             this.setAttribute('contenteditable', 'true');
             this.setAttribute('spellcheck', 'false');
-        }
-    },
 
-    fireChange: {
-        value: function () {
-            dispatch(this, events.EV_CHANGE, {
-                bubbles: false,
-                cancelable: false
-            });
+            this.fireInput = throttleRaf(fireInput, this);
+            this.fireChange = throttleRaf(fireChange, this);
         }
     },
 
@@ -31,6 +27,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.addEventListener('keydown', events.keydown);
             this.addEventListener('keypress', events.keypress);
             this.addEventListener('paste', events.paste);
+            this.addEventListener('keyup', events.keyup);
 
             drag.init(this);
 
@@ -46,7 +43,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.removeEventListener('focus', events.focus);
             this.removeEventListener('keydown', events.keydown);
             this.removeEventListener('keypress', events.keypress);
-            this.removeEventListener('paste', events.paste);
+            this.removeEventListener('keyup', events.keyup);
 
             drag.destroy(this);
         }
@@ -154,4 +151,45 @@ function optionsPrepare(options) {
     default:
         options.bubbleDeformation = function () {};
     }
+}
+
+function fireChange() {
+    dispatch(this, events.EV_CHANGE, {
+        bubbles: false,
+        cancelable: false
+    });
+}
+
+function fireInput() {
+    const textRange = text.currentTextRange();
+    if (textRange) {
+        const editText = zws.textClean(textRange.toString());
+
+        if (this._bubbleValue !== editText) {
+            this._bubbleValue = editText;
+
+            dispatch(this, events.EV_BUBBLE_INPUT, {
+                bubbles: false,
+                cancelable: false,
+                detail: { data: editText }
+            });
+        }
+    }
+}
+
+function throttleRaf(callback, context) {
+    let throttle = 0;
+    const animationCallback = function () {
+        throttle = 0;
+    };
+
+    return function () {
+        if (throttle) {
+            return;
+        }
+
+        throttle = raf(animationCallback);
+
+        callback.apply(context || this, arguments);
+    };
 }

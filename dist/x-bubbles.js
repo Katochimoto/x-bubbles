@@ -51,6 +51,7 @@ var XBubbles =
 
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+	var raf = __webpack_require__(28);
 	var events = __webpack_require__(1);
 
 	var _require = __webpack_require__(23);
@@ -61,21 +62,16 @@ var XBubbles =
 	var bubble = __webpack_require__(4);
 	var bubbleset = __webpack_require__(8);
 	var text = __webpack_require__(9);
+	var zws = __webpack_require__(5);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
 	    createdCallback: {
 	        value: function value() {
 	            this.setAttribute('contenteditable', 'true');
 	            this.setAttribute('spellcheck', 'false');
-	        }
-	    },
 
-	    fireChange: {
-	        value: function value() {
-	            dispatch(this, events.EV_CHANGE, {
-	                bubbles: false,
-	                cancelable: false
-	            });
+	            this.fireInput = throttleRaf(fireInput, this);
+	            this.fireChange = throttleRaf(fireChange, this);
 	        }
 	    },
 
@@ -88,6 +84,7 @@ var XBubbles =
 	            this.addEventListener('keydown', events.keydown);
 	            this.addEventListener('keypress', events.keypress);
 	            this.addEventListener('paste', events.paste);
+	            this.addEventListener('keyup', events.keyup);
 
 	            drag.init(this);
 
@@ -103,7 +100,7 @@ var XBubbles =
 	            this.removeEventListener('focus', events.focus);
 	            this.removeEventListener('keydown', events.keydown);
 	            this.removeEventListener('keypress', events.keypress);
-	            this.removeEventListener('paste', events.paste);
+	            this.removeEventListener('keyup', events.keyup);
 
 	            drag.destroy(this);
 	        }
@@ -211,6 +208,47 @@ var XBubbles =
 	    }
 	}
 
+	function fireChange() {
+	    dispatch(this, events.EV_CHANGE, {
+	        bubbles: false,
+	        cancelable: false
+	    });
+	}
+
+	function fireInput() {
+	    var textRange = text.currentTextRange();
+	    if (textRange) {
+	        var editText = zws.textClean(textRange.toString());
+
+	        if (this._bubbleValue !== editText) {
+	            this._bubbleValue = editText;
+
+	            dispatch(this, events.EV_BUBBLE_INPUT, {
+	                bubbles: false,
+	                cancelable: false,
+	                detail: { data: editText }
+	            });
+	        }
+	    }
+	}
+
+	function throttleRaf(callback, context) {
+	    var throttle = 0;
+	    var animationCallback = function animationCallback() {
+	        throttle = 0;
+	    };
+
+	    return function () {
+	        if (throttle) {
+	            return;
+	        }
+
+	        throttle = raf(animationCallback);
+
+	        callback.apply(context || this, arguments);
+	    };
+	}
+
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
@@ -218,6 +256,7 @@ var XBubbles =
 	'use strict';
 
 	var EV_CHANGE = 'change';
+	var EV_BUBBLE_INPUT = 'bubble-input';
 
 	exports.backSpace = __webpack_require__(2);
 	exports.paste = __webpack_require__(10);
@@ -233,8 +272,10 @@ var XBubbles =
 	exports.blur = __webpack_require__(20);
 	exports.keypress = __webpack_require__(21);
 	exports.keydown = __webpack_require__(22);
+	exports.keyup = __webpack_require__(31);
 
 	exports.EV_CHANGE = EV_CHANGE;
+	exports.EV_BUBBLE_INPUT = EV_BUBBLE_INPUT;
 
 /***/ },
 /* 2 */
@@ -268,10 +309,12 @@ var XBubbles =
 	    if (selection.isCollapsed) {
 	        if (text.arrowLeft(selection, true)) {
 	            text.remove(selection);
+	            nodeSet.fireInput();
 	            return;
 	        }
 	    } else {
 	        text.remove(selection);
+	        nodeSet.fireInput();
 	        return;
 	    }
 
@@ -793,19 +836,40 @@ var XBubbles =
 	exports.arrowLeft = arrowLeft;
 	exports.remove = remove;
 	exports.html2text = html2text;
+	exports.currentTextRange = currentTextRange;
 
-	function html2text(value) {
-	    if (!value) {
-	        return '';
+	function currentTextRange(selection) {
+	    selection = selection || context.getSelection();
+
+	    if (!selection) {
+	        return;
 	    }
 
-	    // @see http://stackoverflow.com/questions/7738046/what-for-to-use-document-implementation-createhtmldocument
-	    // создает nonrendered документ, скрипты не выполняются, картинки не грузит
-	    // вариант DOMParse, но поддержка меньше
-	    var DOMContainer = document.implementation.createHTMLDocument('').body;
-	    DOMContainer.innerText = value;
+	    if (!selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+	        return;
+	    }
 
-	    return DOMContainer.innerText.replace(/^[\u0020\u00a0]+$/gm, '').replace(/\n/gm, ' ').trim();
+	    var range = context.document.createRange();
+	    var startNode = selection.anchorNode;
+	    var endNode = selection.anchorNode;
+	    var item = selection.anchorNode;
+
+	    while (item && item.nodeType === Node.TEXT_NODE) {
+	        startNode = item;
+	        item = item.previousSibling;
+	    }
+
+	    item = selection.anchorNode;
+
+	    while (item && item.nodeType === Node.TEXT_NODE) {
+	        endNode = item;
+	        item = item.nextSibling;
+	    }
+
+	    range.setStartBefore(startNode);
+	    range.setEndAfter(endNode);
+
+	    return range;
 	}
 
 	function remove(selection) {
@@ -968,6 +1032,17 @@ var XBubbles =
 	    }
 
 	    return true;
+	}
+
+	function html2text(value) {
+	    if (!value) {
+	        return '';
+	    }
+
+	    var DOMContainer = document.implementation.createHTMLDocument('').body;
+	    DOMContainer.innerText = value;
+
+	    return DOMContainer.innerText.replace(/^[\u0020\u00a0]+$/gm, '').replace(/\n/gm, ' ').trim();
 	}
 
 /***/ },
@@ -1407,7 +1482,6 @@ var XBubbles =
 	            event.preventDefault();
 
 	            var nodeSet = bubbleset.closestNodeSet(event.currentTarget);
-
 	            if (!nodeSet) {
 	                return;
 	            }
@@ -1806,6 +1880,321 @@ var XBubbles =
 
 	exports.DRAGSTART = 'drag';
 	exports.DROPZONE = 'dropzone';
+
+/***/ },
+/* 27 */,
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(29)
+	  , root = typeof window === 'undefined' ? global : window
+	  , vendors = ['moz', 'webkit']
+	  , suffix = 'AnimationFrame'
+	  , raf = root['request' + suffix]
+	  , caf = root['cancel' + suffix] || root['cancelRequest' + suffix]
+
+	for(var i = 0; !raf && i < vendors.length; i++) {
+	  raf = root[vendors[i] + 'Request' + suffix]
+	  caf = root[vendors[i] + 'Cancel' + suffix]
+	      || root[vendors[i] + 'CancelRequest' + suffix]
+	}
+
+	// Some versions of FF have rAF but not cAF
+	if(!raf || !caf) {
+	  var last = 0
+	    , id = 0
+	    , queue = []
+	    , frameDuration = 1000 / 60
+
+	  raf = function(callback) {
+	    if(queue.length === 0) {
+	      var _now = now()
+	        , next = Math.max(0, frameDuration - (_now - last))
+	      last = next + _now
+	      setTimeout(function() {
+	        var cp = queue.slice(0)
+	        // Clear queue here to prevent
+	        // callbacks from appending listeners
+	        // to the current frame's queue
+	        queue.length = 0
+	        for(var i = 0; i < cp.length; i++) {
+	          if(!cp[i].cancelled) {
+	            try{
+	              cp[i].callback(last)
+	            } catch(e) {
+	              setTimeout(function() { throw e }, 0)
+	            }
+	          }
+	        }
+	      }, Math.round(next))
+	    }
+	    queue.push({
+	      handle: ++id,
+	      callback: callback,
+	      cancelled: false
+	    })
+	    return id
+	  }
+
+	  caf = function(handle) {
+	    for(var i = 0; i < queue.length; i++) {
+	      if(queue[i].handle === handle) {
+	        queue[i].cancelled = true
+	      }
+	    }
+	  }
+	}
+
+	module.exports = function(fn) {
+	  // Wrap in a new function to prevent
+	  // `cancel` potentially being assigned
+	  // to the native rAF function
+	  return raf.call(root, fn)
+	}
+	module.exports.cancel = function() {
+	  caf.apply(root, arguments)
+	}
+	module.exports.polyfill = function() {
+	  root.requestAnimationFrame = raf
+	  root.cancelAnimationFrame = caf
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.7.1
+	(function() {
+	  var getNanoSeconds, hrtime, loadTime;
+
+	  if ((typeof performance !== "undefined" && performance !== null) && performance.now) {
+	    module.exports = function() {
+	      return performance.now();
+	    };
+	  } else if ((typeof process !== "undefined" && process !== null) && process.hrtime) {
+	    module.exports = function() {
+	      return (getNanoSeconds() - loadTime) / 1e6;
+	    };
+	    hrtime = process.hrtime;
+	    getNanoSeconds = function() {
+	      var hr;
+	      hr = hrtime();
+	      return hr[0] * 1e9 + hr[1];
+	    };
+	    loadTime = getNanoSeconds();
+	  } else if (Date.now) {
+	    module.exports = function() {
+	      return Date.now() - loadTime;
+	    };
+	    loadTime = Date.now();
+	  } else {
+	    module.exports = function() {
+	      return new Date().getTime() - loadTime;
+	    };
+	    loadTime = new Date().getTime();
+	  }
+
+	}).call(this);
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(30)))
+
+/***/ },
+/* 30 */
+/***/ function(module, exports) {
+
+	// shim for using process in browser
+	var process = module.exports = {};
+
+	// cached from whatever global is present so that test runners that stub it
+	// don't break things.  But we need to wrap it in a try catch in case it is
+	// wrapped in strict mode code which doesn't define any globals.  It's inside a
+	// function because try/catches deoptimize in certain engines.
+
+	var cachedSetTimeout;
+	var cachedClearTimeout;
+
+	function defaultSetTimout() {
+	    throw new Error('setTimeout has not been defined');
+	}
+	function defaultClearTimeout () {
+	    throw new Error('clearTimeout has not been defined');
+	}
+	(function () {
+	    try {
+	        if (typeof setTimeout === 'function') {
+	            cachedSetTimeout = setTimeout;
+	        } else {
+	            cachedSetTimeout = defaultSetTimout;
+	        }
+	    } catch (e) {
+	        cachedSetTimeout = defaultSetTimout;
+	    }
+	    try {
+	        if (typeof clearTimeout === 'function') {
+	            cachedClearTimeout = clearTimeout;
+	        } else {
+	            cachedClearTimeout = defaultClearTimeout;
+	        }
+	    } catch (e) {
+	        cachedClearTimeout = defaultClearTimeout;
+	    }
+	} ())
+	function runTimeout(fun) {
+	    if (cachedSetTimeout === setTimeout) {
+	        //normal enviroments in sane situations
+	        return setTimeout(fun, 0);
+	    }
+	    // if setTimeout wasn't available but was latter defined
+	    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+	        cachedSetTimeout = setTimeout;
+	        return setTimeout(fun, 0);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedSetTimeout(fun, 0);
+	    } catch(e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+	            return cachedSetTimeout.call(null, fun, 0);
+	        } catch(e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+	            return cachedSetTimeout.call(this, fun, 0);
+	        }
+	    }
+
+
+	}
+	function runClearTimeout(marker) {
+	    if (cachedClearTimeout === clearTimeout) {
+	        //normal enviroments in sane situations
+	        return clearTimeout(marker);
+	    }
+	    // if clearTimeout wasn't available but was latter defined
+	    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+	        cachedClearTimeout = clearTimeout;
+	        return clearTimeout(marker);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedClearTimeout(marker);
+	    } catch (e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+	            return cachedClearTimeout.call(null, marker);
+	        } catch (e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+	            return cachedClearTimeout.call(this, marker);
+	        }
+	    }
+
+
+
+	}
+	var queue = [];
+	var draining = false;
+	var currentQueue;
+	var queueIndex = -1;
+
+	function cleanUpNextTick() {
+	    if (!draining || !currentQueue) {
+	        return;
+	    }
+	    draining = false;
+	    if (currentQueue.length) {
+	        queue = currentQueue.concat(queue);
+	    } else {
+	        queueIndex = -1;
+	    }
+	    if (queue.length) {
+	        drainQueue();
+	    }
+	}
+
+	function drainQueue() {
+	    if (draining) {
+	        return;
+	    }
+	    var timeout = runTimeout(cleanUpNextTick);
+	    draining = true;
+
+	    var len = queue.length;
+	    while(len) {
+	        currentQueue = queue;
+	        queue = [];
+	        while (++queueIndex < len) {
+	            if (currentQueue) {
+	                currentQueue[queueIndex].run();
+	            }
+	        }
+	        queueIndex = -1;
+	        len = queue.length;
+	    }
+	    currentQueue = null;
+	    draining = false;
+	    runClearTimeout(timeout);
+	}
+
+	process.nextTick = function (fun) {
+	    var args = new Array(arguments.length - 1);
+	    if (arguments.length > 1) {
+	        for (var i = 1; i < arguments.length; i++) {
+	            args[i - 1] = arguments[i];
+	        }
+	    }
+	    queue.push(new Item(fun, args));
+	    if (queue.length === 1 && !draining) {
+	        runTimeout(drainQueue);
+	    }
+	};
+
+	// v8 likes predictible objects
+	function Item(fun, array) {
+	    this.fun = fun;
+	    this.array = array;
+	}
+	Item.prototype.run = function () {
+	    this.fun.apply(null, this.array);
+	};
+	process.title = 'browser';
+	process.browser = true;
+	process.env = {};
+	process.argv = [];
+	process.version = ''; // empty string to avoid regexp issues
+	process.versions = {};
+
+	function noop() {}
+
+	process.on = noop;
+	process.addListener = noop;
+	process.once = noop;
+	process.off = noop;
+	process.removeListener = noop;
+	process.removeAllListeners = noop;
+	process.emit = noop;
+
+	process.binding = function (name) {
+	    throw new Error('process.binding is not supported');
+	};
+
+	process.cwd = function () { return '/' };
+	process.chdir = function (dir) {
+	    throw new Error('process.chdir is not supported');
+	};
+	process.umask = function() { return 0; };
+
+
+/***/ },
+/* 31 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	module.exports = function (event) {
+	    event.currentTarget.fireInput();
+	};
 
 /***/ }
 /******/ ]);

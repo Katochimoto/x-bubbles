@@ -78,7 +78,12 @@ function test() {
 <script>
 document.getElementById('test')
 .addEventListener('change', function(event) {
-    console.log(event.target.items);
+    // console.log('change', event.target.items);
+}, false);
+
+document.getElementById('test')
+.addEventListener('bubble-input', function(event) {
+    console.log('bubble-input', event.detail.data);
 }, false);
 </script>
 </body>
