@@ -53,14 +53,14 @@ var XBubbles =
 
 	var events = __webpack_require__(1);
 
-	var _require = __webpack_require__(6);
+	var _require = __webpack_require__(23);
 
 	var dispatch = _require.dispatch;
 
 	var drag = __webpack_require__(25);
 	var bubble = __webpack_require__(4);
-	var bubbleset = __webpack_require__(10);
-	var text = __webpack_require__(11);
+	var bubbleset = __webpack_require__(8);
+	var text = __webpack_require__(9);
 	var throttleAnimationFrame = __webpack_require__(27);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
@@ -219,19 +219,19 @@ var XBubbles =
 	var EV_CHANGE = 'change';
 
 	exports.backSpace = __webpack_require__(2);
-	exports.paste = __webpack_require__(12);
-	exports.arrowLeft = __webpack_require__(13);
-	exports.arrowRight = __webpack_require__(14);
-	exports.arrowBottom = __webpack_require__(15);
-	exports.arrowTop = __webpack_require__(16);
-	exports.tab = __webpack_require__(17);
-	exports.selectAll = __webpack_require__(18);
-	exports.dblclick = __webpack_require__(19);
-	exports.click = __webpack_require__(20);
-	exports.focus = __webpack_require__(21);
-	exports.blur = __webpack_require__(22);
-	exports.keypress = __webpack_require__(23);
-	exports.keydown = __webpack_require__(24);
+	exports.paste = __webpack_require__(10);
+	exports.arrowLeft = __webpack_require__(11);
+	exports.arrowRight = __webpack_require__(12);
+	exports.arrowBottom = __webpack_require__(13);
+	exports.arrowTop = __webpack_require__(14);
+	exports.tab = __webpack_require__(15);
+	exports.selectAll = __webpack_require__(16);
+	exports.dblclick = __webpack_require__(17);
+	exports.click = __webpack_require__(18);
+	exports.focus = __webpack_require__(19);
+	exports.blur = __webpack_require__(20);
+	exports.keypress = __webpack_require__(21);
+	exports.keydown = __webpack_require__(22);
 
 	exports.EV_CHANGE = EV_CHANGE;
 
@@ -243,10 +243,10 @@ var XBubbles =
 
 	var context = __webpack_require__(3);
 	var bubble = __webpack_require__(4);
-	var cursor = __webpack_require__(8);
-	var select = __webpack_require__(9);
-	var text = __webpack_require__(11);
-	var bubbleset = __webpack_require__(10);
+	var cursor = __webpack_require__(6);
+	var select = __webpack_require__(7);
+	var text = __webpack_require__(9);
+	var bubbleset = __webpack_require__(8);
 
 	module.exports = function (event) {
 	    event.preventDefault();
@@ -500,186 +500,9 @@ var XBubbles =
 
 	'use strict';
 
-	/**
-	 * @module x-bubbles/event
-	 */
-
-	var context = __webpack_require__(3);
-	var CustomEventCommon = __webpack_require__(7);
-
-	/**
-	 * Designer events.
-	 *
-	 * @example
-	 * const { Custom } = require('event');
-	 *
-	 * new Custom('custom-event', {
-	 *     bubbles: true,
-	 *     cancelable: true,
-	 *     detail: { data: '123' }
-	 * })
-	 *
-	 * @alias module:x-bubbles/event~Custom
-	 * @constructor
-	 */
-	var Custom = function () {
-	    if (typeof context.CustomEvent === 'function') {
-	        return context.CustomEvent;
-	    }
-
-	    return CustomEventCommon;
-	}();
-
-	/**
-	 * Dispatch event.
-	 *
-	 * @example
-	 * const { dispatch } = require('event');
-	 * dispatch(node, 'custom-event', {
-	 *     bubbles: true,
-	 *     cancelable: true,
-	 *     detail: { data: '123' }
-	 * })
-	 *
-	 * @alias module:x-bubbles/event.dispatch
-	 * @param {HTMLElement} element node events
-	 * @param {string} name event name
-	 * @param {Object} params the event parameters
-	 * @param {boolean} [params.bubbles=false]
-	 * @param {boolean} [params.cancelable=false]
-	 * @param {*} [params.detail]
-	 */
-	function dispatch(element, name, params) {
-	    element.dispatchEvent(new Custom(name, params || {}));
-	}
-
-	/**
-	 * Forwarding events
-	 *
-	 * @example
-	 * const { forwardingEvents } = require('event');
-	 * forwardingEvents('custom-event', fromNode, toNode, false);
-	 *
-	 * @param {string} name event name
-	 * @param {HTMLElement} fromElement
-	 * @param {HTMLElement} toElement
-	 * @param {boolean} [capture=false]
-	 * @returns {function} callback
-	 */
-	function forwardingEvents(name, fromElement, toElement) {
-	    var capture = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-
-	    var callback = function callback(event) {
-	        dispatch(toElement, name, {
-	            bubbles: event.bubbles,
-	            cancelable: event.cancelable,
-	            detail: event.detail
-	        });
-	    };
-
-	    callback.cancel = function () {
-	        fromElement.removeEventListener(name, callback, capture);
-	    };
-
-	    fromElement.addEventListener(name, callback, capture);
-
-	    return callback;
-	}
-
-	exports.Custom = Custom;
-	exports.dispatch = dispatch;
-	exports.forwardingEvents = forwardingEvents;
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var context = __webpack_require__(3);
-
-	/**
-	 * @constant {Document}
-	 * @private
-	 */
-	var doc = context.document;
-
-	/**
-	 * @constant {Object}
-	 * @private
-	 */
-	var protoEvent = context.Event.prototype;
-
-	var issetCustomEvent = false;
-
-	try {
-	    issetCustomEvent = Boolean(doc.createEvent('CustomEvent'));
-	} catch (e) {}
-	// do nothing
-
-
-	/**
-	 * The original function "stopImmediatePropagation"
-	 * @constant {function}
-	 * @private
-	 */
-	var stopImmediatePropagation = protoEvent.stopImmediatePropagation;
-
-	/**
-	 * Override function to set properties "immediatePropagationStopped"
-	 */
-	protoEvent.stopImmediatePropagation = function () {
-	    this.immediatePropagationStopped = true;
-
-	    if (stopImmediatePropagation) {
-	        stopImmediatePropagation.call(this);
-	    } else {
-	        this.stopPropagation();
-	    }
-	};
-
-	var CustomEventCommon = function () {
-	    if (issetCustomEvent) {
-	        return function (eventName, params) {
-	            params = params || {};
-
-	            var bubbles = Boolean(params.bubbles);
-	            var cancelable = Boolean(params.cancelable);
-	            var evt = doc.createEvent('CustomEvent');
-
-	            evt.initCustomEvent(eventName, bubbles, cancelable, params.detail);
-
-	            return evt;
-	        };
-	    }
-
-	    return function (eventName, params) {
-	        params = params || {};
-
-	        var bubbles = Boolean(params.bubbles);
-	        var cancelable = Boolean(params.cancelable);
-	        var evt = doc.createEvent('Event');
-
-	        evt.initEvent(eventName, bubbles, cancelable);
-	        evt.detail = params.detail;
-
-	        return evt;
-	    };
-	}();
-
-	CustomEventCommon.prototype = protoEvent;
-
-	module.exports = CustomEventCommon;
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	var context = __webpack_require__(3);
 	var zws = __webpack_require__(5);
-	var select = __webpack_require__(9);
+	var select = __webpack_require__(7);
 
 	exports.restore = restore;
 	exports.restoreBasis = restoreBasis;
@@ -711,14 +534,14 @@ var XBubbles =
 	}
 
 /***/ },
-/* 9 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var context = __webpack_require__(3);
 	var bubble = __webpack_require__(4);
-	var bubbleset = __webpack_require__(10);
+	var bubbleset = __webpack_require__(8);
 
 	var slice = Array.prototype.slice;
 	var PATH_SELECTED = '[bubble][selected]';
@@ -886,7 +709,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 10 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -957,7 +780,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 11 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1147,7 +970,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 12 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1201,16 +1024,16 @@ var XBubbles =
 	}
 
 /***/ },
-/* 13 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var context = __webpack_require__(3);
 	var bubble = __webpack_require__(4);
-	var select = __webpack_require__(9);
-	var text = __webpack_require__(11);
-	var bubbleset = __webpack_require__(10);
+	var select = __webpack_require__(7);
+	var text = __webpack_require__(9);
+	var bubbleset = __webpack_require__(8);
 
 	module.exports = function (event) {
 	    event.preventDefault();
@@ -1259,17 +1082,17 @@ var XBubbles =
 	}
 
 /***/ },
-/* 14 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var context = __webpack_require__(3);
 	var bubble = __webpack_require__(4);
-	var cursor = __webpack_require__(8);
-	var select = __webpack_require__(9);
-	var text = __webpack_require__(11);
-	var bubbleset = __webpack_require__(10);
+	var cursor = __webpack_require__(6);
+	var select = __webpack_require__(7);
+	var text = __webpack_require__(9);
+	var bubbleset = __webpack_require__(8);
 
 	module.exports = function (event) {
 	    event.preventDefault();
@@ -1323,13 +1146,13 @@ var XBubbles =
 	}
 
 /***/ },
-/* 15 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var select = __webpack_require__(9);
-	var cursor = __webpack_require__(8);
+	var select = __webpack_require__(7);
+	var cursor = __webpack_require__(6);
 
 	module.exports = function (event) {
 	    var nodeSet = event.currentTarget;
@@ -1341,13 +1164,13 @@ var XBubbles =
 	};
 
 /***/ },
-/* 16 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var bubbleset = __webpack_require__(10);
-	var select = __webpack_require__(9);
+	var bubbleset = __webpack_require__(8);
+	var select = __webpack_require__(7);
 
 	module.exports = function (event) {
 	    event.preventDefault();
@@ -1361,13 +1184,13 @@ var XBubbles =
 	};
 
 /***/ },
-/* 17 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var select = __webpack_require__(9);
-	var cursor = __webpack_require__(8);
+	var select = __webpack_require__(7);
+	var cursor = __webpack_require__(6);
 
 	module.exports = function (event) {
 	    var nodeSet = event.currentTarget;
@@ -1378,7 +1201,7 @@ var XBubbles =
 	};
 
 /***/ },
-/* 18 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1432,14 +1255,14 @@ var XBubbles =
 	};
 
 /***/ },
-/* 19 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var context = __webpack_require__(3);
 	var zws = __webpack_require__(5);
-	var bubbleset = __webpack_require__(10);
+	var bubbleset = __webpack_require__(8);
 
 	module.exports = function (event) {
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
@@ -1490,15 +1313,15 @@ var XBubbles =
 	};
 
 /***/ },
-/* 20 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var context = __webpack_require__(3);
-	var bubbleset = __webpack_require__(10);
-	var select = __webpack_require__(9);
-	var cursor = __webpack_require__(8);
+	var bubbleset = __webpack_require__(8);
+	var select = __webpack_require__(7);
+	var cursor = __webpack_require__(6);
 
 	module.exports = function (event) {
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
@@ -1536,25 +1359,25 @@ var XBubbles =
 	};
 
 /***/ },
-/* 21 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var cursor = __webpack_require__(8);
+	var cursor = __webpack_require__(6);
 
 	module.exports = function (event) {
 	    cursor.restore(event.currentTarget);
 	};
 
 /***/ },
-/* 22 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var bubble = __webpack_require__(4);
-	var select = __webpack_require__(9);
+	var select = __webpack_require__(7);
 
 	module.exports = function (event) {
 	    bubble.bubbling(event.currentTarget);
@@ -1562,14 +1385,14 @@ var XBubbles =
 	};
 
 /***/ },
-/* 23 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var bubbleset = __webpack_require__(10);
+	var bubbleset = __webpack_require__(8);
 	var bubble = __webpack_require__(4);
-	var cursor = __webpack_require__(8);
+	var cursor = __webpack_require__(6);
 
 	module.exports = function (event) {
 	    var code = event.charCode || event.keyCode;
@@ -1595,14 +1418,14 @@ var XBubbles =
 	};
 
 /***/ },
-/* 24 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var bubbleset = __webpack_require__(10);
+	var bubbleset = __webpack_require__(8);
 	var events = __webpack_require__(1);
-	var select = __webpack_require__(9);
+	var select = __webpack_require__(7);
 
 	module.exports = function (event) {
 	    var code = event.charCode || event.keyCode;
@@ -1658,14 +1481,191 @@ var XBubbles =
 	};
 
 /***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	/**
+	 * @module x-bubbles/event
+	 */
+
+	var context = __webpack_require__(3);
+	var CustomEventCommon = __webpack_require__(24);
+
+	/**
+	 * Designer events.
+	 *
+	 * @example
+	 * const { Custom } = require('event');
+	 *
+	 * new Custom('custom-event', {
+	 *     bubbles: true,
+	 *     cancelable: true,
+	 *     detail: { data: '123' }
+	 * })
+	 *
+	 * @alias module:x-bubbles/event~Custom
+	 * @constructor
+	 */
+	var Custom = function () {
+	    if (typeof context.CustomEvent === 'function') {
+	        return context.CustomEvent;
+	    }
+
+	    return CustomEventCommon;
+	}();
+
+	/**
+	 * Dispatch event.
+	 *
+	 * @example
+	 * const { dispatch } = require('event');
+	 * dispatch(node, 'custom-event', {
+	 *     bubbles: true,
+	 *     cancelable: true,
+	 *     detail: { data: '123' }
+	 * })
+	 *
+	 * @alias module:x-bubbles/event.dispatch
+	 * @param {HTMLElement} element node events
+	 * @param {string} name event name
+	 * @param {Object} params the event parameters
+	 * @param {boolean} [params.bubbles=false]
+	 * @param {boolean} [params.cancelable=false]
+	 * @param {*} [params.detail]
+	 */
+	function dispatch(element, name, params) {
+	    element.dispatchEvent(new Custom(name, params || {}));
+	}
+
+	/**
+	 * Forwarding events
+	 *
+	 * @example
+	 * const { forwardingEvents } = require('event');
+	 * forwardingEvents('custom-event', fromNode, toNode, false);
+	 *
+	 * @param {string} name event name
+	 * @param {HTMLElement} fromElement
+	 * @param {HTMLElement} toElement
+	 * @param {boolean} [capture=false]
+	 * @returns {function} callback
+	 */
+	function forwardingEvents(name, fromElement, toElement) {
+	    var capture = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+
+	    var callback = function callback(event) {
+	        dispatch(toElement, name, {
+	            bubbles: event.bubbles,
+	            cancelable: event.cancelable,
+	            detail: event.detail
+	        });
+	    };
+
+	    callback.cancel = function () {
+	        fromElement.removeEventListener(name, callback, capture);
+	    };
+
+	    fromElement.addEventListener(name, callback, capture);
+
+	    return callback;
+	}
+
+	exports.Custom = Custom;
+	exports.dispatch = dispatch;
+	exports.forwardingEvents = forwardingEvents;
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(3);
+
+	/**
+	 * @constant {Document}
+	 * @private
+	 */
+	var doc = context.document;
+
+	/**
+	 * @constant {Object}
+	 * @private
+	 */
+	var protoEvent = context.Event.prototype;
+
+	var issetCustomEvent = false;
+
+	try {
+	    issetCustomEvent = Boolean(doc.createEvent('CustomEvent'));
+	} catch (e) {}
+	// do nothing
+
+
+	/**
+	 * The original function "stopImmediatePropagation"
+	 * @constant {function}
+	 * @private
+	 */
+	var stopImmediatePropagation = protoEvent.stopImmediatePropagation;
+
+	/**
+	 * Override function to set properties "immediatePropagationStopped"
+	 */
+	protoEvent.stopImmediatePropagation = function () {
+	    this.immediatePropagationStopped = true;
+
+	    if (stopImmediatePropagation) {
+	        stopImmediatePropagation.call(this);
+	    } else {
+	        this.stopPropagation();
+	    }
+	};
+
+	var CustomEventCommon = function () {
+	    if (issetCustomEvent) {
+	        return function (eventName, params) {
+	            params = params || {};
+
+	            var bubbles = Boolean(params.bubbles);
+	            var cancelable = Boolean(params.cancelable);
+	            var evt = doc.createEvent('CustomEvent');
+
+	            evt.initCustomEvent(eventName, bubbles, cancelable, params.detail);
+
+	            return evt;
+	        };
+	    }
+
+	    return function (eventName, params) {
+	        params = params || {};
+
+	        var bubbles = Boolean(params.bubbles);
+	        var cancelable = Boolean(params.cancelable);
+	        var evt = doc.createEvent('Event');
+
+	        evt.initEvent(eventName, bubbles, cancelable);
+	        evt.detail = params.detail;
+
+	        return evt;
+	    };
+	}();
+
+	CustomEventCommon.prototype = protoEvent;
+
+	module.exports = CustomEventCommon;
+
+/***/ },
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var select = __webpack_require__(9);
+	var select = __webpack_require__(7);
 	var bubble = __webpack_require__(4);
-	var bubbleset = __webpack_require__(10);
+	var bubbleset = __webpack_require__(8);
 	var classes = __webpack_require__(26);
 
 	var currentDragSet = null;
@@ -1825,7 +1825,7 @@ var XBubbles =
 	            return;
 	        }
 
-	        throttle = raf(animationCallback);
+	        throttle = setTimeout(animationCallback, 0); // raf(animationCallback);
 
 	        callback.apply(context || this, arguments);
 	    };
