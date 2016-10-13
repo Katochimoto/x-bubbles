@@ -1,5 +1,4 @@
 const select = require('./select');
-const bubble = require('./bubble');
 const bubbleset = require('./bubbleset');
 const classes = require('./classes');
 
@@ -26,10 +25,10 @@ exports.destroy = function (nodeSet) {
 function onDragstart(event) {
     event.stopPropagation();
 
-    const nodeBubble = event.target;
-    const nodeSet = bubbleset.closestNodeSet(nodeBubble);
+    const nodeSet = bubbleset.closestNodeSet(event.target);
+    const nodeBubble = bubbleset.closestNodeBubble(event.target);
 
-    if (!nodeSet || !bubble.isBubbleNode(nodeBubble)) {
+    if (!nodeSet || !nodeBubble) {
         event.preventDefault();
         return;
     }

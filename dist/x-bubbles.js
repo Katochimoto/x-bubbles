@@ -1739,7 +1739,6 @@ var XBubbles =
 	'use strict';
 
 	var select = __webpack_require__(7);
-	var bubble = __webpack_require__(4);
 	var bubbleset = __webpack_require__(8);
 	var classes = __webpack_require__(26);
 
@@ -1766,10 +1765,10 @@ var XBubbles =
 	function onDragstart(event) {
 	    event.stopPropagation();
 
-	    var nodeBubble = event.target;
-	    var nodeSet = bubbleset.closestNodeSet(nodeBubble);
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
 
-	    if (!nodeSet || !bubble.isBubbleNode(nodeBubble)) {
+	    if (!nodeSet || !nodeBubble) {
 	        event.preventDefault();
 	        return;
 	    }
