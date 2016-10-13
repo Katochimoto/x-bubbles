@@ -11,7 +11,7 @@ module.exports = function (callback, context) {
             return;
         }
 
-        throttle = setTimeout(animationCallback, 0); // raf(animationCallback);
+        throttle = raf(animationCallback);
 
         callback.apply(context || this, arguments);
     };

@@ -61,20 +61,25 @@ var XBubbles =
 	var bubble = __webpack_require__(4);
 	var bubbleset = __webpack_require__(8);
 	var text = __webpack_require__(9);
-	var throttleAnimationFrame = __webpack_require__(27);
+	var raf = __webpack_require__(28);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
 	    createdCallback: {
 	        value: function value() {
 	            this.setAttribute('contenteditable', 'true');
 	            this.setAttribute('spellcheck', 'false');
+	        }
+	    },
 
-	            this.fireChange = throttleAnimationFrame(function () {
-	                dispatch(this, events.EV_CHANGE, {
+	    fireChange: {
+	        value: function value() {
+	            var that = this;
+	            raf(function () {
+	                dispatch(that, events.EV_CHANGE, {
 	                    bubbles: false,
 	                    cancelable: false
 	                });
-	            }, this);
+	            });
 	        }
 	    },
 
@@ -1807,31 +1812,7 @@ var XBubbles =
 	exports.DROPZONE = 'dropzone';
 
 /***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var raf = __webpack_require__(28);
-
-	module.exports = function (callback, context) {
-	    var throttle = 0;
-	    var animationCallback = function animationCallback() {
-	        throttle = 0;
-	    };
-
-	    return function () {
-	        if (throttle) {
-	            return;
-	        }
-
-	        throttle = setTimeout(animationCallback, 0); // raf(animationCallback);
-
-	        callback.apply(context || this, arguments);
-	    };
-	};
-
-/***/ },
+/* 27 */,
 /* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
