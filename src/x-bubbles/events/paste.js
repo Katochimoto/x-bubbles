@@ -1,6 +1,5 @@
 const context = require('../../context');
 const zws = require('../zws');
-const text = require('../text');
 
 const slice = Array.prototype.slice;
 
@@ -37,12 +36,12 @@ function pasteString(data) {
     }
 
     const anchor = document.createElement('span');
-    const text = document.createTextNode(data);
+    const textNode = document.createTextNode(data);
 
     selection.getRangeAt(0).surroundContents(anchor);
-    anchor.parentNode.replaceChild(text, anchor);
+    anchor.parentNode.replaceChild(textNode, anchor);
     selection.removeAllRanges();
-    selection.collapse(text, text.nodeValue.length);
+    selection.collapse(textNode, textNode.nodeValue.length);
 
     return true;
 }
