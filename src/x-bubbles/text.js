@@ -1,7 +1,6 @@
 const context = require('../context');
 const zws = require('./zws');
 const bubble = require('./bubble');
-const select = require('./select');
 
 exports.arrowRight = arrowRight;
 exports.arrowLeft = arrowLeft;
@@ -35,8 +34,6 @@ function text2bubble(nodeSet, nodeBubble, selection) {
     selection.addRange(range);
 
     replace(selection, nodeBubble);
-
-    select.uniq(nodeBubble);
     return true;
 }
 

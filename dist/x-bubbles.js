@@ -62,6 +62,7 @@ var XBubbles =
 	var bubble = __webpack_require__(7);
 	var bubbleset = __webpack_require__(11);
 	var text = __webpack_require__(12);
+	var cursor = __webpack_require__(9);
 	var zws = __webpack_require__(8);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
@@ -180,10 +181,11 @@ var XBubbles =
 	            var nodeBubble = bubble.create(this, bubbleText, data);
 
 	            if (!nodeBubble) {
-	                return false;
+	                return;
 	            }
 
-	            return text.text2bubble(this, nodeBubble);
+	            text.text2bubble(this, nodeBubble);
+	            cursor.restore();
 	        }
 	    }
 	});
@@ -1169,7 +1171,6 @@ var XBubbles =
 	var context = __webpack_require__(6);
 	var zws = __webpack_require__(8);
 	var bubble = __webpack_require__(7);
-	var select = __webpack_require__(10);
 
 	exports.arrowRight = arrowRight;
 	exports.arrowLeft = arrowLeft;
@@ -1203,8 +1204,6 @@ var XBubbles =
 	    selection.addRange(range);
 
 	    replace(selection, nodeBubble);
-
-	    select.uniq(nodeBubble);
 	    return true;
 	}
 

@@ -5,6 +5,7 @@ const drag = require('./x-bubbles/drag');
 const bubble = require('./x-bubbles/bubble');
 const bubbleset = require('./x-bubbles/bubbleset');
 const text = require('./x-bubbles/text');
+const cursor = require('./x-bubbles/cursor');
 const zws = require('./x-bubbles/zws');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
@@ -125,10 +126,11 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             const nodeBubble = bubble.create(this, bubbleText, data);
 
             if (!nodeBubble) {
-                return false;
+                return;
             }
 
-            return text.text2bubble(this, nodeBubble);
+            text.text2bubble(this, nodeBubble);
+            cursor.restore();
         }
     }
 });
