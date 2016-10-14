@@ -173,6 +173,18 @@ var XBubbles =
 	            this.appendChild(document.createTextNode(value));
 	            bubble.bubbling(this);
 	        }
+	    },
+
+	    addBubble: {
+	        value: function value(bubbleText, data) {
+	            var nodeBubble = bubble.create(this, bubbleText, data);
+
+	            if (!nodeBubble) {
+	                return false;
+	            }
+
+	            return text.text2bubble(this, nodeBubble);
+	        }
 	    }
 	});
 
@@ -670,6 +682,7 @@ var XBubbles =
 
 	exports.isBubbleNode = isBubbleNode;
 	exports.bubbling = bubbling;
+	exports.create = create;
 
 	function isBubbleNode(node) {
 	    if (!node || node.nodeType !== Node.ELEMENT_NODE) {
@@ -679,10 +692,40 @@ var XBubbles =
 	    return node.hasAttribute('bubble');
 	}
 
-	function bubbling(nodeSet) {
-	    var classBubble = nodeSet.options('classBubble');
+	function create(nodeSet, text) {
+	    var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+	    text = zws.textClean(text);
+
+	    if (!text) {
+	        return;
+	    }
+
 	    var bubbleFormation = nodeSet.options('bubbleFormation');
+	    var classBubble = nodeSet.options('classBubble');
 	    var draggable = nodeSet.options('draggable');
+	    var wrap = document.createElement('span');
+
+	    wrap.innerText = text;
+
+	    if (draggable) {
+	        wrap.setAttribute('draggable', 'true');
+	    }
+
+	    for (var key in data) {
+	        wrap.setAttribute('data-' + key, String(data[key]));
+	    }
+
+	    bubbleFormation(wrap);
+
+	    wrap.classList.add(classBubble);
+	    wrap.setAttribute('bubble', '');
+	    wrap.setAttribute('contenteditable', 'false');
+
+	    return wrap;
+	}
+
+	function bubbling(nodeSet) {
 	    var separator = nodeSet.options('separator');
 	    var ending = nodeSet.options('ending');
 	    var begining = nodeSet.options('begining');
@@ -720,21 +763,11 @@ var XBubbles =
 	        var fragment = document.createDocumentFragment();
 
 	        textParts.forEach(function (textPart) {
-	            var wrap = document.createElement('span');
-	            wrap.innerText = textPart;
-
-	            if (draggable) {
-	                wrap.setAttribute('draggable', 'true');
+	            var nodeBubble = create(nodeSet, textPart);
+	            if (nodeBubble) {
+	                fragment.appendChild(nodeBubble);
+	                nodes.push(nodeBubble);
 	            }
-
-	            bubbleFormation(wrap);
-
-	            wrap.classList.add(classBubble);
-	            wrap.setAttribute('bubble', '');
-	            wrap.setAttribute('contenteditable', 'false');
-
-	            fragment.appendChild(wrap);
-	            nodes.push(wrap);
 	        });
 
 	        range.deleteContents();
@@ -1135,12 +1168,45 @@ var XBubbles =
 
 	var context = __webpack_require__(6);
 	var zws = __webpack_require__(8);
+	var bubble = __webpack_require__(7);
+	var select = __webpack_require__(10);
 
 	exports.arrowRight = arrowRight;
 	exports.arrowLeft = arrowLeft;
 	exports.remove = remove;
 	exports.html2text = html2text;
 	exports.currentTextRange = currentTextRange;
+	exports.text2bubble = text2bubble;
+
+	function text2bubble(nodeSet, nodeBubble, selection) {
+	    selection = selection || context.getSelection();
+
+	    if (!selection) {
+	        return false;
+	    }
+
+	    var range = currentTextRange(selection);
+
+	    if (!range) {
+	        return false;
+	    }
+
+	    if (!nodeBubble) {
+	        nodeBubble = bubble.create(nodeSet, range.toString());
+	    }
+
+	    if (!nodeBubble) {
+	        return false;
+	    }
+
+	    selection.removeAllRanges();
+	    selection.addRange(range);
+
+	    replace(selection, nodeBubble);
+
+	    select.uniq(nodeBubble);
+	    return true;
+	}
 
 	function currentTextRange(selection) {
 	    selection = selection || context.getSelection();
@@ -1179,6 +1245,10 @@ var XBubbles =
 	}
 
 	function remove(selection) {
+	    return replace(selection, zws.createElement());
+	}
+
+	function replace(selection, node) {
 	    selection = selection || context.getSelection();
 
 	    if (!selection || selection.isCollapsed) {
@@ -1191,9 +1261,8 @@ var XBubbles =
 	        selection.getRangeAt(i).deleteContents();
 	    }
 
-	    var fakeText = zws.createElement();
 	    var range = selection.getRangeAt(0);
-	    range.insertNode(fakeText);
+	    range.insertNode(node);
 	    // FIXME хорошо бы false, тогда zws в конце удаляется, но в ФФ при этом слетает выделение
 	    range.collapse(true);
 

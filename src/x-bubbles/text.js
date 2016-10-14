@@ -1,11 +1,44 @@
 const context = require('../context');
 const zws = require('./zws');
+const bubble = require('./bubble');
+const select = require('./select');
 
 exports.arrowRight = arrowRight;
 exports.arrowLeft = arrowLeft;
 exports.remove = remove;
 exports.html2text = html2text;
 exports.currentTextRange = currentTextRange;
+exports.text2bubble = text2bubble;
+
+function text2bubble(nodeSet, nodeBubble, selection) {
+    selection = selection || context.getSelection();
+
+    if (!selection) {
+        return false;
+    }
+
+    const range = currentTextRange(selection);
+
+    if (!range) {
+        return false;
+    }
+
+    if (!nodeBubble) {
+        nodeBubble = bubble.create(nodeSet, range.toString());
+    }
+
+    if (!nodeBubble) {
+        return false;
+    }
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    replace(selection, nodeBubble);
+
+    select.uniq(nodeBubble);
+    return true;
+}
 
 function currentTextRange(selection) {
     selection = selection || context.getSelection();
@@ -54,6 +87,10 @@ function currentTextRange(selection) {
 }
 
 function remove(selection) {
+    return replace(selection, zws.createElement());
+}
+
+function replace(selection, node) {
     selection = selection || context.getSelection();
 
     if (!selection || selection.isCollapsed) {
@@ -66,9 +103,8 @@ function remove(selection) {
         selection.getRangeAt(i).deleteContents();
     }
 
-    const fakeText = zws.createElement();
     const range = selection.getRangeAt(0);
-    range.insertNode(fakeText);
+    range.insertNode(node);
     // FIXME хорошо бы false, тогда zws в конце удаляется, но в ФФ при этом слетает выделение
     range.collapse(true);
 

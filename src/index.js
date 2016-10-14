@@ -118,6 +118,18 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.appendChild(document.createTextNode(value));
             bubble.bubbling(this);
         }
+    },
+
+    addBubble: {
+        value: function (bubbleText, data) {
+            const nodeBubble = bubble.create(this, bubbleText, data);
+
+            if (!nodeBubble) {
+                return false;
+            }
+
+            return text.text2bubble(this, nodeBubble);
+        }
     }
 });
 

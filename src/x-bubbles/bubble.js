@@ -2,6 +2,7 @@ const zws = require('./zws');
 
 exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
+exports.create = create;
 
 function isBubbleNode(node) {
     if (!node || node.nodeType !== Node.ELEMENT_NODE) {
@@ -11,10 +12,38 @@ function isBubbleNode(node) {
     return node.hasAttribute('bubble');
 }
 
-function bubbling(nodeSet) {
-    const classBubble = nodeSet.options('classBubble');
+function create(nodeSet, text, data = {}) {
+    text = zws.textClean(text);
+
+    if (!text) {
+        return;
+    }
+
     const bubbleFormation = nodeSet.options('bubbleFormation');
+    const classBubble = nodeSet.options('classBubble');
     const draggable = nodeSet.options('draggable');
+    const wrap = document.createElement('span');
+
+    wrap.innerText = text;
+
+    if (draggable) {
+        wrap.setAttribute('draggable', 'true');
+    }
+
+    for (let key in data) {
+        wrap.setAttribute(`data-${key}`, String(data[ key ]));
+    }
+
+    bubbleFormation(wrap);
+
+    wrap.classList.add(classBubble);
+    wrap.setAttribute('bubble', '');
+    wrap.setAttribute('contenteditable', 'false');
+
+    return wrap;
+}
+
+function bubbling(nodeSet) {
     const separator = nodeSet.options('separator');
     const ending = nodeSet.options('ending');
     const begining = nodeSet.options('begining');
@@ -58,21 +87,11 @@ function bubbling(nodeSet) {
         const fragment = document.createDocumentFragment();
 
         textParts.forEach(function (textPart) {
-            const wrap = document.createElement('span');
-            wrap.innerText = textPart;
-
-            if (draggable) {
-                wrap.setAttribute('draggable', 'true');
+            const nodeBubble = create(nodeSet, textPart);
+            if (nodeBubble) {
+                fragment.appendChild(nodeBubble);
+                nodes.push(nodeBubble);
             }
-
-            bubbleFormation(wrap);
-
-            wrap.classList.add(classBubble);
-            wrap.setAttribute('bubble', '');
-            wrap.setAttribute('contenteditable', 'false');
-
-            fragment.appendChild(wrap);
-            nodes.push(wrap);
         });
 
         range.deleteContents();
