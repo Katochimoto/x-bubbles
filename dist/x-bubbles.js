@@ -185,7 +185,7 @@ var XBubbles =
 	            }
 
 	            text.text2bubble(this, nodeBubble);
-	            cursor.restore();
+	            cursor.restore(this);
 	        }
 	    }
 	});

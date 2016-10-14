@@ -130,7 +130,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             }
 
             text.text2bubble(this, nodeBubble);
-            cursor.restore();
+            cursor.restore(this);
         }
     }
 });
