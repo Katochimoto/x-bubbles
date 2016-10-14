@@ -1815,8 +1815,10 @@ var XBubbles =
 	'use strict';
 
 	var cursor = __webpack_require__(9);
+	var select = __webpack_require__(10);
 
 	module.exports = function (event) {
+	    select.clear(event.currentTarget);
 	    cursor.restore(event.currentTarget);
 	};
 
@@ -1827,11 +1829,9 @@ var XBubbles =
 	'use strict';
 
 	var bubble = __webpack_require__(7);
-	var select = __webpack_require__(10);
 
 	module.exports = function (event) {
 	    bubble.bubbling(event.currentTarget);
-	    select.clear(event.currentTarget);
 	};
 
 /***/ },
@@ -1925,7 +1925,7 @@ var XBubbles =
 	            if (event.metaKey) {
 	                event.preventDefault();
 
-	                if (enable && !events.selectAll(event)) {
+	                if (!events.selectAll(event)) {
 	                    select.all(nodeSet);
 	                }
 	            }

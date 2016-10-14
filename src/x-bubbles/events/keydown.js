@@ -44,7 +44,7 @@ module.exports = function (event) {
         if (event.metaKey) {
             event.preventDefault();
 
-            if (enable && !events.selectAll(event)) {
+            if (!events.selectAll(event)) {
                 select.all(nodeSet);
             }
         }
