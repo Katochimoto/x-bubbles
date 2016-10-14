@@ -13,7 +13,7 @@ module.exports = function (event) {
         event.preventDefault();
 
         const nodeSet = bubbleset.closestNodeSet(event.currentTarget);
-        if (!nodeSet) {
+        if (!nodeSet || nodeSet.hasAttribute('disable-controls')) {
             return;
         }
 

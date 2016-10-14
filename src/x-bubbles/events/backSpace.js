@@ -6,8 +6,6 @@ const text = require('../text');
 const bubbleset = require('../bubbleset');
 
 module.exports = function (event) {
-    event.preventDefault();
-
     const nodeSet = bubbleset.closestNodeSet(event.currentTarget);
 
     if (!nodeSet) {

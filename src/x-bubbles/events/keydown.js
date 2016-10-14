@@ -4,43 +4,47 @@ const select = require('../select');
 
 module.exports = function (event) {
     const code = event.charCode || event.keyCode;
+    const nodeSet = bubbleset.closestNodeSet(event.currentTarget);
+    const enable = nodeSet && !nodeSet.hasAttribute('disable-controls');
 
     switch (code) {
     case 8: // Backspace
-        events.backSpace(event);
+        event.preventDefault();
+        enable && events.backSpace(event);
         break;
 
     case 9: // Tab
-        events.tab(event);
+        event.preventDefault();
+        enable && events.tab(event);
         break;
 
     case 37: // Left
-        events.arrowLeft(event);
+        event.preventDefault();
+        enable && events.arrowLeft(event);
         break;
 
     // сдвигаем курсор в начало списка
     case 38: // Top
-        events.arrowTop(event);
+        event.preventDefault();
+        enable && events.arrowTop(event);
         break;
 
     case 39: // Right
-        events.arrowRight(event);
+        event.preventDefault();
+        enable && events.arrowRight(event);
         break;
 
     // сдвигаем курсор в конец списка
     case 40: // Bottom
-        events.arrowBottom(event);
+        event.preventDefault();
+        enable && events.arrowBottom(event);
         break;
 
     case 65: // a
         if (event.metaKey) {
-            if (!events.selectAll(event)) {
-                const nodeSet = bubbleset.closestNodeSet(event.currentTarget);
+            event.preventDefault();
 
-                if (!nodeSet) {
-                    return;
-                }
-
+            if (enable && !events.selectAll(event)) {
                 select.all(nodeSet);
             }
         }

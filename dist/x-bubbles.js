@@ -78,14 +78,14 @@ var XBubbles =
 
 	    attachedCallback: {
 	        value: function value() {
+	            this.addEventListener('focus', events.focus);
 	            this.addEventListener('blur', events.blur);
 	            this.addEventListener('click', events.click);
 	            this.addEventListener('dblclick', events.dblclick);
-	            this.addEventListener('focus', events.focus);
-	            this.addEventListener('keydown', events.keydown);
-	            this.addEventListener('keypress', events.keypress);
 	            this.addEventListener('paste', events.paste);
 	            this.addEventListener('keyup', events.keyup);
+	            this.addEventListener('keydown', events.keydown);
+	            this.addEventListener('keypress', events.keypress);
 
 	            drag.init(this);
 
@@ -95,13 +95,13 @@ var XBubbles =
 
 	    detachedCallback: {
 	        value: function value() {
+	            this.removeEventListener('focus', events.focus);
 	            this.removeEventListener('blur', events.blur);
 	            this.removeEventListener('click', events.click);
 	            this.removeEventListener('dblclick', events.dblclick);
-	            this.removeEventListener('focus', events.focus);
+	            this.removeEventListener('keyup', events.keyup);
 	            this.removeEventListener('keydown', events.keydown);
 	            this.removeEventListener('keypress', events.keypress);
-	            this.removeEventListener('keyup', events.keyup);
 
 	            drag.destroy(this);
 	        }
@@ -109,7 +109,7 @@ var XBubbles =
 
 	    /*
 	    attributeChangedCallback: {
-	        value: function (name, previousValue, value) {}
+	        value: function (name, prevValue, value) {}
 	    },
 	    */
 
@@ -609,8 +609,6 @@ var XBubbles =
 	var bubbleset = __webpack_require__(11);
 
 	module.exports = function (event) {
-	    event.preventDefault();
-
 	    var nodeSet = bubbleset.closestNodeSet(event.currentTarget);
 
 	    if (!nodeSet) {
@@ -1487,8 +1485,6 @@ var XBubbles =
 	var bubbleset = __webpack_require__(11);
 
 	module.exports = function (event) {
-	    event.preventDefault();
-
 	    var selection = context.getSelection();
 
 	    if (text.arrowLeft(selection, event.shiftKey)) {
@@ -1546,8 +1542,6 @@ var XBubbles =
 	var bubbleset = __webpack_require__(11);
 
 	module.exports = function (event) {
-	    event.preventDefault();
-
 	    var selection = context.getSelection();
 
 	    if (text.arrowRight(selection, event.shiftKey)) {
@@ -1604,12 +1598,16 @@ var XBubbles =
 
 	var select = __webpack_require__(10);
 	var cursor = __webpack_require__(9);
+	var bubbleset = __webpack_require__(11);
 
 	module.exports = function (event) {
-	    var nodeSet = event.currentTarget;
+	    var nodeSet = bubbleset.closestNodeSet(event.currentTarget);
+
+	    if (!nodeSet) {
+	        return;
+	    }
 
 	    if (select.has(nodeSet)) {
-	        event.preventDefault();
 	        cursor.restore(nodeSet);
 	    }
 	};
@@ -1624,8 +1622,6 @@ var XBubbles =
 	var select = __webpack_require__(10);
 
 	module.exports = function (event) {
-	    event.preventDefault();
-
 	    var nodeSet = bubbleset.closestNodeSet(event.currentTarget);
 	    var headBubble = nodeSet && bubbleset.headBubble(nodeSet);
 
@@ -1642,11 +1638,16 @@ var XBubbles =
 
 	var select = __webpack_require__(10);
 	var cursor = __webpack_require__(9);
+	var bubbleset = __webpack_require__(11);
 
 	module.exports = function (event) {
-	    var nodeSet = event.currentTarget;
+	    var nodeSet = bubbleset.closestNodeSet(event.currentTarget);
+
+	    if (!nodeSet) {
+	        return;
+	    }
+
 	    if (select.has(nodeSet)) {
-	        event.preventDefault();
 	        cursor.restore(nodeSet);
 	    }
 	};
@@ -1661,8 +1662,6 @@ var XBubbles =
 	var zws = __webpack_require__(8);
 
 	module.exports = function (event) {
-	    event.preventDefault();
-
 	    var nodeSet = event.currentTarget;
 	    var selection = context.getSelection();
 	    var node = selection && selection.anchorNode;
@@ -1857,7 +1856,7 @@ var XBubbles =
 	            event.preventDefault();
 
 	            var nodeSet = bubbleset.closestNodeSet(event.currentTarget);
-	            if (!nodeSet) {
+	            if (!nodeSet || nodeSet.hasAttribute('disable-controls')) {
 	                return;
 	            }
 
@@ -1879,50 +1878,54 @@ var XBubbles =
 
 	module.exports = function (event) {
 	    var code = event.charCode || event.keyCode;
+	    var nodeSet = bubbleset.closestNodeSet(event.currentTarget);
+	    var enable = nodeSet && !nodeSet.hasAttribute('disable-controls');
 
 	    switch (code) {
 	        case 8:
 	            // Backspace
-	            events.backSpace(event);
+	            event.preventDefault();
+	            enable && events.backSpace(event);
 	            break;
 
 	        case 9:
 	            // Tab
-	            events.tab(event);
+	            event.preventDefault();
+	            enable && events.tab(event);
 	            break;
 
 	        case 37:
 	            // Left
-	            events.arrowLeft(event);
+	            event.preventDefault();
+	            enable && events.arrowLeft(event);
 	            break;
 
 	        // сдвигаем курсор в начало списка
 	        case 38:
 	            // Top
-	            events.arrowTop(event);
+	            event.preventDefault();
+	            enable && events.arrowTop(event);
 	            break;
 
 	        case 39:
 	            // Right
-	            events.arrowRight(event);
+	            event.preventDefault();
+	            enable && events.arrowRight(event);
 	            break;
 
 	        // сдвигаем курсор в конец списка
 	        case 40:
 	            // Bottom
-	            events.arrowBottom(event);
+	            event.preventDefault();
+	            enable && events.arrowBottom(event);
 	            break;
 
 	        case 65:
 	            // a
 	            if (event.metaKey) {
-	                if (!events.selectAll(event)) {
-	                    var nodeSet = bubbleset.closestNodeSet(event.currentTarget);
+	                event.preventDefault();
 
-	                    if (!nodeSet) {
-	                        return;
-	                    }
-
+	                if (enable && !events.selectAll(event)) {
 	                    select.all(nodeSet);
 	                }
 	            }

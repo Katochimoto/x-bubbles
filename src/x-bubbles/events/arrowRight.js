@@ -6,8 +6,6 @@ const text = require('../text');
 const bubbleset = require('../bubbleset');
 
 module.exports = function (event) {
-    event.preventDefault();
-
     const selection = context.getSelection();
 
     if (text.arrowRight(selection, event.shiftKey)) {

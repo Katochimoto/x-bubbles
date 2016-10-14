@@ -21,14 +21,14 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     attachedCallback: {
         value: function () {
+            this.addEventListener('focus', events.focus);
             this.addEventListener('blur', events.blur);
             this.addEventListener('click', events.click);
             this.addEventListener('dblclick', events.dblclick);
-            this.addEventListener('focus', events.focus);
-            this.addEventListener('keydown', events.keydown);
-            this.addEventListener('keypress', events.keypress);
             this.addEventListener('paste', events.paste);
             this.addEventListener('keyup', events.keyup);
+            this.addEventListener('keydown', events.keydown);
+            this.addEventListener('keypress', events.keypress);
 
             drag.init(this);
 
@@ -38,13 +38,13 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     detachedCallback: {
         value: function () {
+            this.removeEventListener('focus', events.focus);
             this.removeEventListener('blur', events.blur);
             this.removeEventListener('click', events.click);
             this.removeEventListener('dblclick', events.dblclick);
-            this.removeEventListener('focus', events.focus);
+            this.removeEventListener('keyup', events.keyup);
             this.removeEventListener('keydown', events.keydown);
             this.removeEventListener('keypress', events.keypress);
-            this.removeEventListener('keyup', events.keyup);
 
             drag.destroy(this);
         }
@@ -52,7 +52,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     /*
     attributeChangedCallback: {
-        value: function (name, previousValue, value) {}
+        value: function (name, prevValue, value) {}
     },
     */
 

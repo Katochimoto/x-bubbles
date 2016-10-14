@@ -2,8 +2,6 @@ const context = require('../../context');
 const zws = require('../zws');
 
 module.exports = function (event) {
-    event.preventDefault();
-
     const nodeSet = event.currentTarget;
     const selection = context.getSelection();
     const node = selection && selection.anchorNode;
