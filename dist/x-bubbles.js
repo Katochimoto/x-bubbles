@@ -1885,7 +1885,7 @@ var XBubbles =
 	        case 8:
 	            // Backspace
 	            event.preventDefault();
-	            enable && events.backSpace(event);
+	            events.backSpace(event);
 	            break;
 
 	        case 9:
@@ -1897,7 +1897,7 @@ var XBubbles =
 	        case 37:
 	            // Left
 	            event.preventDefault();
-	            enable && events.arrowLeft(event);
+	            events.arrowLeft(event);
 	            break;
 
 	        // сдвигаем курсор в начало списка
@@ -1910,7 +1910,7 @@ var XBubbles =
 	        case 39:
 	            // Right
 	            event.preventDefault();
-	            enable && events.arrowRight(event);
+	            events.arrowRight(event);
 	            break;
 
 	        // сдвигаем курсор в конец списка
