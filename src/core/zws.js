@@ -14,5 +14,6 @@ exports.check = function (text) {
 };
 
 exports.createElement = function () {
-    return document.createTextNode(TEXT_ZWS);
+    // return document.createTextNode(TEXT_ZWS);
+    return document.createElement('span');
 };
