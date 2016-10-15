@@ -1,5 +1,5 @@
-var testable = require('x-bubbles/text');
-var zws = require('x-bubbles/zws');
+var testable = require('core/text');
+var zws = require('core/zws');
 
 describe('x-bubbles/text', function () {
     beforeEach(function () {

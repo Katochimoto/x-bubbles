@@ -35,7 +35,7 @@ module.exports = function(config) {
             'devtool': '#inline-source-map',
             'resolve': {
                 'alias': {
-                    'x-bubbles': path.join(src, 'x-bubbles')
+                    'core': path.join(src, 'core')
                 }
             },
             'module': {

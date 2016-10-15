@@ -1,12 +1,12 @@
 const raf = require('raf');
-const events = require('./x-bubbles/events');
-const { dispatch } = require('./x-bubbles/event');
-const drag = require('./x-bubbles/drag');
-const bubble = require('./x-bubbles/bubble');
-const bubbleset = require('./x-bubbles/bubbleset');
-const text = require('./x-bubbles/text');
-const cursor = require('./x-bubbles/cursor');
-const zws = require('./x-bubbles/zws');
+const events = require('./core/events');
+const { dispatch } = require('./core/event');
+const drag = require('./core/drag');
+const bubble = require('./core/bubble');
+const bubbleset = require('./core/bubbleset');
+const text = require('./core/text');
+const cursor = require('./core/cursor');
+const zws = require('./core/zws');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
