@@ -86,6 +86,11 @@ document.getElementById('test')
 .addEventListener('bubble-input', function(event) {
     console.log('bubble-input', event.detail.data);
 }, false);
+
+document.getElementById('test')
+.addEventListener('dblclick', function(event) {
+    document.getElementById('test').addBubble('qwe')
+}, false);
 </script>
 </body>
 </html>

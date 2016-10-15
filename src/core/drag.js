@@ -1,6 +1,6 @@
 const select = require('./select');
 const bubbleset = require('./bubbleset');
-const classes = require('./classes');
+const { CLS } = require('./constant');
 
 let currentDragSet = null;
 
@@ -34,7 +34,7 @@ function onDragstart(event) {
     }
 
     currentDragSet = nodeSet;
-    nodeSet.classList.add(classes.DRAGSTART);
+    nodeSet.classList.add(CLS.DRAGSTART);
     select.add(nodeBubble);
 
     event.dataTransfer.effectAllowed = 'move';
@@ -90,7 +90,7 @@ function onDragenter(event) {
         return;
     }
 
-    nodeSet.classList.add(classes.DROPZONE);
+    nodeSet.classList.add(CLS.DROPZONE);
 }
 
 function onDragleave(event) {
@@ -107,7 +107,7 @@ function onDragleave(event) {
         return;
     }
 
-    nodeSet.classList.remove(classes.DROPZONE);
+    nodeSet.classList.remove(CLS.DROPZONE);
 }
 
 function onDragend(event) {
@@ -118,12 +118,12 @@ function onDragend(event) {
         return;
     }
 
-    currentDragSet.classList.remove(classes.DRAGSTART);
+    currentDragSet.classList.remove(CLS.DRAGSTART);
 
     const nodeSet = bubbleset.closestNodeSet(event.target);
 
     if (nodeSet && nodeSet !== currentDragSet) {
-        nodeSet.classList.remove(classes.DROPZONE);
+        nodeSet.classList.remove(CLS.DROPZONE);
     }
 
     currentDragSet = null;

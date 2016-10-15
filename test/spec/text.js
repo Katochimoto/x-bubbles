@@ -1,5 +1,4 @@
 var testable = require('core/text');
-var zws = require('core/zws');
 
 describe('x-bubbles/text', function () {
     beforeEach(function () {
@@ -99,7 +98,7 @@ describe('x-bubbles/text', function () {
         });
 
         it('непечатный символ в тексте пропускается', function () {
-            var zwsText = zws.createElement();
+            var zwsText = testable.createZws();
             var t1 = this.buffer.appendChild(document.createTextNode('1' + zwsText.nodeValue + '2'));
 
             var range = document.createRange();
@@ -116,7 +115,7 @@ describe('x-bubbles/text', function () {
         });
 
         it('непечатные символы пропускаются в конце и начале нод', function () {
-            var zwsText = zws.createElement();
+            var zwsText = testable.createZws();
             var t1 = this.buffer.appendChild(document.createTextNode('1' + zwsText.nodeValue + zwsText.nodeValue));
             var t2 = this.buffer.appendChild(document.createTextNode(zwsText.nodeValue + zwsText.nodeValue + '2'));
 
@@ -150,7 +149,7 @@ describe('x-bubbles/text', function () {
         });
 
         it('достижение конца считается, если после идут ноды и/или текст с непечатными символами', function () {
-            var zwsText = zws.createElement();
+            var zwsText = testable.createZws();
             this.buffer.appendChild(document.createTextNode(zwsText.nodeValue + zwsText.nodeValue));
             var t1 = this.buffer.appendChild(document.createTextNode(zwsText.nodeValue + zwsText.nodeValue + '2'));
 
@@ -269,7 +268,7 @@ describe('x-bubbles/text', function () {
         });
 
         it('непечатный символ в тексте пропускается', function () {
-            var zwsText = zws.createElement();
+            var zwsText = testable.createZws();
             var t1 = this.buffer.appendChild(document.createTextNode('1' + zwsText.nodeValue + '2'));
 
             var range = document.createRange();
@@ -286,7 +285,7 @@ describe('x-bubbles/text', function () {
         });
 
         it('непечатные символы пропускаются в конце и начале нод', function () {
-            var zwsText = zws.createElement();
+            var zwsText = testable.createZws();
             var t1 = this.buffer.appendChild(document.createTextNode('1' + zwsText.nodeValue + zwsText.nodeValue));
             var t2 = this.buffer.appendChild(document.createTextNode(zwsText.nodeValue + zwsText.nodeValue + '2'));
 
@@ -320,7 +319,7 @@ describe('x-bubbles/text', function () {
         });
 
         it('достижение конца считается, если после идут ноды и/или текст с непечатными символами', function () {
-            var zwsText = zws.createElement();
+            var zwsText = testable.createZws();
             var t1 = this.buffer.appendChild(document.createTextNode('1' + zwsText.nodeValue + zwsText.nodeValue));
             this.buffer.appendChild(document.createTextNode(zwsText.nodeValue + zwsText.nodeValue));
 

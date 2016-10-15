@@ -2,11 +2,12 @@ const raf = require('raf');
 const events = require('./core/events');
 const { dispatch } = require('./core/event');
 const drag = require('./core/drag');
+const editor = require('./core/editor');
 const bubble = require('./core/bubble');
 const bubbleset = require('./core/bubbleset');
 const text = require('./core/text');
 const cursor = require('./core/cursor');
-const zws = require('./core/zws');
+const { EV } = require('./core/constant');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
@@ -25,13 +26,9 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.addEventListener('blur', events.blur);
             this.addEventListener('click', events.click);
             this.addEventListener('dblclick', events.dblclick);
-            this.addEventListener('paste', events.paste);
-            this.addEventListener('keyup', events.keyup);
-            this.addEventListener('keydown', events.keydown);
-            this.addEventListener('keypress', events.keypress);
 
             drag.init(this);
-
+            editor.init(this);
             bubble.bubbling(this);
         }
     },
@@ -42,11 +39,9 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.removeEventListener('blur', events.blur);
             this.removeEventListener('click', events.click);
             this.removeEventListener('dblclick', events.dblclick);
-            this.removeEventListener('keyup', events.keyup);
-            this.removeEventListener('keydown', events.keydown);
-            this.removeEventListener('keypress', events.keypress);
 
             drag.destroy(this);
+            editor.destroy(this);
         }
     },
 
@@ -168,7 +163,7 @@ function optionsPrepare(options) {
 }
 
 function fireChange() {
-    dispatch(this, events.EV_CHANGE, {
+    dispatch(this, EV.CHANGE, {
         bubbles: false,
         cancelable: false
     });
@@ -177,12 +172,12 @@ function fireChange() {
 function fireInput() {
     const textRange = text.currentTextRange();
     if (textRange) {
-        const editText = zws.textClean(textRange.toString());
+        const editText = text.textClean(textRange.toString());
 
         if (this._bubbleValue !== editText) {
             this._bubbleValue = editText;
 
-            dispatch(this, events.EV_BUBBLE_INPUT, {
+            dispatch(this, EV.BUBBLE_INPUT, {
                 bubbles: false,
                 cancelable: false,
                 detail: { data: editText }

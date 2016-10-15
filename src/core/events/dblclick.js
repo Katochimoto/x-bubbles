@@ -1,5 +1,5 @@
 const context = require('../../context');
-const zws = require('../zws');
+const text = require('../text');
 const bubbleset = require('../bubbleset');
 
 module.exports = function (event) {
@@ -27,16 +27,16 @@ module.exports = function (event) {
     let rangeParams = bubbleDeformation(nodeBubble);
 
     if (!rangeParams) {
-        const text = zws.textClean(nodeBubble.innerText);
+        const dataText = text.textClean(nodeBubble.innerText);
 
         rangeParams = {
-            text: text,
+            text: dataText,
             startOffset: 0,
             endOffset: text.length
         };
     }
 
-    const textFake = zws.createElement();
+    const textFake = text.createZws();
     const textNode = context.document.createTextNode(rangeParams.text);
 
     nodeSet.replaceChild(textNode, nodeBubble);

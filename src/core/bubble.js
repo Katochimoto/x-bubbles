@@ -1,4 +1,4 @@
-const zws = require('./zws');
+const text = require('./text');
 
 exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
@@ -12,10 +12,10 @@ function isBubbleNode(node) {
     return node.hasAttribute('bubble');
 }
 
-function create(nodeSet, text, data = {}) {
-    text = zws.textClean(text);
+function create(nodeSet, dataText, data = {}) {
+    dataText = text.textClean(dataText);
 
-    if (!text) {
+    if (!dataText) {
         return;
     }
 
@@ -24,7 +24,7 @@ function create(nodeSet, text, data = {}) {
     const draggable = nodeSet.options('draggable');
     const wrap = document.createElement('span');
 
-    wrap.innerText = text;
+    wrap.innerText = dataText;
 
     if (draggable) {
         wrap.setAttribute('draggable', 'true');
@@ -51,17 +51,17 @@ function bubbling(nodeSet) {
     const nodes = [];
 
     ranges.forEach(function (range) {
-        const text = zws.textClean(range.toString());
+        const dataText = text.textClean(range.toString());
 
-        if (!text) {
+        if (!dataText) {
             range.deleteContents();
             return;
         }
 
-        let textParts = [ text ];
+        let textParts = [ dataText ];
 
         if (separator) {
-            textParts = text
+            textParts = dataText
                 .split(separator)
                 .map(trimIterator)
                 .filter(nonEmptyIterator);

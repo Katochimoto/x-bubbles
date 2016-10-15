@@ -1,5 +1,5 @@
 const context = require('../context');
-const zws = require('./zws');
+const text = require('./text');
 const select = require('./select');
 
 exports.restore = restore;
@@ -14,7 +14,7 @@ function restore(nodeSet) {
 }
 
 function restoreBasis(nodeSet) {
-    let fakeText = zws.createElement();
+    let fakeText = text.createZws();
 
     if (nodeSet.hasChildNodes()) {
         const lastNode = nodeSet.childNodes[ nodeSet.childNodes.length - 1 ];

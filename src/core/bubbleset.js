@@ -1,5 +1,5 @@
 const bubble = require('./bubble');
-const zws = require('./zws');
+const text = require('./text');
 const context = require('../context');
 
 const slice = Array.prototype.slice;
@@ -16,8 +16,14 @@ exports.getBubbles = function (nodeSet) {
     return slice.call(nodeSet.querySelectorAll('[bubble]'));
 };
 
+exports.hasBubbles = function (nodeSet) {
+    return Boolean(nodeSet.querySelector('[bubble]'));
+};
+
 exports.closestNodeSet = closestNodeSet;
 exports.closestNodeBubble = closestNodeBubble;
+exports.prevBubble = prevBubble;
+exports.nextBubble = nextBubble;
 
 exports.findBubbleLeft = function (selection) {
     selection = selection || context.getSelection();
@@ -33,7 +39,7 @@ exports.findBubbleLeft = function (selection) {
             return node;
         }
 
-        if (node.nodeType === Node.TEXT_NODE && zws.textClean(node.nodeValue)) {
+        if (node.nodeType === Node.TEXT_NODE && text.textClean(node.nodeValue)) {
             return;
         }
 
@@ -55,12 +61,32 @@ function closestNodeSet(node) {
 
 function closestNodeBubble(node) {
     while (node) {
-        if (node.nodeType === Node.ELEMENT_NODE &&
-            node.hasAttribute('bubble')) {
-
+        if (bubble.isBubbleNode(node)) {
             return node;
         }
 
         node = node.parentNode;
+    }
+}
+
+function prevBubble(target) {
+    let node = target && target.previousSibling;
+    while (node) {
+        if (bubble.isBubbleNode(node)) {
+            return node;
+        }
+
+        node = node.previousSibling;
+    }
+}
+
+function nextBubble(target) {
+    let node = target && target.nextSibling;
+    while (node) {
+        if (bubble.isBubbleNode(node)) {
+            return node;
+        }
+
+        node = node.nextSibling;
     }
 }
