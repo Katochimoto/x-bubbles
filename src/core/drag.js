@@ -3,6 +3,7 @@ const bubbleset = require('./bubbleset');
 const { CLS } = require('./constant');
 
 let currentDragSet = null;
+let dragImage = null;
 
 exports.init = function (nodeSet) {
     nodeSet.addEventListener('drop', onDrop);
@@ -39,6 +40,11 @@ function onDragstart(event) {
 
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', '');
+
+    const list = select.get(currentDragSet);
+    if (list.length > 1) {
+        event.dataTransfer.setDragImage(getDragImage(), 16, 16);
+    }
 }
 
 function onDrop(event) {
@@ -127,4 +133,13 @@ function onDragend(event) {
     }
 
     currentDragSet = null;
+}
+
+function getDragImage() {
+    if (!dragImage) {
+        dragImage = new Image();
+        dragImage.src = require('url?mimetype=image/png!../bubbles.png');
+    }
+
+    return dragImage;
 }

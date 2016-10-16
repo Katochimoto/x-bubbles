@@ -53,6 +53,7 @@
     "raf": "3.3.0",
     "sinon": "1.17.6",
     "sinon-chai": "2.8.0",
+    "url-loader": "^0.5.7",
     "webpack": "1.13.2"
   },
   "engines": {

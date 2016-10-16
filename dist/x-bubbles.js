@@ -59,7 +59,7 @@ var XBubbles =
 	var dispatch = _require.dispatch;
 
 	var drag = __webpack_require__(17);
-	var editor = __webpack_require__(19);
+	var editor = __webpack_require__(20);
 	var bubble = __webpack_require__(8);
 	var bubbleset = __webpack_require__(9);
 	var text = __webpack_require__(7);
@@ -1736,6 +1736,7 @@ var XBubbles =
 
 
 	var currentDragSet = null;
+	var dragImage = null;
 
 	exports.init = function (nodeSet) {
 	    nodeSet.addEventListener('drop', onDrop);
@@ -1772,6 +1773,11 @@ var XBubbles =
 
 	    event.dataTransfer.effectAllowed = 'move';
 	    event.dataTransfer.setData('text/plain', '');
+
+	    var list = select.get(currentDragSet);
+	    if (list.length > 1) {
+	        event.dataTransfer.setDragImage(getDragImage(), 16, 16);
+	    }
 	}
 
 	function onDrop(event) {
@@ -1864,6 +1870,15 @@ var XBubbles =
 	    currentDragSet = null;
 	}
 
+	function getDragImage() {
+	    if (!dragImage) {
+	        dragImage = new Image();
+	        dragImage.src = __webpack_require__(19);
+	    }
+
+	    return dragImage;
+	}
+
 /***/ },
 /* 18 */
 /***/ function(module, exports) {
@@ -1895,6 +1910,12 @@ var XBubbles =
 
 /***/ },
 /* 19 */
+/***/ function(module, exports) {
+
+	module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAB3klEQVR4XtWWMWgTYRTH/0n0IjWNkSo9jYJTx4KDAXWoIChtqdBFkG6lTm5iiw5OHQQFV4fSunYTOpVucbRDBicVUmmb0GsuJCYGknjfez4+PmjUy8U7cegffty3vPfjfY/jLsbM+J+JC8dbcAIm97aqEwBeCjmEywdhaePOSD5QQETr1y6m7Ww6iTApNTq57XJjHcCFYIEiGyeTKLYQKkmp0bWDrkiRQstD6HikazFYoBQIEWJql9+Ncu9Ons86+d8EBOKoAsLtG9P67FTLuY+fC3onf0zgcfQJKu1tfbaGU2Bm2+eKvKgTmFpdjK5qgtlnB17kHZjanq5M7LvkkltvZs+khxEm3xpNDCUqvwjIX0ALX4o7bwHYAs6fG8HlS1ns7ZdQcavol9NWHVNjb6COBP5XVJgf3+x9G8dXCuwpguu6eDrxAINCjIAJfFCk4Bw6eHZrLvTy+W8EpAiPrt6HYgth0qx1wcylgYKZobuTu59gduKfs6OnYF9J4eDrd9ScNkwOhAWY/NMXbXEtwxmR1KX5q/l6LOB7EAnd9MlqhhGQWM8zLiSM1IC4pn9uCtcfr6QXXz9svADwXsgLnqAEFgE0prklJA2WkSSEWICEDD+ErtAR2jCS4/9X8RPiO+YqXEJbcwAAAABJRU5ErkJggg=="
+
+/***/ },
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
