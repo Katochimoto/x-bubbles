@@ -54,6 +54,12 @@ function keydown(event) {
     const enable = !nodeSet.hasAttribute('disable-controls');
 
     switch (code) {
+    case KEY.Esc:
+        event.preventDefault();
+        bubble.bubbling(nodeSet);
+        cursor.restore(nodeSet);
+        break;
+
     case KEY.Backspace:
         event.preventDefault();
         backSpace(event);

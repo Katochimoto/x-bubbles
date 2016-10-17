@@ -69,6 +69,7 @@ function onDrop(event) {
 
     list.forEach(item => nodeSet.appendChild(item));
     nodeSet.focus();
+    nodeSet.fireChange();
 }
 
 function onDragover(event) {

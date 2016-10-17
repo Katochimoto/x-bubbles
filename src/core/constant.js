@@ -4,6 +4,7 @@ exports.KEY = {
     Bottom: 40,
     Comma: 44, // ,
     Enter: 13, // Enter
+    Esc: 27,
     Left: 37,
     Right: 39,
     Semicolon: 59, // ;

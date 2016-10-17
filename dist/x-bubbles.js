@@ -1804,6 +1804,7 @@ var XBubbles =
 	        return nodeSet.appendChild(item);
 	    });
 	    nodeSet.focus();
+	    nodeSet.fireChange();
 	}
 
 	function onDragover(event) {
@@ -1891,6 +1892,7 @@ var XBubbles =
 	    Bottom: 40,
 	    Comma: 44, // ,
 	    Enter: 13, // Enter
+	    Esc: 27,
 	    Left: 37,
 	    Right: 39,
 	    Semicolon: 59, // ;
@@ -1980,6 +1982,12 @@ var XBubbles =
 	    var enable = !nodeSet.hasAttribute('disable-controls');
 
 	    switch (code) {
+	        case KEY.Esc:
+	            event.preventDefault();
+	            bubble.bubbling(nodeSet);
+	            cursor.restore(nodeSet);
+	            break;
+
 	        case KEY.Backspace:
 	            event.preventDefault();
 	            backSpace(event);
