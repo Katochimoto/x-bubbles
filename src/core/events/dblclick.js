@@ -11,7 +11,7 @@ module.exports = function (event) {
 
     const nodeBubble = bubbleset.closestNodeBubble(event.target);
 
-    if (!nodeBubble) {
+    if (!nodeBubble || nodeBubble.hasAttribute('readonly')) {
         return;
     }
 

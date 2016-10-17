@@ -46,6 +46,7 @@ function create(nodeSet, dataText, data = {}) {
     }
 
     wrap.setAttribute('bubble', '');
+    wrap.setAttribute('readonly', '');
     wrap.setAttribute('contenteditable', 'false');
 
     return wrap;

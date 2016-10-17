@@ -596,7 +596,7 @@ var XBubbles =
 
 	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
 
-	    if (!nodeBubble) {
+	    if (!nodeBubble || nodeBubble.hasAttribute('readonly')) {
 	        return;
 	    }
 
@@ -1036,6 +1036,7 @@ var XBubbles =
 	    }
 
 	    wrap.setAttribute('bubble', '');
+	    wrap.setAttribute('readonly', '');
 	    wrap.setAttribute('contenteditable', 'false');
 
 	    return wrap;
