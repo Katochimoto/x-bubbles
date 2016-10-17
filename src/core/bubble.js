@@ -36,7 +36,15 @@ function create(nodeSet, dataText, data = {}) {
 
     bubbleFormation(wrap);
 
-    wrap.classList.add(classBubble);
+    if (classBubble) {
+        const classes = String(classBubble).trim().split(/\s+/);
+        let len = classes.length;
+
+        while (len--) {
+            wrap.classList.add(classes[ len ]);
+        }
+    }
+
     wrap.setAttribute('bubble', '');
     wrap.setAttribute('contenteditable', 'false');
 

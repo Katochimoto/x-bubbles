@@ -1026,7 +1026,15 @@ var XBubbles =
 
 	    bubbleFormation(wrap);
 
-	    wrap.classList.add(classBubble);
+	    if (classBubble) {
+	        var classes = String(classBubble).trim().split(/\s+/);
+	        var len = classes.length;
+
+	        while (len--) {
+	            wrap.classList.add(classes[len]);
+	        }
+	    }
+
 	    wrap.setAttribute('bubble', '');
 	    wrap.setAttribute('contenteditable', 'false');
 
