@@ -1,10 +1,11 @@
-const text = require('./text');
 const context = require('../context');
+const text = require('./text');
 const { escape } = require('./utils');
 
 exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
 exports.create = create;
+exports.edit = edit;
 
 function isBubbleNode(node) {
     if (!node || node.nodeType !== Node.ELEMENT_NODE) {
@@ -12,6 +13,47 @@ function isBubbleNode(node) {
     }
 
     return node.hasAttribute('bubble');
+}
+
+function edit(nodeSet, nodeBubble) {
+    if (nodeBubble.hasAttribute('readonly') ||
+        !nodeSet.contains(nodeBubble)) {
+
+        return false;
+    }
+
+    const selection = context.getSelection();
+
+    if (!selection) {
+        return false;
+    }
+
+    const bubbleDeformation = nodeSet.options('bubbleDeformation');
+    let rangeParams = bubbleDeformation(nodeBubble);
+
+    if (!rangeParams) {
+        const dataText = text.textClean(nodeBubble.innerText);
+
+        rangeParams = {
+            text: dataText,
+            startOffset: 0,
+            endOffset: text.length
+        };
+    }
+
+    const textFake = text.createZws();
+    const textNode = context.document.createTextNode(rangeParams.text);
+
+    nodeSet.replaceChild(textNode, nodeBubble);
+    nodeSet.insertBefore(textFake, textNode);
+
+    const range = context.document.createRange();
+    range.setStart(textNode, rangeParams.startOffset);
+    range.setEnd(textNode, rangeParams.endOffset);
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return true;
 }
 
 function create(nodeSet, dataText, data = {}) {

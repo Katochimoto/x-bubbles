@@ -121,21 +121,32 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             const nodeBubble = bubble.create(this, bubbleText, data);
 
             if (!nodeBubble) {
-                return;
+                return false;
             }
 
             text.text2bubble(this, nodeBubble);
             cursor.restore(this);
+            return true;
         }
     },
 
     removeBubble: {
         value: function (nodeBubble) {
             const nodeSet = bubbleset.closestNodeSet(nodeBubble);
+
             if (nodeSet === this) {
                 nodeSet.removeChild(nodeBubble);
                 this.fireChange();
+                return true;
             }
+
+            return false;
+        }
+    },
+
+    editBubble: {
+        value: function (nodeBubble) {
+            return bubble.edit(this, nodeBubble);
         }
     }
 });
