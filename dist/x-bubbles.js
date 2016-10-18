@@ -988,7 +988,11 @@ var XBubbles =
 
 	var text = __webpack_require__(7);
 	var context = __webpack_require__(6);
-	var escape = __webpack_require__(21);
+
+	var _require = __webpack_require__(33);
+
+	var escape = _require.escape;
+
 
 	exports.isBubbleNode = isBubbleNode;
 	exports.bubbling = bubbling;
@@ -1023,7 +1027,9 @@ var XBubbles =
 	    }
 
 	    for (var key in data) {
-	        wrap.setAttribute('data-' + key, escape(data[key]));
+	        if (data[key]) {
+	            wrap.setAttribute('data-' + key, escape(data[key]));
+	        }
 	    }
 
 	    bubbleFormation(wrap);
@@ -2174,353 +2180,75 @@ var XBubbles =
 	}
 
 /***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
+/* 21 */,
+/* 22 */,
+/* 23 */,
+/* 24 */,
+/* 25 */,
+/* 26 */,
+/* 27 */,
+/* 28 */,
+/* 29 */,
+/* 30 */,
+/* 31 */,
+/* 32 */,
+/* 33 */
+/***/ function(module, exports) {
 
-	var escapeHtmlChar = __webpack_require__(22),
-	    toString = __webpack_require__(24);
+	'use strict';
 
-	/** Used to match HTML entities and HTML characters. */
-	var reUnescapedHtml = /[&<>"']/g,
-	    reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+	/* eslint quotes: 0 */
 
-	/**
-	 * Converts the characters "&", "<", ">", '"', and "'" in `string` to their
-	 * corresponding HTML entities.
-	 *
-	 * **Note:** No other characters are escaped. To escape additional
-	 * characters use a third-party library like [_he_](https://mths.be/he).
-	 *
-	 * Though the ">" character is escaped for symmetry, characters like
-	 * ">" and "/" don't need escaping in HTML and have no special meaning
-	 * unless they're part of a tag or unquoted attribute value. See
-	 * [Mathias Bynens's article](https://mathiasbynens.be/notes/ambiguous-ampersands)
-	 * (under "semi-related fun fact") for more details.
-	 *
-	 * When working with HTML you should always
-	 * [quote attribute values](http://wonko.com/post/html-escaping) to reduce
-	 * XSS vectors.
-	 *
-	 * @static
-	 * @since 0.1.0
-	 * @memberOf _
-	 * @category String
-	 * @param {string} [string=''] The string to escape.
-	 * @returns {string} Returns the escaped string.
-	 * @example
-	 *
-	 * _.escape('fred, barney, & pebbles');
-	 * // => 'fred, barney, &amp; pebbles'
-	 */
-	function escape(string) {
-	  string = toString(string);
-	  return (string && reHasUnescapedHtml.test(string))
-	    ? string.replace(reUnescapedHtml, escapeHtmlChar)
-	    : string;
-	}
-
-	module.exports = escape;
-
-
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var basePropertyOf = __webpack_require__(23);
-
-	/** Used to map characters to HTML entities. */
 	var htmlEscapes = {
-	  '&': '&amp;',
-	  '<': '&lt;',
-	  '>': '&gt;',
-	  '"': '&quot;',
-	  "'": '&#39;'
+	    '&': '&amp;',
+	    '<': '&lt;',
+	    '>': '&gt;',
+	    '"': '&quot;',
+	    "'": '&#39;',
+	    '`': '&#96;'
 	};
 
-	/**
-	 * Used by `_.escape` to convert characters to HTML entities.
-	 *
-	 * @private
-	 * @param {string} chr The matched character to escape.
-	 * @returns {string} Returns the escaped character.
-	 */
-	var escapeHtmlChar = basePropertyOf(htmlEscapes);
+	var htmlUnescapes = {
+	    '&amp;': '&',
+	    '&lt;': '<',
+	    '&gt;': '>',
+	    '&quot;': '"',
+	    '&#39;': "'",
+	    '&#96;': '`'
+	};
 
-	module.exports = escapeHtmlChar;
+	var reEscapedHtml = /&(?:amp|lt|gt|quot|#39|#96);/g;
+	var reUnescapedHtml = /[&<>"'`]/g;
+	var reHasEscapedHtml = RegExp(reEscapedHtml.source);
+	var reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
 
+	exports.escape = function (data) {
+	    data = String(data);
 
-/***/ },
-/* 23 */
-/***/ function(module, exports) {
+	    if (data && reHasUnescapedHtml.test(data)) {
+	        return data.replace(reUnescapedHtml, escapeHtmlChar);
+	    }
 
-	/**
-	 * The base implementation of `_.propertyOf` without support for deep paths.
-	 *
-	 * @private
-	 * @param {Object} object The object to query.
-	 * @returns {Function} Returns the new accessor function.
-	 */
-	function basePropertyOf(object) {
-	  return function(key) {
-	    return object == null ? undefined : object[key];
-	  };
+	    return data;
+	};
+
+	exports.unescape = function (data) {
+	    data = String(data);
+
+	    if (data && reHasEscapedHtml.test(data)) {
+	        return data.replace(reEscapedHtml, unescapeHtmlChar);
+	    }
+
+	    return data;
+	};
+
+	function unescapeHtmlChar(chr) {
+	    return htmlUnescapes[chr];
 	}
 
-	module.exports = basePropertyOf;
-
-
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var baseToString = __webpack_require__(25);
-
-	/**
-	 * Converts `value` to a string. An empty string is returned for `null`
-	 * and `undefined` values. The sign of `-0` is preserved.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to convert.
-	 * @returns {string} Returns the converted string.
-	 * @example
-	 *
-	 * _.toString(null);
-	 * // => ''
-	 *
-	 * _.toString(-0);
-	 * // => '-0'
-	 *
-	 * _.toString([1, 2, 3]);
-	 * // => '1,2,3'
-	 */
-	function toString(value) {
-	  return value == null ? '' : baseToString(value);
+	function escapeHtmlChar(chr) {
+	    return htmlEscapes[chr];
 	}
-
-	module.exports = toString;
-
-
-/***/ },
-/* 25 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Symbol = __webpack_require__(26),
-	    arrayMap = __webpack_require__(29),
-	    isArray = __webpack_require__(30),
-	    isSymbol = __webpack_require__(31);
-
-	/** Used as references for various `Number` constants. */
-	var INFINITY = 1 / 0;
-
-	/** Used to convert symbols to primitives and strings. */
-	var symbolProto = Symbol ? Symbol.prototype : undefined,
-	    symbolToString = symbolProto ? symbolProto.toString : undefined;
-
-	/**
-	 * The base implementation of `_.toString` which doesn't convert nullish
-	 * values to empty strings.
-	 *
-	 * @private
-	 * @param {*} value The value to process.
-	 * @returns {string} Returns the string.
-	 */
-	function baseToString(value) {
-	  // Exit early for strings to avoid a performance hit in some environments.
-	  if (typeof value == 'string') {
-	    return value;
-	  }
-	  if (isArray(value)) {
-	    // Recursively convert values (susceptible to call stack limits).
-	    return arrayMap(value, baseToString) + '';
-	  }
-	  if (isSymbol(value)) {
-	    return symbolToString ? symbolToString.call(value) : '';
-	  }
-	  var result = (value + '');
-	  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
-	}
-
-	module.exports = baseToString;
-
-
-/***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var root = __webpack_require__(27);
-
-	/** Built-in value references. */
-	var Symbol = root.Symbol;
-
-	module.exports = Symbol;
-
-
-/***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var freeGlobal = __webpack_require__(28);
-
-	/** Detect free variable `self`. */
-	var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-
-	/** Used as a reference to the global object. */
-	var root = freeGlobal || freeSelf || Function('return this')();
-
-	module.exports = root;
-
-
-/***/ },
-/* 28 */
-/***/ function(module, exports) {
-
-	/* WEBPACK VAR INJECTION */(function(global) {/** Detect free variable `global` from Node.js. */
-	var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
-
-	module.exports = freeGlobal;
-
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
-
-/***/ },
-/* 29 */
-/***/ function(module, exports) {
-
-	/**
-	 * A specialized version of `_.map` for arrays without support for iteratee
-	 * shorthands.
-	 *
-	 * @private
-	 * @param {Array} [array] The array to iterate over.
-	 * @param {Function} iteratee The function invoked per iteration.
-	 * @returns {Array} Returns the new mapped array.
-	 */
-	function arrayMap(array, iteratee) {
-	  var index = -1,
-	      length = array ? array.length : 0,
-	      result = Array(length);
-
-	  while (++index < length) {
-	    result[index] = iteratee(array[index], index, array);
-	  }
-	  return result;
-	}
-
-	module.exports = arrayMap;
-
-
-/***/ },
-/* 30 */
-/***/ function(module, exports) {
-
-	/**
-	 * Checks if `value` is classified as an `Array` object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 0.1.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is an array, else `false`.
-	 * @example
-	 *
-	 * _.isArray([1, 2, 3]);
-	 * // => true
-	 *
-	 * _.isArray(document.body.children);
-	 * // => false
-	 *
-	 * _.isArray('abc');
-	 * // => false
-	 *
-	 * _.isArray(_.noop);
-	 * // => false
-	 */
-	var isArray = Array.isArray;
-
-	module.exports = isArray;
-
-
-/***/ },
-/* 31 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isObjectLike = __webpack_require__(32);
-
-	/** `Object#toString` result references. */
-	var symbolTag = '[object Symbol]';
-
-	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
-
-	/**
-	 * Used to resolve the
-	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
-	 * of values.
-	 */
-	var objectToString = objectProto.toString;
-
-	/**
-	 * Checks if `value` is classified as a `Symbol` primitive or object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
-	 * @example
-	 *
-	 * _.isSymbol(Symbol.iterator);
-	 * // => true
-	 *
-	 * _.isSymbol('abc');
-	 * // => false
-	 */
-	function isSymbol(value) {
-	  return typeof value == 'symbol' ||
-	    (isObjectLike(value) && objectToString.call(value) == symbolTag);
-	}
-
-	module.exports = isSymbol;
-
-
-/***/ },
-/* 32 */
-/***/ function(module, exports) {
-
-	/**
-	 * Checks if `value` is object-like. A value is object-like if it's not `null`
-	 * and has a `typeof` result of "object".
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
-	 * @example
-	 *
-	 * _.isObjectLike({});
-	 * // => true
-	 *
-	 * _.isObjectLike([1, 2, 3]);
-	 * // => true
-	 *
-	 * _.isObjectLike(_.noop);
-	 * // => false
-	 *
-	 * _.isObjectLike(null);
-	 * // => false
-	 */
-	function isObjectLike(value) {
-	  return value != null && typeof value == 'object';
-	}
-
-	module.exports = isObjectLike;
-
 
 /***/ }
 /******/ ]);

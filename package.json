@@ -47,7 +47,6 @@
     "karma-sinon-chai": "1.2.4",
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "1.8.0",
-    "lodash": "4.16.4",
     "mocha": "3.1.2",
     "preprocess": "3.1.0",
     "preprocess-loader": "0.2.0",

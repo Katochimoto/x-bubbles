@@ -1,6 +1,6 @@
 const text = require('./text');
 const context = require('../context');
-const escape = require('lodash/escape');
+const { escape } = require('./utils');
 
 exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
@@ -33,7 +33,9 @@ function create(nodeSet, dataText, data = {}) {
     }
 
     for (let key in data) {
-        wrap.setAttribute(`data-${key}`, escape(data[ key ]));
+        if (data[ key ]) {
+            wrap.setAttribute(`data-${key}`, escape(data[ key ]));
+        }
     }
 
     bubbleFormation(wrap);
