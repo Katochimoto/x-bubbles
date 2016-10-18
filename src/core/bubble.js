@@ -1,4 +1,6 @@
 const text = require('./text');
+const context = require('../context');
+const escape = require('lodash/escape');
 
 exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
@@ -22,7 +24,7 @@ function create(nodeSet, dataText, data = {}) {
     const bubbleFormation = nodeSet.options('bubbleFormation');
     const classBubble = nodeSet.options('classBubble');
     const draggable = nodeSet.options('draggable');
-    const wrap = document.createElement('span');
+    const wrap = context.document.createElement('span');
 
     wrap.innerText = dataText;
 
@@ -31,7 +33,7 @@ function create(nodeSet, dataText, data = {}) {
     }
 
     for (let key in data) {
-        wrap.setAttribute(`data-${key}`, String(data[ key ]));
+        wrap.setAttribute(`data-${key}`, escape(data[ key ]));
     }
 
     bubbleFormation(wrap);
@@ -92,7 +94,7 @@ function bubbling(nodeSet) {
             range.deleteContents();
         }
 
-        const fragment = document.createDocumentFragment();
+        const fragment = context.document.createDocumentFragment();
 
         textParts.forEach(function (textPart) {
             const nodeBubble = create(nodeSet, textPart);
@@ -129,7 +131,7 @@ function getBubbleRanges(set) {
 
         } else {
             if (!rng) {
-                rng = document.createRange();
+                rng = context.document.createRange();
                 rng.setStartBefore(node);
             }
         }
