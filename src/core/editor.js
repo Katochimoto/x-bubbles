@@ -228,8 +228,9 @@ function backSpace(event) {
         } else {
             nodeSet.focus();
             cursor.restore(nodeSet);
-            nodeSet.fireChange();
         }
+
+        nodeSet.fireChange();
     }
 }
 

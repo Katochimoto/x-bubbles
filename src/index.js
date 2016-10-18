@@ -127,6 +127,16 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             text.text2bubble(this, nodeBubble);
             cursor.restore(this);
         }
+    },
+
+    removeBubble: {
+        value: function (nodeBubble) {
+            const nodeSet = bubbleset.closestNodeSet(nodeBubble);
+            if (nodeSet === this) {
+                nodeSet.removeChild(nodeBubble);
+                this.fireChange();
+            }
+        }
     }
 });
 

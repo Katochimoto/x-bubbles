@@ -186,6 +186,16 @@ var XBubbles =
 	            text.text2bubble(this, nodeBubble);
 	            cursor.restore(this);
 	        }
+	    },
+
+	    removeBubble: {
+	        value: function value(nodeBubble) {
+	            var nodeSet = bubbleset.closestNodeSet(nodeBubble);
+	            if (nodeSet === this) {
+	                nodeSet.removeChild(nodeBubble);
+	                this.fireChange();
+	            }
+	        }
 	    }
 	});
 
@@ -2153,8 +2163,9 @@ var XBubbles =
 	        } else {
 	            nodeSet.focus();
 	            cursor.restore(nodeSet);
-	            nodeSet.fireChange();
 	        }
+
+	        nodeSet.fireChange();
 	    }
 	}
 
