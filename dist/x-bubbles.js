@@ -260,7 +260,11 @@ var XBubbles =
 
 	function fireInput() {
 	    var textRange = text.currentTextRange();
-	    var editText = textRange && text.textClean(textRange.toString()) || '';
+	    if (!textRange) {
+	        return;
+	    }
+
+	    var editText = text.textClean(textRange.toString()) || '';
 
 	    if (this._bubbleValue !== editText) {
 	        this._bubbleValue = editText;

@@ -201,7 +201,11 @@ function fireChange() {
 
 function fireInput() {
     const textRange = text.currentTextRange();
-    const editText = textRange && text.textClean(textRange.toString()) || '';
+    if (!textRange) {
+        return;
+    }
+
+    const editText = text.textClean(textRange.toString()) || '';
 
     if (this._bubbleValue !== editText) {
         this._bubbleValue = editText;
