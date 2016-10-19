@@ -153,7 +153,6 @@ function bubbling(nodeSet) {
     });
 
     nodeSet.fireChange();
-    nodeSet.fireInput();
     return nodes;
 }
 

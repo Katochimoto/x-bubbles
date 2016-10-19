@@ -881,7 +881,6 @@ var XBubbles =
 	    });
 
 	    nodeSet.fireChange();
-	    nodeSet.fireInput();
 	    return nodes;
 	}
 
