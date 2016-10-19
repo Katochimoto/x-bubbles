@@ -192,18 +192,16 @@ function fireChange() {
 
 function fireInput() {
     const textRange = text.currentTextRange();
-    if (textRange) {
-        const editText = text.textClean(textRange.toString());
+    const editText = textRange && text.textClean(textRange.toString()) || '';
 
-        if (this._bubbleValue !== editText) {
-            this._bubbleValue = editText;
+    if (this._bubbleValue !== editText) {
+        this._bubbleValue = editText;
 
-            dispatch(this, EV.BUBBLE_INPUT, {
-                bubbles: false,
-                cancelable: false,
-                detail: { data: editText }
-            });
-        }
+        dispatch(this, EV.BUBBLE_INPUT, {
+            bubbles: false,
+            cancelable: false,
+            detail: { data: editText }
+        });
     }
 }
 

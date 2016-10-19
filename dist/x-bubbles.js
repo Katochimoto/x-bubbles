@@ -251,18 +251,16 @@ var XBubbles =
 
 	function fireInput() {
 	    var textRange = text.currentTextRange();
-	    if (textRange) {
-	        var editText = text.textClean(textRange.toString());
+	    var editText = textRange && text.textClean(textRange.toString()) || '';
 
-	        if (this._bubbleValue !== editText) {
-	            this._bubbleValue = editText;
+	    if (this._bubbleValue !== editText) {
+	        this._bubbleValue = editText;
 
-	            dispatch(this, EV.BUBBLE_INPUT, {
-	                bubbles: false,
-	                cancelable: false,
-	                detail: { data: editText }
-	            });
-	        }
+	        dispatch(this, EV.BUBBLE_INPUT, {
+	            bubbles: false,
+	            cancelable: false,
+	            detail: { data: editText }
+	        });
 	    }
 	}
 
@@ -882,6 +880,7 @@ var XBubbles =
 	        range.insertNode(fragment);
 	    });
 
+	    nodeSet.fireInput();
 	    nodeSet.fireChange();
 	    return nodes;
 	}
