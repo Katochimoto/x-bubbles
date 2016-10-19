@@ -17,6 +17,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
             this.fireInput = throttleRaf(fireInput, this);
             this.fireChange = throttleRaf(fireChange, this);
+            this.fireEdit = fireEdit.bind(this);
         }
     },
 
@@ -181,6 +182,14 @@ function optionsPrepare(options) {
     default:
         options.bubbleDeformation = function () {};
     }
+}
+
+function fireEdit(nodeBubble) {
+    dispatch(this, EV.BUBBLE_EDIT, {
+        bubbles: false,
+        cancelable: false,
+        detail: { data: nodeBubble }
+    });
 }
 
 function fireChange() {

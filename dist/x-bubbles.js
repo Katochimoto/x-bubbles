@@ -78,6 +78,7 @@ var XBubbles =
 
 	            this.fireInput = throttleRaf(fireInput, this);
 	            this.fireChange = throttleRaf(fireChange, this);
+	            this.fireEdit = fireEdit.bind(this);
 	        }
 	    },
 
@@ -240,6 +241,14 @@ var XBubbles =
 	        default:
 	            options.bubbleDeformation = function () {};
 	    }
+	}
+
+	function fireEdit(nodeBubble) {
+	    dispatch(this, EV.BUBBLE_EDIT, {
+	        bubbles: false,
+	        cancelable: false,
+	        detail: { data: nodeBubble }
+	    });
 	}
 
 	function fireChange() {
@@ -776,6 +785,7 @@ var XBubbles =
 	    var textFake = text.createZws();
 	    var textNode = context.document.createTextNode(rangeParams.text);
 
+	    nodeSet.fireEdit(nodeBubble);
 	    nodeSet.replaceChild(textNode, nodeBubble);
 	    nodeSet.insertBefore(textFake, textNode);
 
@@ -2010,6 +2020,7 @@ var XBubbles =
 	};
 
 	exports.EV = {
+	    BUBBLE_EDIT: 'bubble-edit',
 	    BUBBLE_INPUT: 'bubble-input',
 	    CHANGE: 'change'
 	};

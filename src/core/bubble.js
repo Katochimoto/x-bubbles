@@ -44,6 +44,7 @@ function edit(nodeSet, nodeBubble) {
     const textFake = text.createZws();
     const textNode = context.document.createTextNode(rangeParams.text);
 
+    nodeSet.fireEdit(nodeBubble);
     nodeSet.replaceChild(textNode, nodeBubble);
     nodeSet.insertBefore(textFake, textNode);
 

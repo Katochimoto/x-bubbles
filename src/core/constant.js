@@ -18,6 +18,7 @@ exports.CLS = {
 };
 
 exports.EV = {
+    BUBBLE_EDIT: 'bubble-edit',
     BUBBLE_INPUT: 'bubble-input',
     CHANGE: 'change',
 };
