@@ -152,8 +152,8 @@ function bubbling(nodeSet) {
         range.insertNode(fragment);
     });
 
-    nodeSet.fireInput();
     nodeSet.fireChange();
+    nodeSet.fireInput();
     return nodes;
 }
 
