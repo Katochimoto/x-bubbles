@@ -23,7 +23,18 @@ exports.destroy = function (nodeSet) {
 };
 
 function keyup(event) {
-    event.currentTarget.fireInput();
+    const code = event.charCode || event.keyCode;
+    const isPrintableChar = do {
+        if (event.key) {
+            event.key.length === 1;
+        } else {
+            ((code > 47 || code === KEY.Space || code === KEY.Backspace) && code !== KEY.Cmd);
+        }
+    };
+
+    if (isPrintableChar) {
+        event.currentTarget.fireInput();
+    }
 }
 
 function keypress(event) {
@@ -49,7 +60,7 @@ function keypress(event) {
 
 function keydown(event) {
     const code = event.charCode || event.keyCode;
-    const metaKey = event.metaKey;
+    const metaKey = event.ctrlKey || event.metaKey;
     const nodeSet = event.currentTarget;
     const enable = !nodeSet.hasAttribute('disable-controls');
 

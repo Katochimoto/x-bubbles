@@ -890,6 +890,7 @@ var XBubbles =
 	        range.insertNode(fragment);
 	    });
 
+	    nodeSet.fireInput();
 	    nodeSet.fireChange();
 	    return nodes;
 	}
@@ -1405,7 +1406,7 @@ var XBubbles =
 	        return;
 	    }
 
-	    if (event.metaKey) {
+	    if (event.metaKey || event.ctrlKey) {
 	        select.add(nodeBubble);
 	    } else if (event.shiftKey) {
 	        if (!nodeSet.startRangeSelect) {
@@ -2004,12 +2005,14 @@ var XBubbles =
 	    a: 65,
 	    Backspace: 8,
 	    Bottom: 40,
+	    Cmd: 91,
 	    Comma: 44, // ,
 	    Enter: 13, // Enter
 	    Esc: 27,
 	    Left: 37,
 	    Right: 39,
 	    Semicolon: 59, // ;
+	    Space: 32,
 	    Tab: 9,
 	    Top: 38
 	};
@@ -2066,7 +2069,12 @@ var XBubbles =
 	};
 
 	function keyup(event) {
-	    event.currentTarget.fireInput();
+	    var code = event.charCode || event.keyCode;
+	    var isPrintableChar = event.key ? event.key.length === 1 : (code > 47 || code === KEY.Space || code === KEY.Backspace) && code !== KEY.Cmd;
+
+	    if (isPrintableChar) {
+	        event.currentTarget.fireInput();
+	    }
 	}
 
 	function keypress(event) {
@@ -2092,7 +2100,7 @@ var XBubbles =
 
 	function keydown(event) {
 	    var code = event.charCode || event.keyCode;
-	    var metaKey = event.metaKey;
+	    var metaKey = event.ctrlKey || event.metaKey;
 	    var nodeSet = event.currentTarget;
 	    var enable = !nodeSet.hasAttribute('disable-controls');
 

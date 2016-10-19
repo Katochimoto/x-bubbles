@@ -2,12 +2,14 @@ exports.KEY = {
     a: 65,
     Backspace: 8,
     Bottom: 40,
+    Cmd: 91,
     Comma: 44, // ,
     Enter: 13, // Enter
     Esc: 27,
     Left: 37,
     Right: 39,
     Semicolon: 59, // ;
+    Space: 32,
     Tab: 9,
     Top: 38,
 };

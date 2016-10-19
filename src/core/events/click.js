@@ -27,7 +27,7 @@ module.exports = function (event) {
         return;
     }
 
-    if (event.metaKey) {
+    if (event.metaKey || event.ctrlKey) {
         select.add(nodeBubble);
 
     } else if (event.shiftKey) {
