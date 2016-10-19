@@ -1842,6 +1842,7 @@ var XBubbles =
 
 	'use strict';
 
+	var context = __webpack_require__(8);
 	var select = __webpack_require__(12);
 	var bubbleset = __webpack_require__(6);
 
@@ -1881,6 +1882,9 @@ var XBubbles =
 	        event.preventDefault();
 	        return;
 	    }
+
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
 
 	    currentDragSet = nodeSet;
 	    nodeSet.classList.add(CLS.DRAGSTART);

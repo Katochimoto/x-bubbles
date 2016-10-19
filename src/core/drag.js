@@ -1,3 +1,4 @@
+const context = require('../context');
 const select = require('./select');
 const bubbleset = require('./bubbleset');
 const { CLS } = require('./constant');
@@ -33,6 +34,9 @@ function onDragstart(event) {
         event.preventDefault();
         return;
     }
+
+    const selection = context.getSelection();
+    selection && selection.removeAllRanges();
 
     currentDragSet = nodeSet;
     nodeSet.classList.add(CLS.DRAGSTART);
