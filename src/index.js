@@ -10,8 +10,6 @@ const text = require('./core/text');
 const cursor = require('./core/cursor');
 const { EV } = require('./core/constant');
 
-const focus = HTMLElement.prototype.focus;
-
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
         value: function () {
@@ -54,12 +52,6 @@ const XBubbles = Object.create(HTMLElement.prototype, {
         value: function (name, prevValue, value) {}
     },
     */
-
-    focus: {
-        value: function () {
-            context.setTimeout(focus.bind(this), 0);
-        }
-    },
 
     options: {
         value: function (name, value) {

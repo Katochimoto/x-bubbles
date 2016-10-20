@@ -71,8 +71,6 @@ var XBubbles =
 	var EV = _require2.EV;
 
 
-	var focus = HTMLElement.prototype.focus;
-
 	var XBubbles = Object.create(HTMLElement.prototype, {
 	    createdCallback: {
 	        value: function value() {
@@ -115,12 +113,6 @@ var XBubbles =
 	        value: function (name, prevValue, value) {}
 	    },
 	    */
-
-	    focus: {
-	        value: function value() {
-	            context.setTimeout(focus.bind(this), 0);
-	        }
-	    },
 
 	    options: {
 	        value: function value(name, _value) {
