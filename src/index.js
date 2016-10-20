@@ -1,6 +1,5 @@
 const raf = require('raf');
 const context = require('./context');
-const events = require('./core/events');
 const { dispatch } = require('./core/event');
 const drag = require('./core/drag');
 const editor = require('./core/editor');
@@ -9,6 +8,11 @@ const bubbleset = require('./core/bubbleset');
 const text = require('./core/text');
 const cursor = require('./core/cursor');
 const { EV } = require('./core/constant');
+
+const dblclick = require('./core/events/dblclick');
+const click = require('./core/events/click');
+const focus = require('./core/events/focus');
+const blur = require('./core/events/blur');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
@@ -24,10 +28,10 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     attachedCallback: {
         value: function () {
-            this.addEventListener('focus', events.focus);
-            this.addEventListener('blur', events.blur);
-            this.addEventListener('click', events.click);
-            this.addEventListener('dblclick', events.dblclick);
+            this.addEventListener('focus', focus);
+            this.addEventListener('blur', blur);
+            this.addEventListener('click', click);
+            this.addEventListener('dblclick', dblclick);
 
             drag.init(this);
             editor.init(this);
@@ -37,10 +41,10 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     detachedCallback: {
         value: function () {
-            this.removeEventListener('focus', events.focus);
-            this.removeEventListener('blur', events.blur);
-            this.removeEventListener('click', events.click);
-            this.removeEventListener('dblclick', events.dblclick);
+            this.removeEventListener('focus', focus);
+            this.removeEventListener('blur', blur);
+            this.removeEventListener('click', click);
+            this.removeEventListener('dblclick', dblclick);
 
             drag.destroy(this);
             editor.destroy(this);
@@ -225,7 +229,7 @@ function throttleRaf(callback, ctx) {
         throttle = 0;
     };
 
-    return function () {
+    return (function () {
         if (throttle) {
             return;
         }
@@ -233,5 +237,5 @@ function throttleRaf(callback, ctx) {
         throttle = raf(animationCallback);
 
         callback.apply(ctx || this, arguments);
-    };
+    });
 }

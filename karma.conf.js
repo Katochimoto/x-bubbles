@@ -10,10 +10,11 @@ module.exports = function(config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['mocha', 'sinon-chai'],
+        frameworks: [ 'mocha', 'sinon-chai' ],
 
         // list of files / patterns to load in the browser
         files: [
+            'node_modules/jquery/dist/jquery.min.js',
             'node_modules/document-register-element/build/document-register-element.js',
             'test/helpers/setup.js',
             'test/spec/**/*.js'
@@ -27,17 +28,12 @@ module.exports = function(config) {
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            'test/**/*.js': [ 'webpack' ],
+            'test/**/*.js': [ 'webpack', 'sourcemap' ],
             'src/**/*.js': [ 'webpack', 'sourcemap' ]
         },
 
         webpack: {
             'devtool': '#inline-source-map',
-            'resolve': {
-                'alias': {
-                    'core': path.join(src, 'core')
-                }
-            },
             'module': {
                 'loaders': [
                     {
@@ -67,9 +63,10 @@ module.exports = function(config) {
         reporters: [ 'progress', 'coverage' ],
 
         coverageReporter: {
-            dir : 'coverage',
-            type: 'lcov',
-            subdir: 'report'
+            reporters : [
+                { type: 'text' },
+                { type: 'lcov', dir: 'coverage', subdir: 'report' }
+            ]
         },
 
         // web server port
@@ -84,6 +81,13 @@ module.exports = function(config) {
 
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: true,
+
+        customLaunchers: {
+            'ChromiumES6': {
+                base: 'Chromium',
+                flags: ['--enable-javascript-harmony']
+            }
+        },
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
