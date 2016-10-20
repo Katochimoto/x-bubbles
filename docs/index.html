@@ -77,18 +77,21 @@ function test() {
 <br/>
 <div class="bubbles" is="x-bubbles" tabindex="0"></div>
 <script>
-document.getElementById('test')
-.addEventListener('change', function(event) {
-    console.log('change');
+var set = document.getElementById('test');
+
+set.addEventListener('change', function(event) {
+    //console.log('change');
 }, false);
 
-document.getElementById('test')
-.addEventListener('bubble-input', function(event) {
-    console.log('bubble-input', event.detail.data);
+set.addEventListener('bubble-input', function(event) {
+    //console.log('bubble-input', event.detail.data);
 }, false);
 
-document.getElementById('test')
-.addEventListener('dblclick', function(event) {
+set.addEventListener('focus', function(event) {
+    console.log('focus');
+}, false);
+
+set.addEventListener('dblclick', function(event) {
     // document.getElementById('test').addBubble('qwe')
 }, false);
 </script>

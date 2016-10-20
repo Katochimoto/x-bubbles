@@ -70,6 +70,8 @@ var XBubbles =
 	var EV = _require2.EV;
 
 
+	var focus = HTMLElement.prototype.focus;
+
 	var XBubbles = Object.create(HTMLElement.prototype, {
 	    createdCallback: {
 	        value: function value() {
@@ -112,6 +114,12 @@ var XBubbles =
 	        value: function (name, prevValue, value) {}
 	    },
 	    */
+
+	    focus: {
+	        value: function value() {
+	            raf(focus.bind(this));
+	        }
+	    },
 
 	    options: {
 	        value: function value(name, _value) {
@@ -2143,7 +2151,7 @@ var XBubbles =
 	            break;
 
 	        // сдвигаем курсор в конец списка
-	        case KEY.Tab:
+	        // case KEY.Tab:
 	        case KEY.Bottom:
 	            event.preventDefault();
 	            if (enable && select.has(nodeSet)) {

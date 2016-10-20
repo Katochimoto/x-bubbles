@@ -96,7 +96,7 @@ function keydown(event) {
         break;
 
     // сдвигаем курсор в конец списка
-    case KEY.Tab:
+    // case KEY.Tab:
     case KEY.Bottom:
         event.preventDefault();
         if (enable && select.has(nodeSet)) {
