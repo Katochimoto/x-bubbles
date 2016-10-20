@@ -27,3 +27,4 @@ exclude_paths:
 - samples/*
 - docs/*
 - webpack.config.js
+- karma.conf.js
