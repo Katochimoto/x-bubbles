@@ -133,10 +133,8 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     removeBubble: {
         value: function (nodeBubble) {
-            const nodeSet = bubbleset.closestNodeSet(nodeBubble);
-
-            if (nodeSet === this) {
-                nodeSet.removeChild(nodeBubble);
+            if (this.contains(nodeBubble)) {
+                this.removeChild(nodeBubble);
                 this.fireChange();
                 return true;
             }
@@ -147,7 +145,11 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     editBubble: {
         value: function (nodeBubble) {
-            return bubble.edit(this, nodeBubble);
+            if (this.contains(nodeBubble)) {
+                return bubble.edit(this, nodeBubble);
+            }
+
+            return false;
         }
     }
 });

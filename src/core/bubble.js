@@ -16,9 +16,7 @@ function isBubbleNode(node) {
 }
 
 function edit(nodeSet, nodeBubble) {
-    if (nodeBubble.hasAttribute('readonly') ||
-        !nodeSet.contains(nodeBubble)) {
-
+    if (nodeBubble.hasAttribute('readonly')) {
         return false;
     }
 

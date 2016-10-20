@@ -44,6 +44,8 @@ function text2bubble(nodeSet, nodeBubble, selection) {
     selection.addRange(range);
 
     replace(selection, nodeBubble);
+    nodeSet.fireInput();
+    nodeSet.fireChange();
     return true;
 }
 

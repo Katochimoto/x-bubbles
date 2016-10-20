@@ -192,10 +192,8 @@ var XBubbles =
 
 	    removeBubble: {
 	        value: function value(nodeBubble) {
-	            var nodeSet = bubbleset.closestNodeSet(nodeBubble);
-
-	            if (nodeSet === this) {
-	                nodeSet.removeChild(nodeBubble);
+	            if (this.contains(nodeBubble)) {
+	                this.removeChild(nodeBubble);
 	                this.fireChange();
 	                return true;
 	            }
@@ -206,7 +204,11 @@ var XBubbles =
 
 	    editBubble: {
 	        value: function value(nodeBubble) {
-	            return bubble.edit(this, nodeBubble);
+	            if (this.contains(nodeBubble)) {
+	                return bubble.edit(this, nodeBubble);
+	            }
+
+	            return false;
 	        }
 	    }
 	});
@@ -758,8 +760,7 @@ var XBubbles =
 	}
 
 	function edit(nodeSet, nodeBubble) {
-	    if (nodeBubble.hasAttribute('readonly') || !nodeSet.contains(nodeBubble)) {
-
+	    if (nodeBubble.hasAttribute('readonly')) {
 	        return false;
 	    }
 
@@ -1032,6 +1033,8 @@ var XBubbles =
 	    selection.addRange(range);
 
 	    replace(selection, nodeBubble);
+	    nodeSet.fireInput();
+	    nodeSet.fireChange();
 	    return true;
 	}
 
