@@ -80,15 +80,15 @@ function test() {
 var set = document.getElementById('test');
 
 set.addEventListener('change', function(event) {
-    //console.log('change');
+    console.log('change');
 }, false);
 
 set.addEventListener('bubble-input', function(event) {
-    //console.log('bubble-input', event.detail.data);
+    console.log('bubble-input', event.detail.data);
 }, false);
 
 set.addEventListener('focus', function(event) {
-    console.log('focus');
+    // console.log('focus');
 }, false);
 
 set.addEventListener('dblclick', function(event) {

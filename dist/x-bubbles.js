@@ -158,6 +158,7 @@ var XBubbles =
 	            value = text.html2text(value);
 	            this.appendChild(context.document.createTextNode(value));
 	            bubble.bubbling(this);
+	            cursor.restore(this);
 	        }
 	    },
 
@@ -174,6 +175,7 @@ var XBubbles =
 	            value = text.html2text(value);
 	            this.appendChild(context.document.createTextNode(value));
 	            bubble.bubbling(this);
+	            cursor.restore(this);
 	        }
 	    },
 
