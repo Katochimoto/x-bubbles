@@ -1176,7 +1176,7 @@ var XBubbles =
 	        rangeParams = {
 	            text: dataText,
 	            startOffset: 0,
-	            endOffset: text.length
+	            endOffset: dataText.length
 	        };
 	    }
 
