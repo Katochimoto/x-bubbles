@@ -25,4 +25,5 @@ exclude_paths:
 - dist/*
 - test/*
 - samples/*
+- docs/*
 - webpack.config.js

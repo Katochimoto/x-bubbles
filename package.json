@@ -68,7 +68,7 @@
     "test-dev": "eslint . --color; karma start --browsers PhantomJS",
     "prod": "NODE_ENV=production webpack --progress",
     "dev": "NODE_ENV=development webpack --progress --watch",
-    "codeclimate": "rm -rf coverage; npm run test; CODECLIMATE_REPO_TOKEN=dafd0fb850e792364e7595a939ef2a22933ce4d5ad1c7a972eb0fe7dc2c4e0c7 codeclimate-test-reporter < coverage/lcov.info"
+    "codeclimate": "rm -rf coverage; npm run test; CODECLIMATE_REPO_TOKEN=984843e3de4f7841d34ede70c12c1d3524791cb800f370e48068f1581ab6eae1 codeclimate-test-reporter < coverage/report/lcov.info"
   },
   "main": "dist/x-bubbles.js",
   "directories": {
