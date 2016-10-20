@@ -14,6 +14,11 @@
     padding: 2px;
     overflow-y: auto;
     overflow-x: hidden;
+    outline: none;
+}
+
+.bubbles:focus {
+    border-color: #f00;
 }
 
 .bubble {
@@ -56,8 +61,8 @@
   -webkit-user-drag: element;
 }
     </style>
-    <script src="../node_modules/document-register-element/build/document-register-element.js"></script>
-    <script src="../dist/x-bubbles.js"></script>
+    <script src="document-register-element.js"></script>
+    <script src="x-bubbles.min.js"></script>
 </head>
 <body>
     <div class="a"></div>
