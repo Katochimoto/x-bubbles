@@ -52,6 +52,7 @@ var XBubbles =
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var raf = __webpack_require__(1);
+	var context = __webpack_require__(8);
 	var events = __webpack_require__(4);
 
 	var _require = __webpack_require__(16);
@@ -117,7 +118,7 @@ var XBubbles =
 
 	    focus: {
 	        value: function value() {
-	            raf(focus.bind(this));
+	            context.setTimeout(focus.bind(this), 0);
 	        }
 	    },
 
@@ -163,7 +164,7 @@ var XBubbles =
 	            }
 
 	            value = text.html2text(value);
-	            this.appendChild(document.createTextNode(value));
+	            this.appendChild(context.document.createTextNode(value));
 	            bubble.bubbling(this);
 	        }
 	    },
@@ -179,7 +180,7 @@ var XBubbles =
 	            }
 
 	            value = text.html2text(value);
-	            this.appendChild(document.createTextNode(value));
+	            this.appendChild(context.document.createTextNode(value));
 	            bubble.bubbling(this);
 	        }
 	    },
@@ -221,7 +222,7 @@ var XBubbles =
 	    }
 	});
 
-	module.exports = document.registerElement('x-bubbles', {
+	module.exports = context.document.registerElement('x-bubbles', {
 	    extends: 'div',
 	    prototype: XBubbles
 	});
@@ -283,7 +284,7 @@ var XBubbles =
 	    }
 	}
 
-	function throttleRaf(callback, context) {
+	function throttleRaf(callback, ctx) {
 	    var throttle = 0;
 	    var animationCallback = function animationCallback() {
 	        throttle = 0;
@@ -296,7 +297,7 @@ var XBubbles =
 
 	        throttle = raf(animationCallback);
 
-	        callback.apply(context || this, arguments);
+	        callback.apply(ctx || this, arguments);
 	    };
 	}
 

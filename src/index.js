@@ -1,4 +1,5 @@
 const raf = require('raf');
+const context = require('./context');
 const events = require('./core/events');
 const { dispatch } = require('./core/event');
 const drag = require('./core/drag');
@@ -56,7 +57,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     focus: {
         value: function () {
-            raf(focus.bind(this));
+            context.setTimeout(focus.bind(this), 0);
         }
     },
 
@@ -104,7 +105,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             }
 
             value = text.html2text(value);
-            this.appendChild(document.createTextNode(value));
+            this.appendChild(context.document.createTextNode(value));
             bubble.bubbling(this);
         }
     },
@@ -120,7 +121,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             }
 
             value = text.html2text(value);
-            this.appendChild(document.createTextNode(value));
+            this.appendChild(context.document.createTextNode(value));
             bubble.bubbling(this);
         }
     },
@@ -162,7 +163,7 @@ const XBubbles = Object.create(HTMLElement.prototype, {
     }
 });
 
-module.exports = document.registerElement('x-bubbles', {
+module.exports = context.document.registerElement('x-bubbles', {
     extends: 'div',
     prototype: XBubbles
 });
@@ -224,7 +225,7 @@ function fireInput() {
     }
 }
 
-function throttleRaf(callback, context) {
+function throttleRaf(callback, ctx) {
     let throttle = 0;
     const animationCallback = function () {
         throttle = 0;
@@ -237,6 +238,6 @@ function throttleRaf(callback, context) {
 
         throttle = raf(animationCallback);
 
-        callback.apply(context || this, arguments);
+        callback.apply(ctx || this, arguments);
     };
 }
