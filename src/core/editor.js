@@ -44,14 +44,16 @@ function keypress(event) {
     /* eslint no-case-declarations: 0 */
     switch (code) {
     case KEY.Enter:
+        event.preventDefault();
+        if (!nodeSet.hasAttribute('disable-controls')) {
+            bubble.bubbling(nodeSet);
+            cursor.restore(nodeSet);
+        }
+        break;
+
     case KEY.Comma:
     case KEY.Semicolon:
         event.preventDefault();
-
-        if (nodeSet.hasAttribute('disable-controls')) {
-            return;
-        }
-
         bubble.bubbling(nodeSet);
         cursor.restore(nodeSet);
         break;
