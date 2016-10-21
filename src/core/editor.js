@@ -9,6 +9,8 @@ const text = require('./text');
 const slice = Array.prototype.slice;
 
 exports.init = function (nodeSet) {
+    nodeSet.addEventListener('focus', focus);
+    nodeSet.addEventListener('blur', blur);
     nodeSet.addEventListener('keyup', keyup);
     nodeSet.addEventListener('keydown', keydown);
     nodeSet.addEventListener('keypress', keypress);
@@ -16,6 +18,8 @@ exports.init = function (nodeSet) {
 };
 
 exports.destroy = function (nodeSet) {
+    nodeSet.removeEventListener('focus', focus);
+    nodeSet.removeEventListener('blur', blur);
     nodeSet.removeEventListener('keyup', keyup);
     nodeSet.removeEventListener('keydown', keydown);
     nodeSet.removeEventListener('keypress', keypress);
@@ -266,4 +270,13 @@ function paste(event) {
                 return true;
             });
     }
+}
+
+function blur(event) {
+    select.clear(event.currentTarget);
+    bubble.bubbling(event.currentTarget);
+}
+
+function focus(event) {
+    cursor.restore(event.currentTarget);
 }

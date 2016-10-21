@@ -1,18 +1,14 @@
-const raf = require('raf');
 const context = require('./context');
-const { dispatch } = require('./core/event');
+const events = require('./core/events');
 const drag = require('./core/drag');
 const editor = require('./core/editor');
 const bubble = require('./core/bubble');
 const bubbleset = require('./core/bubbleset');
 const text = require('./core/text');
 const cursor = require('./core/cursor');
-const { EV } = require('./core/constant');
 
 const dblclick = require('./core/events/dblclick');
 const click = require('./core/events/click');
-const focus = require('./core/events/focus');
-const blur = require('./core/events/blur');
 
 const XBubbles = Object.create(HTMLElement.prototype, {
     createdCallback: {
@@ -20,16 +16,14 @@ const XBubbles = Object.create(HTMLElement.prototype, {
             this.setAttribute('contenteditable', 'true');
             this.setAttribute('spellcheck', 'false');
 
-            this.fireInput = throttleRaf(fireInput, this);
-            this.fireChange = throttleRaf(fireChange, this);
-            this.fireEdit = fireEdit.bind(this);
+            this.fireInput = events.throttle(events.fireInput, this);
+            this.fireChange = events.throttle(events.fireChange, this);
+            this.fireEdit = events.throttle(events.fireEdit, this);
         }
     },
 
     attachedCallback: {
         value: function () {
-            this.addEventListener('focus', focus);
-            this.addEventListener('blur', blur);
             this.addEventListener('click', click);
             this.addEventListener('dblclick', dblclick);
 
@@ -41,8 +35,6 @@ const XBubbles = Object.create(HTMLElement.prototype, {
 
     detachedCallback: {
         value: function () {
-            this.removeEventListener('focus', focus);
-            this.removeEventListener('blur', blur);
             this.removeEventListener('click', click);
             this.removeEventListener('dblclick', dblclick);
 
@@ -132,9 +124,12 @@ const XBubbles = Object.create(HTMLElement.prototype, {
                 return false;
             }
 
-            text.text2bubble(this, nodeBubble);
-            cursor.restore(this);
-            return true;
+            if (text.text2bubble(this, nodeBubble)) {
+                cursor.restore(this);
+                return true;
+            }
+
+            return false;
         }
     },
 
@@ -191,51 +186,4 @@ function optionsPrepare(options) {
     default:
         options.bubbleDeformation = function () {};
     }
-}
-
-function fireEdit(nodeBubble) {
-    dispatch(this, EV.BUBBLE_EDIT, {
-        bubbles: false,
-        cancelable: false,
-        detail: { data: nodeBubble }
-    });
-}
-
-function fireChange() {
-    dispatch(this, EV.CHANGE, {
-        bubbles: false,
-        cancelable: false
-    });
-}
-
-function fireInput() {
-    const textRange = text.currentTextRange();
-    const editText = textRange && text.textClean(textRange.toString()) || '';
-
-    if (this._bubbleValue !== editText) {
-        this._bubbleValue = editText;
-
-        dispatch(this, EV.BUBBLE_INPUT, {
-            bubbles: false,
-            cancelable: false,
-            detail: { data: editText }
-        });
-    }
-}
-
-function throttleRaf(callback, ctx) {
-    let throttle = 0;
-    const animationCallback = function () {
-        throttle = 0;
-    };
-
-    return (function () {
-        if (throttle) {
-            return;
-        }
-
-        throttle = raf(animationCallback);
-
-        callback.apply(ctx || this, arguments);
-    });
 }

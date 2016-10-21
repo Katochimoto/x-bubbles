@@ -51,29 +51,17 @@ var XBubbles =
 
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-	var raf = __webpack_require__(1);
-	var context = __webpack_require__(4);
-
-	var _require = __webpack_require__(5);
-
-	var dispatch = _require.dispatch;
-
-	var drag = __webpack_require__(7);
+	var context = __webpack_require__(1);
+	var events = __webpack_require__(2);
+	var drag = __webpack_require__(12);
 	var editor = __webpack_require__(15);
 	var bubble = __webpack_require__(9);
 	var bubbleset = __webpack_require__(11);
-	var text = __webpack_require__(10);
+	var text = __webpack_require__(8);
 	var cursor = __webpack_require__(16);
-
-	var _require2 = __webpack_require__(13);
-
-	var EV = _require2.EV;
-
 
 	var dblclick = __webpack_require__(17);
 	var click = __webpack_require__(18);
-	var focus = __webpack_require__(19);
-	var blur = __webpack_require__(20);
 
 	var XBubbles = Object.create(HTMLElement.prototype, {
 	    createdCallback: {
@@ -81,16 +69,14 @@ var XBubbles =
 	            this.setAttribute('contenteditable', 'true');
 	            this.setAttribute('spellcheck', 'false');
 
-	            this.fireInput = throttleRaf(fireInput, this);
-	            this.fireChange = throttleRaf(fireChange, this);
-	            this.fireEdit = fireEdit.bind(this);
+	            this.fireInput = events.throttle(events.fireInput, this);
+	            this.fireChange = events.throttle(events.fireChange, this);
+	            this.fireEdit = events.throttle(events.fireEdit, this);
 	        }
 	    },
 
 	    attachedCallback: {
 	        value: function value() {
-	            this.addEventListener('focus', focus);
-	            this.addEventListener('blur', blur);
 	            this.addEventListener('click', click);
 	            this.addEventListener('dblclick', dblclick);
 
@@ -102,8 +88,6 @@ var XBubbles =
 
 	    detachedCallback: {
 	        value: function value() {
-	            this.removeEventListener('focus', focus);
-	            this.removeEventListener('blur', blur);
 	            this.removeEventListener('click', click);
 	            this.removeEventListener('dblclick', dblclick);
 
@@ -191,9 +175,12 @@ var XBubbles =
 	                return false;
 	            }
 
-	            text.text2bubble(this, nodeBubble);
-	            cursor.restore(this);
-	            return true;
+	            if (text.text2bubble(this, nodeBubble)) {
+	                cursor.restore(this);
+	                return true;
+	            }
+
+	            return false;
 	        }
 	    },
 
@@ -252,22 +239,53 @@ var XBubbles =
 	    }
 	}
 
-	function fireEdit(nodeBubble) {
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = function () {
+	    /* eslint no-eval: 0 */
+	    return this || (1, eval)('this');
+	}();
+
+/***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	/**
+	 * @module x-bubbles/event
+	 */
+
+	var raf = __webpack_require__(3);
+	var context = __webpack_require__(1);
+	var CustomEventCommon = __webpack_require__(6);
+
+	var _require = __webpack_require__(7);
+
+	var EV = _require.EV;
+
+	var text = __webpack_require__(8);
+
+	exports.fireEdit = function (nodeBubble) {
 	    dispatch(this, EV.BUBBLE_EDIT, {
 	        bubbles: false,
 	        cancelable: false,
 	        detail: { data: nodeBubble }
 	    });
-	}
+	};
 
-	function fireChange() {
+	exports.fireChange = function () {
 	    dispatch(this, EV.CHANGE, {
 	        bubbles: false,
 	        cancelable: false
 	    });
-	}
+	};
 
-	function fireInput() {
+	exports.fireInput = function () {
 	    var textRange = text.currentTextRange();
 	    var editText = textRange && text.textClean(textRange.toString()) || '';
 
@@ -280,9 +298,9 @@ var XBubbles =
 	            detail: { data: editText }
 	        });
 	    }
-	}
+	};
 
-	function throttleRaf(callback, ctx) {
+	exports.throttle = function (callback, ctx) {
 	    var throttle = 0;
 	    var animationCallback = function animationCallback() {
 	        throttle = 0;
@@ -297,13 +315,61 @@ var XBubbles =
 
 	        callback.apply(ctx || this, arguments);
 	    };
+	};
+
+	/**
+	 * Designer events.
+	 *
+	 * @example
+	 * const { Custom } = require('event');
+	 *
+	 * new Custom('custom-event', {
+	 *     bubbles: true,
+	 *     cancelable: true,
+	 *     detail: { data: '123' }
+	 * })
+	 *
+	 * @alias module:x-bubbles/event~Custom
+	 * @constructor
+	 */
+	var Custom = function () {
+	    if (typeof context.CustomEvent === 'function') {
+	        return context.CustomEvent;
+	    }
+
+	    return CustomEventCommon;
+	}();
+
+	/**
+	 * Dispatch event.
+	 *
+	 * @example
+	 * const { dispatch } = require('event');
+	 * dispatch(node, 'custom-event', {
+	 *     bubbles: true,
+	 *     cancelable: true,
+	 *     detail: { data: '123' }
+	 * })
+	 *
+	 * @alias module:x-bubbles/event.dispatch
+	 * @param {HTMLElement} element node events
+	 * @param {string} name event name
+	 * @param {Object} params the event parameters
+	 * @param {boolean} [params.bubbles=false]
+	 * @param {boolean} [params.cancelable=false]
+	 * @param {*} [params.detail]
+	 */
+	function dispatch(element, name) {
+	    var params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+	    element.dispatchEvent(new Custom(name, params));
 	}
 
 /***/ },
-/* 1 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(2)
+	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(4)
 	  , root = typeof window === 'undefined' ? global : window
 	  , vendors = ['moz', 'webkit']
 	  , suffix = 'AnimationFrame'
@@ -379,7 +445,7 @@ var XBubbles =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 2 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.7.1
@@ -415,10 +481,10 @@ var XBubbles =
 
 	}).call(this);
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
 
 /***/ },
-/* 3 */
+/* 5 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -604,119 +670,12 @@ var XBubbles =
 
 
 /***/ },
-/* 4 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	module.exports = function () {
-	    /* eslint no-eval: 0 */
-	    return this || (1, eval)('this');
-	}();
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	/**
-	 * @module x-bubbles/event
-	 */
-
-	var context = __webpack_require__(4);
-	var CustomEventCommon = __webpack_require__(6);
-
-	/**
-	 * Designer events.
-	 *
-	 * @example
-	 * const { Custom } = require('event');
-	 *
-	 * new Custom('custom-event', {
-	 *     bubbles: true,
-	 *     cancelable: true,
-	 *     detail: { data: '123' }
-	 * })
-	 *
-	 * @alias module:x-bubbles/event~Custom
-	 * @constructor
-	 */
-	var Custom = function () {
-	    if (typeof context.CustomEvent === 'function') {
-	        return context.CustomEvent;
-	    }
-
-	    return CustomEventCommon;
-	}();
-
-	/**
-	 * Dispatch event.
-	 *
-	 * @example
-	 * const { dispatch } = require('event');
-	 * dispatch(node, 'custom-event', {
-	 *     bubbles: true,
-	 *     cancelable: true,
-	 *     detail: { data: '123' }
-	 * })
-	 *
-	 * @alias module:x-bubbles/event.dispatch
-	 * @param {HTMLElement} element node events
-	 * @param {string} name event name
-	 * @param {Object} params the event parameters
-	 * @param {boolean} [params.bubbles=false]
-	 * @param {boolean} [params.cancelable=false]
-	 * @param {*} [params.detail]
-	 */
-	function dispatch(element, name, params) {
-	    element.dispatchEvent(new Custom(name, params || {}));
-	}
-
-	/**
-	 * Forwarding events
-	 *
-	 * @example
-	 * const { forwardingEvents } = require('event');
-	 * forwardingEvents('custom-event', fromNode, toNode, false);
-	 *
-	 * @param {string} name event name
-	 * @param {HTMLElement} fromElement
-	 * @param {HTMLElement} toElement
-	 * @param {boolean} [capture=false]
-	 * @returns {function} callback
-	 */
-	function forwardingEvents(name, fromElement, toElement) {
-	    var capture = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-
-	    var callback = function callback(event) {
-	        dispatch(toElement, name, {
-	            bubbles: event.bubbles,
-	            cancelable: event.cancelable,
-	            detail: event.detail
-	        });
-	    };
-
-	    callback.cancel = function () {
-	        fromElement.removeEventListener(name, callback, capture);
-	    };
-
-	    fromElement.addEventListener(name, callback, capture);
-
-	    return callback;
-	}
-
-	exports.Custom = Custom;
-	exports.dispatch = dispatch;
-	exports.forwardingEvents = forwardingEvents;
-
-/***/ },
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var context = __webpack_require__(4);
+	var context = __webpack_require__(1);
 
 	/**
 	 * @constant {Document}
@@ -793,166 +752,36 @@ var XBubbles =
 
 /***/ },
 /* 7 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	'use strict';
 
-	var context = __webpack_require__(4);
-	var select = __webpack_require__(8);
-	var bubbleset = __webpack_require__(11);
-
-	var _require = __webpack_require__(13);
-
-	var CLS = _require.CLS;
-
-
-	var currentDragSet = null;
-	var dragImage = null;
-
-	exports.init = function (nodeSet) {
-	    nodeSet.addEventListener('drop', onDrop);
-	    nodeSet.addEventListener('dragover', onDragover);
-	    nodeSet.addEventListener('dragenter', onDragenter);
-	    nodeSet.addEventListener('dragleave', onDragleave);
-	    nodeSet.addEventListener('dragstart', onDragstart);
-	    nodeSet.addEventListener('dragend', onDragend);
+	exports.KEY = {
+	    a: 65,
+	    Backspace: 8,
+	    Bottom: 40,
+	    Cmd: 91,
+	    Comma: 44, // ,
+	    Enter: 13, // Enter
+	    Esc: 27,
+	    Left: 37,
+	    Right: 39,
+	    Semicolon: 59, // ;
+	    Space: 32,
+	    Tab: 9,
+	    Top: 38
 	};
 
-	exports.destroy = function (nodeSet) {
-	    nodeSet.removeEventListener('drop', onDrop);
-	    nodeSet.removeEventListener('dragover', onDragover);
-	    nodeSet.removeEventListener('dragenter', onDragenter);
-	    nodeSet.removeEventListener('dragleave', onDragleave);
-	    nodeSet.removeEventListener('dragstart', onDragstart);
-	    nodeSet.removeEventListener('dragend', onDragend);
+	exports.CLS = {
+	    DRAGSTART: 'drag',
+	    DROPZONE: 'dropzone'
 	};
 
-	function onDragstart(event) {
-	    event.stopPropagation();
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
-
-	    if (!nodeSet || !nodeBubble) {
-	        event.preventDefault();
-	        return;
-	    }
-
-	    var selection = context.getSelection();
-	    selection && selection.removeAllRanges();
-
-	    currentDragSet = nodeSet;
-	    nodeSet.classList.add(CLS.DRAGSTART);
-	    select.add(nodeBubble);
-
-	    event.dataTransfer.effectAllowed = 'move';
-	    event.dataTransfer.setData('text/plain', '');
-
-	    var list = select.get(currentDragSet);
-	    if (list.length > 1) {
-	        event.dataTransfer.setDragImage(getDragImage(), 16, 16);
-	    }
-	}
-
-	function onDrop(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (!nodeSet || nodeSet === currentDragSet) {
-	        return;
-	    }
-
-	    var list = select.get(currentDragSet);
-
-	    if (!list.length) {
-	        return;
-	    }
-
-	    list.forEach(function (item) {
-	        return nodeSet.appendChild(item);
-	    });
-	    nodeSet.focus();
-	    nodeSet.fireChange();
-	}
-
-	function onDragover(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    event.dataTransfer.dropEffect = 'move';
-	}
-
-	function onDragenter(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (!nodeSet || nodeSet === currentDragSet) {
-	        return;
-	    }
-
-	    nodeSet.classList.add(CLS.DROPZONE);
-	}
-
-	function onDragleave(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (!nodeSet || nodeSet === currentDragSet) {
-	        return;
-	    }
-
-	    nodeSet.classList.remove(CLS.DROPZONE);
-	}
-
-	function onDragend(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    currentDragSet.classList.remove(CLS.DRAGSTART);
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (nodeSet && nodeSet !== currentDragSet) {
-	        nodeSet.classList.remove(CLS.DROPZONE);
-	    }
-
-	    currentDragSet = null;
-	}
-
-	function getDragImage() {
-	    if (!dragImage) {
-	        dragImage = new Image();
-	        dragImage.src = __webpack_require__(14);
-	    }
-
-	    return dragImage;
-	}
+	exports.EV = {
+	    BUBBLE_EDIT: 'bubble-edit',
+	    BUBBLE_INPUT: 'bubble-input',
+	    CHANGE: 'change'
+	};
 
 /***/ },
 /* 8 */
@@ -960,424 +789,7 @@ var XBubbles =
 
 	'use strict';
 
-	var context = __webpack_require__(4);
-	var bubble = __webpack_require__(9);
-	var bubbleset = __webpack_require__(11);
-
-	var slice = Array.prototype.slice;
-	var PATH_SELECTED = '[bubble][selected]';
-	var PATH_NOT_SELECTED = '[bubble]:not([selected])';
-
-	exports.all = all;
-	exports.add = add;
-	exports.clear = clear;
-	exports.get = get;
-	exports.uniq = uniq;
-	exports.head = head;
-	exports.last = last;
-	exports.has = has;
-	exports.range = range;
-	exports.toggleUniq = toggleUniq;
-
-	function range(node) {
-	    if (!bubble.isBubbleNode(node)) {
-	        return;
-	    }
-
-	    var set = node.parentNode;
-	    var list = get(set);
-
-	    if (!list.length) {
-	        uniq(node);
-	        return;
-	    }
-
-	    clear(set);
-
-	    var headList = list[0];
-	    var lastList = list[list.length - 1];
-
-	    if (headList === lastList || !set.startRangeSelect) {
-	        set.startRangeSelect = headList;
-	    }
-
-	    var fromNode = void 0;
-	    var toNode = void 0;
-	    var position = node.compareDocumentPosition(set.startRangeSelect);
-
-	    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-	        fromNode = set.startRangeSelect;
-	        toNode = node;
-	    } else {
-	        fromNode = node;
-	        toNode = set.startRangeSelect;
-	    }
-
-	    if (fromNode && toNode) {
-	        var item = fromNode;
-
-	        while (item) {
-	            if (!setSelected(item)) {
-	                break;
-	            }
-
-	            if (item === toNode) {
-	                break;
-	            }
-
-	            item = item.nextSibling;
-	        }
-
-	        bubble.bubbling(set);
-	    }
-	}
-
-	function all(nodeSet) {
-	    slice.call(nodeSet.querySelectorAll(PATH_NOT_SELECTED)).forEach(function (item) {
-	        return setSelected(item);
-	    });
-	    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
-
-	    bubble.bubbling(nodeSet);
-
-	    var selection = context.getSelection();
-	    selection && selection.removeAllRanges();
-	}
-
-	function has(nodeSet) {
-	    return Boolean(nodeSet.querySelector(PATH_SELECTED));
-	}
-
-	function head(set) {
-	    return get(set)[0];
-	}
-
-	function last(set) {
-	    var list = get(set);
-	    return list[list.length - 1];
-	}
-
-	function get(nodeSet) {
-	    return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
-	}
-
-	function clear(nodeSet) {
-	    get(nodeSet).forEach(function (item) {
-	        return item.removeAttribute('selected');
-	    });
-	}
-
-	function add(node) {
-	    if (setSelected(node)) {
-	        var nodeSet = bubbleset.closestNodeSet(node);
-
-	        nodeSet.startRangeSelect = node;
-	        // ???
-	        bubble.bubbling(nodeSet);
-
-	        return true;
-	    }
-
-	    return false;
-	}
-
-	function uniq(node) {
-	    if (!bubble.isBubbleNode(node)) {
-	        return false;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(node);
-	    var selection = context.getSelection();
-
-	    selection && selection.removeAllRanges();
-	    clear(nodeSet);
-
-	    return add(node);
-	}
-
-	function toggleUniq(node) {
-	    if (isSelected(node)) {
-	        var nodeSet = bubbleset.closestNodeSet(node);
-
-	        if (get(nodeSet).length === 1) {
-	            return removeSelected(node);
-	        }
-	    }
-
-	    return uniq(node);
-	}
-
-	function isSelected(node) {
-	    return bubble.isBubbleNode(node) && node.hasAttribute('selected') || false;
-	}
-
-	function setSelected(node) {
-	    if (bubble.isBubbleNode(node)) {
-	        node.setAttribute('selected', '');
-	        return true;
-	    }
-
-	    return false;
-	}
-
-	function removeSelected(node) {
-	    if (bubble.isBubbleNode(node)) {
-	        node.removeAttribute('selected');
-	        return true;
-	    }
-
-	    return false;
-	}
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var context = __webpack_require__(4);
-	var text = __webpack_require__(10);
-
-	var _require = __webpack_require__(12);
-
-	var escape = _require.escape;
-
-
-	exports.isBubbleNode = isBubbleNode;
-	exports.bubbling = bubbling;
-	exports.create = create;
-	exports.edit = edit;
-
-	function isBubbleNode(node) {
-	    if (!node || node.nodeType !== Node.ELEMENT_NODE) {
-	        return false;
-	    }
-
-	    return node.hasAttribute('bubble');
-	}
-
-	function edit(nodeSet, nodeBubble) {
-	    if (nodeBubble.hasAttribute('readonly')) {
-	        return false;
-	    }
-
-	    var selection = context.getSelection();
-
-	    if (!selection) {
-	        return false;
-	    }
-
-	    var bubbleDeformation = nodeSet.options('bubbleDeformation');
-	    var rangeParams = bubbleDeformation(nodeBubble);
-
-	    if (!rangeParams) {
-	        var dataText = text.textClean(nodeBubble.innerText);
-
-	        rangeParams = {
-	            text: dataText,
-	            startOffset: 0,
-	            endOffset: dataText.length
-	        };
-	    }
-
-	    var textFake = text.createZws();
-	    var textNode = context.document.createTextNode(rangeParams.text);
-
-	    nodeSet.fireEdit(nodeBubble);
-	    nodeSet.replaceChild(textNode, nodeBubble);
-	    nodeSet.insertBefore(textFake, textNode);
-
-	    var range = context.document.createRange();
-	    range.setStart(textNode, rangeParams.startOffset);
-	    range.setEnd(textNode, rangeParams.endOffset);
-
-	    selection.removeAllRanges();
-	    selection.addRange(range);
-	    return true;
-	}
-
-	function create(nodeSet, dataText) {
-	    var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-	    dataText = text.textClean(dataText);
-
-	    if (!dataText) {
-	        return;
-	    }
-
-	    var bubbleFormation = nodeSet.options('bubbleFormation');
-	    var classBubble = nodeSet.options('classBubble');
-	    var draggable = nodeSet.options('draggable');
-	    var wrap = context.document.createElement('span');
-
-	    wrap.innerText = dataText;
-
-	    if (draggable) {
-	        wrap.setAttribute('draggable', 'true');
-	    }
-
-	    for (var key in data) {
-	        if (data[key]) {
-	            wrap.setAttribute('data-' + key, escape(data[key]));
-	        }
-	    }
-
-	    bubbleFormation(wrap);
-
-	    if (classBubble) {
-	        var classes = String(classBubble).trim().split(/\s+/);
-	        var len = classes.length;
-
-	        while (len--) {
-	            wrap.classList.add(classes[len]);
-	        }
-	    }
-
-	    wrap.setAttribute('bubble', '');
-	    wrap.setAttribute('contenteditable', 'false');
-
-	    return wrap;
-	}
-
-	function bubbling(nodeSet) {
-	    var separator = nodeSet.options('separator');
-	    var ending = nodeSet.options('ending');
-	    var begining = nodeSet.options('begining');
-	    var ranges = getBubbleRanges(nodeSet);
-	    var nodes = [];
-
-	    ranges.forEach(function (range) {
-	        var dataText = text.textClean(range.toString());
-
-	        if (!dataText) {
-	            range.deleteContents();
-	            return;
-	        }
-
-	        var textParts = [dataText];
-
-	        if (separator) {
-	            textParts = dataText.split(separator).map(trimIterator).filter(nonEmptyIterator);
-	        }
-
-	        if (ending) {
-	            textParts = textParts.reduce(function (parts, str) {
-	                return parts.concat(parseFragmentByEnding(str, ending));
-	            }, []).map(trimIterator).filter(nonEmptyIterator);
-	        } else if (begining) {
-	            textParts = textParts.reduce(function (parts, str) {
-	                return parts.concat(parseFragmentByBeginning(str, begining));
-	            }, []).map(trimIterator).filter(nonEmptyIterator);
-	        }
-
-	        if (!textParts.length) {
-	            range.deleteContents();
-	        }
-
-	        var fragment = context.document.createDocumentFragment();
-
-	        textParts.forEach(function (textPart) {
-	            var nodeBubble = create(nodeSet, textPart);
-	            if (nodeBubble) {
-	                fragment.appendChild(nodeBubble);
-	                nodes.push(nodeBubble);
-	            }
-	        });
-
-	        range.deleteContents();
-	        range.insertNode(fragment);
-	    });
-
-	    nodeSet.fireInput();
-
-	    if (nodes.length) {
-	        nodeSet.fireChange();
-	    }
-
-	    return nodes;
-	}
-
-	function getBubbleRanges(set) {
-	    var i = void 0;
-	    var rng = void 0;
-	    var node = void 0;
-	    var ranges = [];
-	    var children = set.childNodes;
-
-	    for (i = 0; i < children.length; i++) {
-	        node = children[i];
-
-	        if (isBubbleNode(node)) {
-	            if (rng) {
-	                rng.setEndBefore(node);
-	                ranges.push(rng);
-	                rng = undefined;
-	            }
-	        } else {
-	            if (!rng) {
-	                rng = context.document.createRange();
-	                rng.setStartBefore(node);
-	            }
-	        }
-	    }
-
-	    if (rng) {
-	        rng.setEndAfter(node);
-	        ranges.push(rng);
-	    }
-
-	    return ranges;
-	}
-
-	function trimIterator(str) {
-	    return str.trim();
-	}
-
-	function nonEmptyIterator(str) {
-	    return Boolean(str);
-	}
-
-	function parseFragmentByEnding(str, reg) {
-	    var parts = [];
-	    var lastIndex = 0;
-	    var loop = 999;
-
-	    reg.lastIndex = 0;
-	    while (reg.exec(str) !== null && loop) {
-	        loop--;
-	        parts.push(str.substring(lastIndex, reg.lastIndex));
-	        lastIndex = reg.lastIndex;
-	    }
-
-	    return parts;
-	}
-
-	function parseFragmentByBeginning(str, reg) {
-	    var parts = [];
-	    var res = void 0;
-	    var index = 0;
-	    var loop = 999;
-
-	    reg.lastIndex = 0;
-	    while ((res = reg.exec(str)) !== null && loop) {
-	        loop--;
-	        if (index !== res.index) {
-	            parts.push(str.substring(index, res.index));
-	            index = res.index;
-	        }
-	    }
-
-	    parts.push(str.substring(index, str.length));
-	    return parts;
-	}
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var context = __webpack_require__(4);
+	var context = __webpack_require__(1);
 	var bubble = __webpack_require__(9);
 	var bubbleset = __webpack_require__(11);
 
@@ -1407,11 +819,7 @@ var XBubbles =
 
 	    var range = currentTextRange(selection);
 
-	    if (!range) {
-	        return false;
-	    }
-
-	    if (!nodeBubble) {
+	    if (range && !nodeBubble) {
 	        nodeBubble = bubble.create(nodeSet, range.toString());
 	    }
 
@@ -1419,10 +827,14 @@ var XBubbles =
 	        return false;
 	    }
 
-	    selection.removeAllRanges();
-	    selection.addRange(range);
+	    if (range) {
+	        selection.removeAllRanges();
+	        selection.addRange(range);
+	        replace(selection, nodeBubble);
+	    } else {
+	        nodeSet.appendChild(nodeBubble);
+	    }
 
-	    replace(selection, nodeBubble);
 	    nodeSet.fireInput();
 	    nodeSet.fireChange();
 	    return true;
@@ -1708,14 +1120,315 @@ var XBubbles =
 	}
 
 /***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(1);
+	var text = __webpack_require__(8);
+
+	var _require = __webpack_require__(10);
+
+	var escape = _require.escape;
+
+
+	exports.isBubbleNode = isBubbleNode;
+	exports.bubbling = bubbling;
+	exports.create = create;
+	exports.edit = edit;
+
+	function isBubbleNode(node) {
+	    if (!node || node.nodeType !== Node.ELEMENT_NODE) {
+	        return false;
+	    }
+
+	    return node.hasAttribute('bubble');
+	}
+
+	function edit(nodeSet, nodeBubble) {
+	    if (nodeBubble.hasAttribute('readonly')) {
+	        return false;
+	    }
+
+	    var selection = context.getSelection();
+
+	    if (!selection) {
+	        return false;
+	    }
+
+	    var bubbleDeformation = nodeSet.options('bubbleDeformation');
+	    var rangeParams = bubbleDeformation(nodeBubble);
+
+	    if (!rangeParams) {
+	        var dataText = text.textClean(nodeBubble.innerText);
+
+	        rangeParams = {
+	            text: dataText,
+	            startOffset: 0,
+	            endOffset: dataText.length
+	        };
+	    }
+
+	    var textFake = text.createZws();
+	    var textNode = context.document.createTextNode(rangeParams.text);
+
+	    nodeSet.fireEdit(nodeBubble);
+	    nodeSet.replaceChild(textNode, nodeBubble);
+	    nodeSet.insertBefore(textFake, textNode);
+
+	    var range = context.document.createRange();
+	    range.setStart(textNode, rangeParams.startOffset);
+	    range.setEnd(textNode, rangeParams.endOffset);
+
+	    selection.removeAllRanges();
+	    selection.addRange(range);
+	    return true;
+	}
+
+	function create(nodeSet, dataText) {
+	    var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+	    dataText = text.textClean(dataText);
+
+	    if (!dataText) {
+	        return;
+	    }
+
+	    var bubbleFormation = nodeSet.options('bubbleFormation');
+	    var classBubble = nodeSet.options('classBubble');
+	    var draggable = nodeSet.options('draggable');
+	    var wrap = context.document.createElement('span');
+
+	    wrap.innerText = dataText;
+
+	    if (draggable) {
+	        wrap.setAttribute('draggable', 'true');
+	    }
+
+	    for (var key in data) {
+	        if (data[key]) {
+	            wrap.setAttribute('data-' + key, escape(data[key]));
+	        }
+	    }
+
+	    bubbleFormation(wrap);
+
+	    if (classBubble) {
+	        var classes = String(classBubble).trim().split(/\s+/);
+	        var len = classes.length;
+
+	        while (len--) {
+	            wrap.classList.add(classes[len]);
+	        }
+	    }
+
+	    wrap.setAttribute('bubble', '');
+	    wrap.setAttribute('contenteditable', 'false');
+
+	    return wrap;
+	}
+
+	function bubbling(nodeSet) {
+	    var separator = nodeSet.options('separator');
+	    var ending = nodeSet.options('ending');
+	    var begining = nodeSet.options('begining');
+	    var ranges = getBubbleRanges(nodeSet);
+	    var nodes = [];
+
+	    ranges.forEach(function (range) {
+	        var dataText = text.textClean(range.toString());
+
+	        if (!dataText) {
+	            range.deleteContents();
+	            return;
+	        }
+
+	        var textParts = [dataText];
+
+	        if (separator) {
+	            textParts = dataText.split(separator).map(trimIterator).filter(nonEmptyIterator);
+	        }
+
+	        if (ending) {
+	            textParts = textParts.reduce(function (parts, str) {
+	                return parts.concat(parseFragmentByEnding(str, ending));
+	            }, []).map(trimIterator).filter(nonEmptyIterator);
+	        } else if (begining) {
+	            textParts = textParts.reduce(function (parts, str) {
+	                return parts.concat(parseFragmentByBeginning(str, begining));
+	            }, []).map(trimIterator).filter(nonEmptyIterator);
+	        }
+
+	        if (!textParts.length) {
+	            range.deleteContents();
+	        }
+
+	        var fragment = context.document.createDocumentFragment();
+
+	        textParts.forEach(function (textPart) {
+	            var nodeBubble = create(nodeSet, textPart);
+	            if (nodeBubble) {
+	                fragment.appendChild(nodeBubble);
+	                nodes.push(nodeBubble);
+	            }
+	        });
+
+	        range.deleteContents();
+	        range.insertNode(fragment);
+	    });
+
+	    nodeSet.fireInput();
+
+	    if (nodes.length) {
+	        nodeSet.fireChange();
+	    }
+
+	    return nodes;
+	}
+
+	function getBubbleRanges(set) {
+	    var i = void 0;
+	    var rng = void 0;
+	    var node = void 0;
+	    var ranges = [];
+	    var children = set.childNodes;
+
+	    for (i = 0; i < children.length; i++) {
+	        node = children[i];
+
+	        if (isBubbleNode(node)) {
+	            if (rng) {
+	                rng.setEndBefore(node);
+	                ranges.push(rng);
+	                rng = undefined;
+	            }
+	        } else {
+	            if (!rng) {
+	                rng = context.document.createRange();
+	                rng.setStartBefore(node);
+	            }
+	        }
+	    }
+
+	    if (rng) {
+	        rng.setEndAfter(node);
+	        ranges.push(rng);
+	    }
+
+	    return ranges;
+	}
+
+	function trimIterator(str) {
+	    return str.trim();
+	}
+
+	function nonEmptyIterator(str) {
+	    return Boolean(str);
+	}
+
+	function parseFragmentByEnding(str, reg) {
+	    var parts = [];
+	    var lastIndex = 0;
+	    var loop = 999;
+
+	    reg.lastIndex = 0;
+	    while (reg.exec(str) !== null && loop) {
+	        loop--;
+	        parts.push(str.substring(lastIndex, reg.lastIndex));
+	        lastIndex = reg.lastIndex;
+	    }
+
+	    return parts;
+	}
+
+	function parseFragmentByBeginning(str, reg) {
+	    var parts = [];
+	    var res = void 0;
+	    var index = 0;
+	    var loop = 999;
+
+	    reg.lastIndex = 0;
+	    while ((res = reg.exec(str)) !== null && loop) {
+	        loop--;
+	        if (index !== res.index) {
+	            parts.push(str.substring(index, res.index));
+	            index = res.index;
+	        }
+	    }
+
+	    parts.push(str.substring(index, str.length));
+	    return parts;
+	}
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	/* eslint quotes: 0 */
+
+	var htmlEscapes = {
+	    '&': '&amp;',
+	    '<': '&lt;',
+	    '>': '&gt;',
+	    '"': '&quot;',
+	    "'": '&#39;',
+	    '`': '&#96;'
+	};
+
+	var htmlUnescapes = {
+	    '&amp;': '&',
+	    '&lt;': '<',
+	    '&gt;': '>',
+	    '&quot;': '"',
+	    '&#39;': "'",
+	    '&#96;': '`'
+	};
+
+	var reEscapedHtml = /&(?:amp|lt|gt|quot|#39|#96);/g;
+	var reUnescapedHtml = /[&<>"'`]/g;
+	var reHasEscapedHtml = RegExp(reEscapedHtml.source);
+	var reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+
+	exports.escape = function (data) {
+	    data = String(data);
+
+	    if (data && reHasUnescapedHtml.test(data)) {
+	        return data.replace(reUnescapedHtml, escapeHtmlChar);
+	    }
+
+	    return data;
+	};
+
+	exports.unescape = function (data) {
+	    data = String(data);
+
+	    if (data && reHasEscapedHtml.test(data)) {
+	        return data.replace(reEscapedHtml, unescapeHtmlChar);
+	    }
+
+	    return data;
+	};
+
+	function unescapeHtmlChar(chr) {
+	    return htmlUnescapes[chr];
+	}
+
+	function escapeHtmlChar(chr) {
+	    return htmlEscapes[chr];
+	}
+
+/***/ },
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var bubble = __webpack_require__(9);
-	var text = __webpack_require__(10);
-	var context = __webpack_require__(4);
+	var text = __webpack_require__(8);
+	var context = __webpack_require__(1);
 
 	var slice = Array.prototype.slice;
 
@@ -1807,95 +1520,341 @@ var XBubbles =
 
 /***/ },
 /* 12 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	/* eslint quotes: 0 */
+	var context = __webpack_require__(1);
+	var select = __webpack_require__(13);
+	var bubbleset = __webpack_require__(11);
 
-	var htmlEscapes = {
-	    '&': '&amp;',
-	    '<': '&lt;',
-	    '>': '&gt;',
-	    '"': '&quot;',
-	    "'": '&#39;',
-	    '`': '&#96;'
+	var _require = __webpack_require__(7);
+
+	var CLS = _require.CLS;
+
+
+	var currentDragSet = null;
+	var dragImage = null;
+
+	exports.init = function (nodeSet) {
+	    nodeSet.addEventListener('drop', onDrop);
+	    nodeSet.addEventListener('dragover', onDragover);
+	    nodeSet.addEventListener('dragenter', onDragenter);
+	    nodeSet.addEventListener('dragleave', onDragleave);
+	    nodeSet.addEventListener('dragstart', onDragstart);
+	    nodeSet.addEventListener('dragend', onDragend);
 	};
 
-	var htmlUnescapes = {
-	    '&amp;': '&',
-	    '&lt;': '<',
-	    '&gt;': '>',
-	    '&quot;': '"',
-	    '&#39;': "'",
-	    '&#96;': '`'
+	exports.destroy = function (nodeSet) {
+	    nodeSet.removeEventListener('drop', onDrop);
+	    nodeSet.removeEventListener('dragover', onDragover);
+	    nodeSet.removeEventListener('dragenter', onDragenter);
+	    nodeSet.removeEventListener('dragleave', onDragleave);
+	    nodeSet.removeEventListener('dragstart', onDragstart);
+	    nodeSet.removeEventListener('dragend', onDragend);
 	};
 
-	var reEscapedHtml = /&(?:amp|lt|gt|quot|#39|#96);/g;
-	var reUnescapedHtml = /[&<>"'`]/g;
-	var reHasEscapedHtml = RegExp(reEscapedHtml.source);
-	var reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+	function onDragstart(event) {
+	    event.stopPropagation();
 
-	exports.escape = function (data) {
-	    data = String(data);
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
 
-	    if (data && reHasUnescapedHtml.test(data)) {
-	        return data.replace(reUnescapedHtml, escapeHtmlChar);
+	    if (!nodeSet || !nodeBubble) {
+	        event.preventDefault();
+	        return;
 	    }
 
-	    return data;
-	};
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
 
-	exports.unescape = function (data) {
-	    data = String(data);
+	    currentDragSet = nodeSet;
+	    nodeSet.classList.add(CLS.DRAGSTART);
+	    select.add(nodeBubble);
 
-	    if (data && reHasEscapedHtml.test(data)) {
-	        return data.replace(reEscapedHtml, unescapeHtmlChar);
+	    event.dataTransfer.effectAllowed = 'move';
+	    event.dataTransfer.setData('text/plain', '');
+
+	    var list = select.get(currentDragSet);
+	    if (list.length > 1) {
+	        event.dataTransfer.setDragImage(getDragImage(), 16, 16);
 	    }
-
-	    return data;
-	};
-
-	function unescapeHtmlChar(chr) {
-	    return htmlUnescapes[chr];
 	}
 
-	function escapeHtmlChar(chr) {
-	    return htmlEscapes[chr];
+	function onDrop(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	    if (!nodeSet || nodeSet === currentDragSet) {
+	        return;
+	    }
+
+	    var list = select.get(currentDragSet);
+
+	    if (!list.length) {
+	        return;
+	    }
+
+	    list.forEach(function (item) {
+	        return nodeSet.appendChild(item);
+	    });
+	    nodeSet.focus();
+	    nodeSet.fireChange();
+	}
+
+	function onDragover(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    event.dataTransfer.dropEffect = 'move';
+	}
+
+	function onDragenter(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	    if (!nodeSet || nodeSet === currentDragSet) {
+	        return;
+	    }
+
+	    nodeSet.classList.add(CLS.DROPZONE);
+	}
+
+	function onDragleave(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	    if (!nodeSet || nodeSet === currentDragSet) {
+	        return;
+	    }
+
+	    nodeSet.classList.remove(CLS.DROPZONE);
+	}
+
+	function onDragend(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    currentDragSet.classList.remove(CLS.DRAGSTART);
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	    if (nodeSet && nodeSet !== currentDragSet) {
+	        nodeSet.classList.remove(CLS.DROPZONE);
+	    }
+
+	    currentDragSet = null;
+	}
+
+	function getDragImage() {
+	    if (!dragImage) {
+	        dragImage = new Image();
+	        dragImage.src = __webpack_require__(14);
+	    }
+
+	    return dragImage;
 	}
 
 /***/ },
 /* 13 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.KEY = {
-	    a: 65,
-	    Backspace: 8,
-	    Bottom: 40,
-	    Cmd: 91,
-	    Comma: 44, // ,
-	    Enter: 13, // Enter
-	    Esc: 27,
-	    Left: 37,
-	    Right: 39,
-	    Semicolon: 59, // ;
-	    Space: 32,
-	    Tab: 9,
-	    Top: 38
-	};
+	var context = __webpack_require__(1);
+	var bubble = __webpack_require__(9);
+	var bubbleset = __webpack_require__(11);
 
-	exports.CLS = {
-	    DRAGSTART: 'drag',
-	    DROPZONE: 'dropzone'
-	};
+	var slice = Array.prototype.slice;
+	var PATH_SELECTED = '[bubble][selected]';
+	var PATH_NOT_SELECTED = '[bubble]:not([selected])';
 
-	exports.EV = {
-	    BUBBLE_EDIT: 'bubble-edit',
-	    BUBBLE_INPUT: 'bubble-input',
-	    CHANGE: 'change'
-	};
+	exports.all = all;
+	exports.add = add;
+	exports.clear = clear;
+	exports.get = get;
+	exports.uniq = uniq;
+	exports.head = head;
+	exports.last = last;
+	exports.has = has;
+	exports.range = range;
+	exports.toggleUniq = toggleUniq;
+
+	function range(node) {
+	    if (!bubble.isBubbleNode(node)) {
+	        return;
+	    }
+
+	    var set = node.parentNode;
+	    var list = get(set);
+
+	    if (!list.length) {
+	        uniq(node);
+	        return;
+	    }
+
+	    clear(set);
+
+	    var headList = list[0];
+	    var lastList = list[list.length - 1];
+
+	    if (headList === lastList || !set.startRangeSelect) {
+	        set.startRangeSelect = headList;
+	    }
+
+	    var fromNode = void 0;
+	    var toNode = void 0;
+	    var position = node.compareDocumentPosition(set.startRangeSelect);
+
+	    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+	        fromNode = set.startRangeSelect;
+	        toNode = node;
+	    } else {
+	        fromNode = node;
+	        toNode = set.startRangeSelect;
+	    }
+
+	    if (fromNode && toNode) {
+	        var item = fromNode;
+
+	        while (item) {
+	            if (!setSelected(item)) {
+	                break;
+	            }
+
+	            if (item === toNode) {
+	                break;
+	            }
+
+	            item = item.nextSibling;
+	        }
+
+	        bubble.bubbling(set);
+	    }
+	}
+
+	function all(nodeSet) {
+	    slice.call(nodeSet.querySelectorAll(PATH_NOT_SELECTED)).forEach(function (item) {
+	        return setSelected(item);
+	    });
+	    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
+
+	    bubble.bubbling(nodeSet);
+
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
+	}
+
+	function has(nodeSet) {
+	    return Boolean(nodeSet.querySelector(PATH_SELECTED));
+	}
+
+	function head(set) {
+	    return get(set)[0];
+	}
+
+	function last(set) {
+	    var list = get(set);
+	    return list[list.length - 1];
+	}
+
+	function get(nodeSet) {
+	    return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
+	}
+
+	function clear(nodeSet) {
+	    get(nodeSet).forEach(function (item) {
+	        return item.removeAttribute('selected');
+	    });
+	}
+
+	function add(node) {
+	    if (setSelected(node)) {
+	        var nodeSet = bubbleset.closestNodeSet(node);
+
+	        nodeSet.startRangeSelect = node;
+	        // ???
+	        bubble.bubbling(nodeSet);
+
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function uniq(node) {
+	    if (!bubble.isBubbleNode(node)) {
+	        return false;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(node);
+	    var selection = context.getSelection();
+
+	    selection && selection.removeAllRanges();
+	    clear(nodeSet);
+
+	    return add(node);
+	}
+
+	function toggleUniq(node) {
+	    if (isSelected(node)) {
+	        var nodeSet = bubbleset.closestNodeSet(node);
+
+	        if (get(nodeSet).length === 1) {
+	            return removeSelected(node);
+	        }
+	    }
+
+	    return uniq(node);
+	}
+
+	function isSelected(node) {
+	    return bubble.isBubbleNode(node) && node.hasAttribute('selected') || false;
+	}
+
+	function setSelected(node) {
+	    if (bubble.isBubbleNode(node)) {
+	        node.setAttribute('selected', '');
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function removeSelected(node) {
+	    if (bubble.isBubbleNode(node)) {
+	        node.removeAttribute('selected');
+	        return true;
+	    }
+
+	    return false;
+	}
 
 /***/ },
 /* 14 */
@@ -1912,18 +1871,20 @@ var XBubbles =
 	var bubbleset = __webpack_require__(11);
 	var bubble = __webpack_require__(9);
 	var cursor = __webpack_require__(16);
-	var select = __webpack_require__(8);
+	var select = __webpack_require__(13);
 
-	var _require = __webpack_require__(13);
+	var _require = __webpack_require__(7);
 
 	var KEY = _require.KEY;
 
-	var context = __webpack_require__(4);
-	var text = __webpack_require__(10);
+	var context = __webpack_require__(1);
+	var text = __webpack_require__(8);
 
 	var slice = Array.prototype.slice;
 
 	exports.init = function (nodeSet) {
+	    nodeSet.addEventListener('focus', focus);
+	    nodeSet.addEventListener('blur', blur);
 	    nodeSet.addEventListener('keyup', keyup);
 	    nodeSet.addEventListener('keydown', keydown);
 	    nodeSet.addEventListener('keypress', keypress);
@@ -1931,6 +1892,8 @@ var XBubbles =
 	};
 
 	exports.destroy = function (nodeSet) {
+	    nodeSet.removeEventListener('focus', focus);
+	    nodeSet.removeEventListener('blur', blur);
 	    nodeSet.removeEventListener('keyup', keyup);
 	    nodeSet.removeEventListener('keydown', keydown);
 	    nodeSet.removeEventListener('keypress', keypress);
@@ -2158,15 +2121,24 @@ var XBubbles =
 	    }
 	}
 
+	function blur(event) {
+	    select.clear(event.currentTarget);
+	    bubble.bubbling(event.currentTarget);
+	}
+
+	function focus(event) {
+	    cursor.restore(event.currentTarget);
+	}
+
 /***/ },
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var context = __webpack_require__(4);
-	var text = __webpack_require__(10);
-	var select = __webpack_require__(8);
+	var context = __webpack_require__(1);
+	var text = __webpack_require__(8);
+	var select = __webpack_require__(13);
 
 	exports.restore = restore;
 	exports.restoreBasis = restoreBasis;
@@ -2230,9 +2202,9 @@ var XBubbles =
 
 	'use strict';
 
-	var context = __webpack_require__(4);
+	var context = __webpack_require__(1);
 	var bubbleset = __webpack_require__(11);
-	var select = __webpack_require__(8);
+	var select = __webpack_require__(13);
 	var cursor = __webpack_require__(16);
 
 	module.exports = function (event) {
@@ -2268,32 +2240,6 @@ var XBubbles =
 	    } else {
 	        select.toggleUniq(nodeBubble);
 	    }
-	};
-
-/***/ },
-/* 19 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var cursor = __webpack_require__(16);
-
-	module.exports = function (event) {
-	    cursor.restore(event.currentTarget);
-	};
-
-/***/ },
-/* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var bubble = __webpack_require__(9);
-	var select = __webpack_require__(8);
-
-	module.exports = function (event) {
-	    select.clear(event.currentTarget);
-	    bubble.bubbling(event.currentTarget);
 	};
 
 /***/ }

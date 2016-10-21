@@ -28,11 +28,7 @@ function text2bubble(nodeSet, nodeBubble, selection) {
 
     const range = currentTextRange(selection);
 
-    if (!range) {
-        return false;
-    }
-
-    if (!nodeBubble) {
+    if (range && !nodeBubble) {
         nodeBubble = bubble.create(nodeSet, range.toString());
     }
 
@@ -40,10 +36,15 @@ function text2bubble(nodeSet, nodeBubble, selection) {
         return false;
     }
 
-    selection.removeAllRanges();
-    selection.addRange(range);
+    if (range) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+        replace(selection, nodeBubble);
 
-    replace(selection, nodeBubble);
+    } else {
+        nodeSet.appendChild(nodeBubble);
+    }
+
     nodeSet.fireInput();
     nodeSet.fireChange();
     return true;
