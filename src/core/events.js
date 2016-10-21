@@ -8,6 +8,14 @@ const CustomEventCommon = require('../polyfills/CustomEventCommon');
 const { EV } = require('./constant');
 const text = require('./text');
 
+exports.prevent = function (event) {
+    event.cancelBubble = true;
+    event.returnValue = false;
+    event.stopPropagation();
+    event.preventDefault();
+    return false;
+};
+
 exports.fireEdit = function (nodeBubble) {
     dispatch(this, EV.BUBBLE_EDIT, {
         bubbles: false,

@@ -72,6 +72,13 @@ var XBubbles =
 	            this.fireChange = events.throttle(events.fireChange, this);
 	            this.fireEdit = events.throttle(events.fireEdit, this);
 	            this.fireInput = events.throttle(events.fireInput, this);
+
+	            try {
+	                this.addEventListener('mscontrolselect', events.prevent);
+	            } catch (e) {
+	                this.addEventListener('resize', events.prevent);
+	                this.addEventListener('resizestart', events.prevent);
+	            }
 	        }
 	    },
 
@@ -257,6 +264,14 @@ var XBubbles =
 	var EV = _require.EV;
 
 	var text = __webpack_require__(8);
+
+	exports.prevent = function (event) {
+	    event.cancelBubble = true;
+	    event.returnValue = false;
+	    event.stopPropagation();
+	    event.preventDefault();
+	    return false;
+	};
 
 	exports.fireEdit = function (nodeBubble) {
 	    dispatch(this, EV.BUBBLE_EDIT, {
