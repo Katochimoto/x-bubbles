@@ -160,34 +160,33 @@ function bubbling(nodeSet) {
     return nodes;
 }
 
-function getBubbleRanges(set) {
-    let i;
-    let rng;
-    let node;
+function getBubbleRanges(nodeSet) {
     const ranges = [];
-    const children = set.childNodes;
+    const children = nodeSet.childNodes;
+    let range;
+    let node;
 
-    for (i = 0; i < children.length; i++) {
+    for (let i = 0; i < children.length; i++) {
         node = children[ i ];
 
         if (isBubbleNode(node)) {
-            if (rng) {
-                rng.setEndBefore(node);
-                ranges.push(rng);
-                rng = undefined;
+            if (range) {
+                range.setEndBefore(node);
+                ranges.push(range);
+                range = undefined;
             }
 
         } else {
-            if (!rng) {
-                rng = context.document.createRange();
-                rng.setStartBefore(node);
+            if (!range) {
+                range = context.document.createRange();
+                range.setStartBefore(node);
             }
         }
     }
 
-    if (rng) {
-        rng.setEndAfter(node);
-        ranges.push(rng);
+    if (range) {
+        range.setEndAfter(node);
+        ranges.push(range);
     }
 
     return ranges;

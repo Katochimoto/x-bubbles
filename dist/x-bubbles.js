@@ -63,15 +63,15 @@ var XBubbles =
 	var dblclick = __webpack_require__(17);
 	var click = __webpack_require__(18);
 
-	var XBubbles = Object.create(HTMLElement.prototype, {
+	var XBubbles = Object.create(HTMLDivElement.prototype, {
 	    createdCallback: {
 	        value: function value() {
 	            this.setAttribute('contenteditable', 'true');
 	            this.setAttribute('spellcheck', 'false');
 
-	            this.fireInput = events.throttle(events.fireInput, this);
 	            this.fireChange = events.throttle(events.fireChange, this);
 	            this.fireEdit = events.throttle(events.fireEdit, this);
+	            this.fireInput = events.throttle(events.fireInput, this);
 	        }
 	    },
 
@@ -133,35 +133,14 @@ var XBubbles =
 	        }
 	    },
 
-	    innerText: {
-	        get: function get() {
-	            return '';
-	        },
-
-	        set: function set(value) {
+	    setContent: {
+	        value: function value(data) {
 	            while (this.firstChild) {
 	                this.removeChild(this.firstChild);
 	            }
 
-	            value = text.html2text(value);
-	            this.appendChild(context.document.createTextNode(value));
-	            bubble.bubbling(this);
-	            cursor.restore(this);
-	        }
-	    },
-
-	    innerHTML: {
-	        get: function get() {
-	            return '';
-	        },
-
-	        set: function set(value) {
-	            while (this.firstChild) {
-	                this.removeChild(this.firstChild);
-	            }
-
-	            value = text.html2text(value);
-	            this.appendChild(context.document.createTextNode(value));
+	            data = text.html2text(data);
+	            this.appendChild(context.document.createTextNode(data));
 	            bubble.bubbling(this);
 	            cursor.restore(this);
 	        }
@@ -1296,33 +1275,32 @@ var XBubbles =
 	    return nodes;
 	}
 
-	function getBubbleRanges(set) {
-	    var i = void 0;
-	    var rng = void 0;
-	    var node = void 0;
+	function getBubbleRanges(nodeSet) {
 	    var ranges = [];
-	    var children = set.childNodes;
+	    var children = nodeSet.childNodes;
+	    var range = void 0;
+	    var node = void 0;
 
-	    for (i = 0; i < children.length; i++) {
+	    for (var i = 0; i < children.length; i++) {
 	        node = children[i];
 
 	        if (isBubbleNode(node)) {
-	            if (rng) {
-	                rng.setEndBefore(node);
-	                ranges.push(rng);
-	                rng = undefined;
+	            if (range) {
+	                range.setEndBefore(node);
+	                ranges.push(range);
+	                range = undefined;
 	            }
 	        } else {
-	            if (!rng) {
-	                rng = context.document.createRange();
-	                rng.setStartBefore(node);
+	            if (!range) {
+	                range = context.document.createRange();
+	                range.setStartBefore(node);
 	            }
 	        }
 	    }
 
-	    if (rng) {
-	        rng.setEndAfter(node);
-	        ranges.push(rng);
+	    if (range) {
+	        range.setEndAfter(node);
+	        ranges.push(range);
 	    }
 
 	    return ranges;

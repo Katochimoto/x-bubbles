@@ -10,15 +10,15 @@ const cursor = require('./core/cursor');
 const dblclick = require('./core/events/dblclick');
 const click = require('./core/events/click');
 
-const XBubbles = Object.create(HTMLElement.prototype, {
+const XBubbles = Object.create(HTMLDivElement.prototype, {
     createdCallback: {
         value: function () {
             this.setAttribute('contenteditable', 'true');
             this.setAttribute('spellcheck', 'false');
 
-            this.fireInput = events.throttle(events.fireInput, this);
             this.fireChange = events.throttle(events.fireChange, this);
             this.fireEdit = events.throttle(events.fireEdit, this);
+            this.fireInput = events.throttle(events.fireInput, this);
         }
     },
 
@@ -82,35 +82,14 @@ const XBubbles = Object.create(HTMLElement.prototype, {
         }
     },
 
-    innerText: {
-        get: function () {
-            return '';
-        },
-
-        set: function (value) {
+    setContent: {
+        value: function (data) {
             while (this.firstChild) {
                 this.removeChild(this.firstChild);
             }
 
-            value = text.html2text(value);
-            this.appendChild(context.document.createTextNode(value));
-            bubble.bubbling(this);
-            cursor.restore(this);
-        }
-    },
-
-    innerHTML: {
-        get: function () {
-            return '';
-        },
-
-        set: function (value) {
-            while (this.firstChild) {
-                this.removeChild(this.firstChild);
-            }
-
-            value = text.html2text(value);
-            this.appendChild(context.document.createTextNode(value));
+            data = text.html2text(data);
+            this.appendChild(context.document.createTextNode(data));
             bubble.bubbling(this);
             cursor.restore(this);
         }
