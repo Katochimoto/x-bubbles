@@ -61,10 +61,23 @@ describe('x-bubbles ->', function () {
                     expect(this.buffer.removeBubble(this.buffer.items[0])).to.be.eql(true);
 
                     setTimeout(() => {
-                        expect(spyChange.callCount).to.be.equal(1);
-                        expect(spyInput.callCount).to.be.equal(0);
+                        expect(spyChange.callCount).to.be.eql(1);
+                        expect(spyInput.callCount).to.be.eql(0);
                         resolve();
                     }, 0);
+                }, 0);
+            });
+        });
+
+        it('не должен удалить, если передаем узел бабла, не содержащийся в сете', function () {
+            this.buffer = document.createElement('div', { is: 'x-bubbles' });
+            this.buffer.appendChild(document.createTextNode('bubble1,bubble2'));
+            document.body.appendChild(this.buffer);
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.removeBubble(document.createElement('div'))).to.be.eql(false);
+                    resolve();
                 }, 0);
             });
         });
@@ -82,13 +95,187 @@ describe('x-bubbles ->', function () {
 
             return new Promise((resolve) => {
                 setTimeout(() => {
-                    expect(this.buffer.addBubble('bubbke1')).to.be.eql(true);
+                    expect(this.buffer.addBubble('bubble1')).to.be.eql(true);
 
                     setTimeout(() => {
-                        expect(spyChange.callCount).to.be.equal(1);
-                        expect(spyInput.callCount).to.be.equal(1);
+                        expect(spyChange.callCount).to.be.eql(1);
+                        expect(spyInput.callCount).to.be.eql(1);
                         resolve();
                     }, 0);
+                }, 0);
+            });
+        });
+
+        it('должно подставить в содержимое бабла текст, переданный первым аргументом', function () {
+            this.buffer = document.createElement('div', { is: 'x-bubbles' });
+            document.body.appendChild(this.buffer);
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.addBubble('bubble1')).to.be.eql(true);
+
+                    setTimeout(() => {
+                        const nodeBubble = this.buffer.items[0];
+                        expect(nodeBubble.innerText).to.be.eql('bubble1');
+                        resolve();
+                    }, 0);
+                }, 0);
+            });
+        });
+
+        it('должен добавить data атрибуты, переданные вторым аргументом', function () {
+            this.buffer = document.createElement('div', { is: 'x-bubbles' });
+            document.body.appendChild(this.buffer);
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.addBubble('bubble1', {
+                        test1: 'asd',
+                        test2: 'qwe'
+                    })).to.be.eql(true);
+
+                    setTimeout(() => {
+                        const nodeBubble = this.buffer.items[0];
+                        expect(nodeBubble.getAttribute('data-test1')).to.be.eql('asd');
+                        expect(nodeBubble.getAttribute('data-test2')).to.be.eql('qwe');
+                        resolve();
+                    }, 0);
+                }, 0);
+            });
+        });
+
+        it('значения data атрибутов должны кодироваться', function () {
+            this.buffer = document.createElement('div', { is: 'x-bubbles' });
+            document.body.appendChild(this.buffer);
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.addBubble('bubble1', { test1: '>&"\'`<' })).to.be.eql(true);
+
+                    setTimeout(() => {
+                        const nodeBubble = this.buffer.items[0];
+                        expect(nodeBubble.getAttribute('data-test1')).to.be.eql('&gt;&amp;&quot;&#39;&#96;&lt;');
+                        resolve();
+                    }, 0);
+                }, 0);
+            });
+        });
+
+        it('атрибут без значения не добавляется', function () {
+            this.buffer = document.createElement('div', { is: 'x-bubbles' });
+            document.body.appendChild(this.buffer);
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.addBubble('bubble1', { test1: '' })).to.be.eql(true);
+
+                    setTimeout(() => {
+                        const nodeBubble = this.buffer.items[0];
+                        expect(nodeBubble.hasAttribute('data-test1')).not.to.be.ok;
+                        resolve();
+                    }, 0);
+                }, 0);
+            });
+        });
+
+        it('должен добавить класс, указаный в атрибуте data-class-bubble баблсета', function () {
+            this.buffer = document.body.appendChild(document.createElement('div', { is: 'x-bubbles' }));
+            this.buffer.setAttribute('data-class-bubble', 'bubbleclass');
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.addBubble('bubble1')).to.be.eql(true);
+
+                    setTimeout(() => {
+                        const nodeBubble = this.buffer.items[0];
+                        expect(nodeBubble.getAttribute('class')).to.be.eql('bubbleclass');
+                        resolve();
+                    }, 0);
+                }, 0);
+            });
+        });
+
+        it('не должен добавить класс, если ничего не указано', function () {
+            this.buffer = document.body.appendChild(document.createElement('div', { is: 'x-bubbles' }));
+            this.buffer.setAttribute('data-class-bubble', '');
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.addBubble('bubble1')).to.be.eql(true);
+
+                    setTimeout(() => {
+                        const nodeBubble = this.buffer.items[0];
+                        expect(nodeBubble.hasAttribute('class')).not.to.be.ok;
+                        resolve();
+                    }, 0);
+                }, 0);
+            });
+        });
+
+        it('не должен добавить атрибут draggable для бабла, если указано data-draggable="false" для баблсета', function () {
+            this.buffer = document.body.appendChild(document.createElement('div', { is: 'x-bubbles' }));
+            this.buffer.setAttribute('data-draggable', 'false');
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.addBubble('bubble1')).to.be.eql(true);
+
+                    setTimeout(() => {
+                        const nodeBubble = this.buffer.items[0];
+                        expect(nodeBubble.hasAttribute('draggable')).not.to.be.ok;
+                        resolve();
+                    }, 0);
+                }, 0);
+            });
+        });
+    });
+
+    describe('#editBubble', function () {
+        it('должен создать текстовый узел из бабла', function () {
+            this.buffer = document.createElement('div', { is: 'x-bubbles' });
+            this.buffer.appendChild(document.createTextNode('bubble1,bubble2'));
+            document.body.appendChild(this.buffer);
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.editBubble(this.buffer.items[0])).to.be.eql(true);
+
+                    setTimeout(() => {
+                        expect(this.selection.anchorNode.nodeType).to.be.eql(Node.TEXT_NODE);
+                        expect(this.selection.focusNode.nodeType).to.be.eql(Node.TEXT_NODE);
+                        resolve();
+                    }, 0);
+                }, 0);
+            });
+        });
+
+        it('должен выделить содержимое созданного текстового узла', function () {
+            this.buffer = document.createElement('div', { is: 'x-bubbles' });
+            this.buffer.appendChild(document.createTextNode('bubble1,bubble2'));
+            document.body.appendChild(this.buffer);
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.editBubble(this.buffer.items[0])).to.be.eql(true);
+
+                    setTimeout(() => {
+                        expect(this.selection.isCollapsed).not.to.be.ok;
+                        expect(this.selection.toString()).to.be.eql('bubble1');
+                        resolve();
+                    }, 0);
+                }, 0);
+            });
+        });
+
+        it('не должен запустить редактирование, если передаем узел бабла, не содержащийся в сете', function () {
+            this.buffer = document.createElement('div', { is: 'x-bubbles' });
+            this.buffer.appendChild(document.createTextNode('bubble1,bubble2'));
+            document.body.appendChild(this.buffer);
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    expect(this.buffer.editBubble(document.createElement('div'))).to.be.eql(false);
+                    resolve();
                 }, 0);
             });
         });

@@ -212,11 +212,10 @@ var XBubbles =
 	    prototype: XBubbles
 	});
 
-	module.exports = XBubbles;
-
 	function optionsPrepare(options) {
 	    var typeBubbleFormation = _typeof(options.bubbleFormation);
 	    var typeBubbleDeformation = _typeof(options.bubbleDeformation);
+	    var typeDraggable = _typeof(options.draggable);
 
 	    switch (typeBubbleFormation) {
 	        case 'string':
@@ -236,6 +235,16 @@ var XBubbles =
 	            break;
 	        default:
 	            options.bubbleDeformation = function () {};
+	    }
+
+	    switch (typeDraggable) {
+	        case 'string':
+	            options.draggable = options.draggable === 'true' || options.draggable === 'on';
+	            break;
+	        case 'boolean':
+	            break;
+	        default:
+	            options.draggable = true;
 	    }
 	}
 
@@ -2136,6 +2145,10 @@ var XBubbles =
 
 	'use strict';
 
+	/**
+	 * @module x-bubbles/cursor
+	 */
+
 	var context = __webpack_require__(1);
 	var text = __webpack_require__(8);
 	var select = __webpack_require__(13);
@@ -2143,6 +2156,11 @@ var XBubbles =
 	exports.restore = restore;
 	exports.restoreBasis = restoreBasis;
 
+	/**
+	 * Reset the cursor position to the end of the input field.
+	 * @alias module:x-bubbles/cursor.restore
+	 * @param {HTMLElement} nodeSet
+	 */
 	function restore(nodeSet) {
 	    select.clear(nodeSet);
 	    var basis = restoreBasis(nodeSet);
@@ -2151,6 +2169,12 @@ var XBubbles =
 	    selection.collapse(basis, 1);
 	}
 
+	/**
+	 * The creation of the fake text at the end childNodes
+	 * @alias module:x-bubbles/cursor.restoreBasis
+	 * @param {HTMLElement} nodeSet
+	 * @returns {HTMLTextElement} fake text node
+	 */
 	function restoreBasis(nodeSet) {
 	    var fakeText = text.createZws();
 

@@ -161,11 +161,10 @@ module.exports = context.document.registerElement('x-bubbles', {
     prototype: XBubbles
 });
 
-module.exports = XBubbles;
-
 function optionsPrepare(options) {
     const typeBubbleFormation = typeof options.bubbleFormation;
     const typeBubbleDeformation = typeof options.bubbleDeformation;
+    const typeDraggable = typeof options.draggable;
 
     switch (typeBubbleFormation) {
     case 'string':
@@ -185,5 +184,15 @@ function optionsPrepare(options) {
         break;
     default:
         options.bubbleDeformation = function () {};
+    }
+
+    switch (typeDraggable) {
+    case 'string':
+        options.draggable = (options.draggable === 'true' || options.draggable === 'on');
+        break;
+    case 'boolean':
+        break;
+    default:
+        options.draggable = true;
     }
 }
