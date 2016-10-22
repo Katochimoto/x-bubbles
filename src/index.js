@@ -20,12 +20,9 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
             this.fireEdit = events.throttle(events.fireEdit, this);
             this.fireInput = events.throttle(events.fireInput, this);
 
-            try {
-                this.addEventListener('mscontrolselect', events.prevent);
-            } catch (e) {
-                this.addEventListener('resize', events.prevent);
-                this.addEventListener('resizestart', events.prevent);
-            }
+            this.addEventListener('resize', events.prevent);
+            this.addEventListener('resizestart', events.prevent);
+            this.addEventListener('mscontrolselect', events.prevent);
         }
     },
 
