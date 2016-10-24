@@ -8,6 +8,21 @@ const CustomEventCommon = require('../polyfills/CustomEventCommon');
 const { EV } = require('./constant');
 const text = require('./text');
 
+exports.one = function (target, eventName, userCallback) {
+    return target.addEventListener(eventName, function callback(event) {
+        target.removeEventListener(eventName, callback);
+        userCallback(event);
+    });
+};
+
+exports.on = function (target, eventName, userCallback) {
+    return target.addEventListener(eventName, userCallback);
+};
+
+exports.off = function (target, eventName, userCallback) {
+    return target.removeEventListener(eventName, userCallback);
+};
+
 exports.prevent = function (event) {
     event.cancelBubble = true;
     event.returnValue = false;
@@ -46,7 +61,7 @@ exports.fireInput = function () {
     }
 };
 
-exports.throttle = function (callback, ctx) {
+exports.throttle = function (callback) {
     let throttle = 0;
     const animationCallback = function () {
         throttle = 0;
@@ -59,7 +74,7 @@ exports.throttle = function (callback, ctx) {
 
         throttle = raf(animationCallback);
 
-        callback.apply(ctx || this, arguments);
+        callback.apply(this, arguments);
     };
 };
 

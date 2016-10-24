@@ -16,9 +16,9 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
             this.setAttribute('contenteditable', 'true');
             this.setAttribute('spellcheck', 'false');
 
-            this.fireChange = events.throttle(events.fireChange, this);
-            this.fireEdit = events.throttle(events.fireEdit, this);
-            this.fireInput = events.throttle(events.fireInput, this);
+            this.fireChange = events.throttle(events.fireChange);
+            this.fireEdit = events.throttle(events.fireEdit);
+            this.fireInput = events.throttle(events.fireInput);
 
             this.addEventListener('resize', events.prevent);
             this.addEventListener('resizestart', events.prevent);

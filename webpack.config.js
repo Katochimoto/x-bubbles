@@ -20,6 +20,11 @@ var params = {
         'libraryTarget': 'var',
         'path': distPath
     },
+    'resolve': {
+        'alias': {
+            'modernizr$': path.resolve(__dirname, '.modernizrrc')
+        }
+    },
     'module': {
         'preLoaders': [
             {
@@ -33,6 +38,10 @@ var params = {
                 'test': /\.js$/,
                 'loader': 'babel',
                 'include': [ srcPath ]
+            },
+            {
+                'test': /\.modernizrrc$/,
+                'loader': 'modernizr'
             }
         ]
     }

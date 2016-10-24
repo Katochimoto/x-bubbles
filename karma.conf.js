@@ -34,6 +34,11 @@ module.exports = function(config) {
 
         webpack: {
             'devtool': '#inline-source-map',
+            'resolve': {
+                'alias': {
+                    'modernizr$': path.resolve(__dirname, '.modernizrrc')
+                }
+            },
             'module': {
                 'loaders': [
                     {
@@ -43,6 +48,10 @@ module.exports = function(config) {
                             path.join(__dirname, 'src'),
                             path.join(__dirname, 'test')
                         ]
+                    },
+                    {
+                        'test': /\.modernizrrc$/,
+                        'loader': 'modernizr'
                     }
                 ],
                 'postLoaders': [

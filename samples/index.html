@@ -65,11 +65,13 @@
     <script src="../dist/x-bubbles.js?123"></script>
 </head>
 <body>
-<div class="bubbles" id="test" is="x-bubbles" tabindex="0">
-    123,456,789
+<div style="margin-top: 0;">
+    <div class="bubbles" id="test" is="x-bubbles" tabindex="0">
+        123,456,789
+    </div>
+    <br/>
+    <div class="bubbles" is="x-bubbles" tabindex="0"></div>
 </div>
-<br/>
-<div class="bubbles" is="x-bubbles" tabindex="0"></div>
 <script>
 var set = document.getElementById('test');
 
