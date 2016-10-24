@@ -1678,18 +1678,16 @@ var XBubbles =
 
 	    var list = select.get(currentDragSet);
 
-	    if (!list.length) {
-	        return;
+	    if (list.length) {
+	        list.forEach(function (item) {
+	            return nodeSet.appendChild(item);
+	        });
+
+	        setTimeout(function () {
+	            nodeSet.focus();
+	            nodeSet.fireChange();
+	        }, 0);
 	    }
-
-	    list.forEach(function (item) {
-	        return nodeSet.appendChild(item);
-	    });
-
-	    setTimeout(function () {
-	        nodeSet.focus();
-	        nodeSet.fireChange();
-	    }, 0);
 	}
 
 	function onDragover(event) {

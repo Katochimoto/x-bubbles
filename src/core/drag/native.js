@@ -67,16 +67,14 @@ function onDrop(event) {
 
     const list = select.get(currentDragSet);
 
-    if (!list.length) {
-        return;
+    if (list.length) {
+        list.forEach(item => nodeSet.appendChild(item));
+
+        setTimeout(() => {
+            nodeSet.focus();
+            nodeSet.fireChange();
+        }, 0);
     }
-
-    list.forEach(item => nodeSet.appendChild(item));
-
-    setTimeout(() => {
-        nodeSet.focus();
-        nodeSet.fireChange();
-    }, 0);
 }
 
 function onDragover(event) {
