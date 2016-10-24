@@ -1,12 +1,19 @@
 const native = require('./drag/native');
 const mouse = require('./drag/mouse');
+const { msie } = require('./utils');
 
 exports.init = function (nodeSet) {
-    // return native.init(nodeSet);
-    return mouse.init(nodeSet);
+    if (msie) {
+        return mouse.init(nodeSet);
+    }
+
+    return native.init(nodeSet);
 };
 
 exports.destroy = function (nodeSet) {
-    // return native.destroy(nodeSet);
-    return mouse.destroy(nodeSet);
+    if (msie) {
+        return mouse.destroy(nodeSet);
+    }
+
+    return native.destroy(nodeSet);
 };

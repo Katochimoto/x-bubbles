@@ -99,12 +99,9 @@ function onDragenter(event) {
     }
 
     const nodeSet = bubbleset.closestNodeSet(event.target);
-
-    if (!nodeSet || nodeSet === currentDragSet) {
-        return;
+    if (nodeSet && nodeSet !== currentDragSet) {
+        nodeSet.classList.add(CLS.DROPZONE);
     }
-
-    nodeSet.classList.add(CLS.DROPZONE);
 }
 
 function onDragleave(event) {
@@ -116,12 +113,9 @@ function onDragleave(event) {
     }
 
     const nodeSet = bubbleset.closestNodeSet(event.target);
-
-    if (!nodeSet || nodeSet === currentDragSet) {
-        return;
+    if (nodeSet && nodeSet !== currentDragSet) {
+        nodeSet.classList.remove(CLS.DROPZONE);
     }
-
-    nodeSet.classList.remove(CLS.DROPZONE);
 }
 
 function onDragend(event) {

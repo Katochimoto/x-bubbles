@@ -54,14 +54,14 @@ var XBubbles =
 	var context = __webpack_require__(1);
 	var events = __webpack_require__(2);
 	var drag = __webpack_require__(12);
-	var editor = __webpack_require__(16);
+	var editor = __webpack_require__(19);
 	var bubble = __webpack_require__(9);
 	var bubbleset = __webpack_require__(11);
 	var text = __webpack_require__(8);
-	var cursor = __webpack_require__(17);
+	var cursor = __webpack_require__(20);
 
-	var dblclick = __webpack_require__(18);
-	var click = __webpack_require__(19);
+	var dblclick = __webpack_require__(21);
+	var click = __webpack_require__(22);
 
 	var XBubbles = Object.create(HTMLDivElement.prototype, {
 	    createdCallback: {
@@ -262,6 +262,17 @@ var XBubbles =
 
 	var text = __webpack_require__(8);
 
+	exports.scrollX = scrollX;
+	exports.scrollY = scrollY;
+
+	exports.pageX = function (event) {
+	    return event.pageX === null && event.clientX !== null ? event.clientX + scrollX() : event.pageX;
+	};
+
+	exports.pageY = function (event) {
+	    return event.pageY === null && event.clientY !== null ? event.clientY + scrollY() : event.pageY;
+	};
+
 	exports.one = function (target, eventName, userCallback) {
 	    return target.addEventListener(eventName, function callback(event) {
 	        target.removeEventListener(eventName, callback);
@@ -331,6 +342,18 @@ var XBubbles =
 	        callback.apply(this, arguments);
 	    };
 	};
+
+	function scrollX() {
+	    var html = context.document.documentElement;
+	    var body = context.document.body;
+	    return (html && html.scrollLeft || body && body.scrollLeft || 0) - (html.clientLeft || 0);
+	}
+
+	function scrollY() {
+	    var html = context.document.documentElement;
+	    var body = context.document.body;
+	    return (html && html.scrollTop || body && body.scrollTop || 0) - (html.clientTop || 0);
+	}
 
 	/**
 	 * Designer events.
@@ -1426,6 +1449,17 @@ var XBubbles =
 	    return data;
 	};
 
+	exports.msie = function () {
+	    var ua = navigator.userAgent.toLowerCase();
+	    var match = /(msie) ([\w.]+)/.exec(ua) || [];
+
+	    if (match[1]) {
+	        return match[2] || '0';
+	    }
+
+	    return false;
+	}();
+
 	function unescapeHtmlChar(chr) {
 	    return htmlUnescapes[chr];
 	}
@@ -1538,21 +1572,186 @@ var XBubbles =
 
 	'use strict';
 
-	var native = __webpack_require__(20);
-	var mouse = __webpack_require__(21);
+	var native = __webpack_require__(13);
+	var mouse = __webpack_require__(17);
+
+	var _require = __webpack_require__(10);
+
+	var msie = _require.msie;
+
 
 	exports.init = function (nodeSet) {
-	    // return native.init(nodeSet);
-	    return mouse.init(nodeSet);
+	    if (msie) {
+	        return mouse.init(nodeSet);
+	    }
+
+	    return native.init(nodeSet);
 	};
 
 	exports.destroy = function (nodeSet) {
-	    // return native.destroy(nodeSet);
-	    return mouse.destroy(nodeSet);
+	    if (msie) {
+	        return mouse.destroy(nodeSet);
+	    }
+
+	    return native.destroy(nodeSet);
 	};
 
 /***/ },
 /* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(1);
+	var select = __webpack_require__(14);
+	var bubbleset = __webpack_require__(11);
+
+	var _require = __webpack_require__(7);
+
+	var CLS = _require.CLS;
+
+	var _require2 = __webpack_require__(15);
+
+	var getDragImage = _require2.getDragImage;
+
+
+	var currentDragSet = null;
+
+	exports.init = function (nodeSet) {
+	    nodeSet.addEventListener('drop', onDrop);
+	    nodeSet.addEventListener('dragover', onDragover);
+	    nodeSet.addEventListener('dragenter', onDragenter);
+	    nodeSet.addEventListener('dragleave', onDragleave);
+	    nodeSet.addEventListener('dragstart', onDragstart);
+	    nodeSet.addEventListener('dragend', onDragend);
+	};
+
+	exports.destroy = function (nodeSet) {
+	    nodeSet.removeEventListener('drop', onDrop);
+	    nodeSet.removeEventListener('dragover', onDragover);
+	    nodeSet.removeEventListener('dragenter', onDragenter);
+	    nodeSet.removeEventListener('dragleave', onDragleave);
+	    nodeSet.removeEventListener('dragstart', onDragstart);
+	    nodeSet.removeEventListener('dragend', onDragend);
+	};
+
+	function onDragstart(event) {
+	    event.stopPropagation();
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
+
+	    if (!nodeSet || !nodeBubble) {
+	        event.preventDefault();
+	        return;
+	    }
+
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
+
+	    currentDragSet = nodeSet;
+	    nodeSet.classList.add(CLS.DRAGSTART);
+	    select.add(nodeBubble);
+
+	    event.dataTransfer.effectAllowed = 'move';
+	    event.dataTransfer.setData('text/plain', '');
+
+	    var list = select.get(currentDragSet);
+	    if (list.length > 1) {
+	        event.dataTransfer.setDragImage(getDragImage(), 16, 16);
+	    }
+	}
+
+	function onDrop(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	    if (!nodeSet || nodeSet === currentDragSet) {
+	        return;
+	    }
+
+	    var list = select.get(currentDragSet);
+
+	    if (!list.length) {
+	        return;
+	    }
+
+	    list.forEach(function (item) {
+	        return nodeSet.appendChild(item);
+	    });
+
+	    setTimeout(function () {
+	        nodeSet.focus();
+	        nodeSet.fireChange();
+	    }, 0);
+	}
+
+	function onDragover(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    event.dataTransfer.dropEffect = 'move';
+	}
+
+	function onDragenter(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    if (nodeSet && nodeSet !== currentDragSet) {
+	        nodeSet.classList.add(CLS.DROPZONE);
+	    }
+	}
+
+	function onDragleave(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    if (nodeSet && nodeSet !== currentDragSet) {
+	        nodeSet.classList.remove(CLS.DROPZONE);
+	    }
+	}
+
+	function onDragend(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    currentDragSet.classList.remove(CLS.DRAGSTART);
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	    if (nodeSet && nodeSet !== currentDragSet) {
+	        nodeSet.classList.remove(CLS.DROPZONE);
+	    }
+
+	    currentDragSet = null;
+	}
+
+/***/ },
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1727,7 +1926,214 @@ var XBubbles =
 	}
 
 /***/ },
-/* 14 */
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var dragImage = null;
+
+	exports.getDragImage = function () {
+	    if (!dragImage) {
+	        dragImage = new Image();
+	        dragImage.src = __webpack_require__(16);
+	    }
+
+	    return dragImage;
+	};
+
+/***/ },
+/* 16 */
+/***/ function(module, exports) {
+
+	module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAB3klEQVR4XtWWMWgTYRTH/0n0IjWNkSo9jYJTx4KDAXWoIChtqdBFkG6lTm5iiw5OHQQFV4fSunYTOpVucbRDBicVUmmb0GsuJCYGknjfez4+PmjUy8U7cegffty3vPfjfY/jLsbM+J+JC8dbcAIm97aqEwBeCjmEywdhaePOSD5QQETr1y6m7Ww6iTApNTq57XJjHcCFYIEiGyeTKLYQKkmp0bWDrkiRQstD6HikazFYoBQIEWJql9+Ncu9Ons86+d8EBOKoAsLtG9P67FTLuY+fC3onf0zgcfQJKu1tfbaGU2Bm2+eKvKgTmFpdjK5qgtlnB17kHZjanq5M7LvkkltvZs+khxEm3xpNDCUqvwjIX0ALX4o7bwHYAs6fG8HlS1ns7ZdQcavol9NWHVNjb6COBP5XVJgf3+x9G8dXCuwpguu6eDrxAINCjIAJfFCk4Bw6eHZrLvTy+W8EpAiPrt6HYgth0qx1wcylgYKZobuTu59gduKfs6OnYF9J4eDrd9ScNkwOhAWY/NMXbXEtwxmR1KX5q/l6LOB7EAnd9MlqhhGQWM8zLiSM1IC4pn9uCtcfr6QXXz9svADwXsgLnqAEFgE0prklJA2WkSSEWICEDD+ErtAR2jCS4/9X8RPiO+YqXEJbcwAAAABJRU5ErkJggg=="
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(1);
+	var events = __webpack_require__(2);
+	var select = __webpack_require__(14);
+	var bubbleset = __webpack_require__(11);
+	var Modernizr = __webpack_require__(18);
+
+	var _require = __webpack_require__(7);
+
+	var CLS = _require.CLS;
+
+	var _require2 = __webpack_require__(15);
+
+	var getDragImage = _require2.getDragImage;
+
+
+	var currentDragSet = null;
+	var currentMoveSet = null;
+	var currentDragElement = null;
+
+	exports.init = function (nodeSet) {
+	    events.on(nodeSet, 'mousedown', onMousedown);
+	};
+
+	exports.destroy = function (nodeSet) {
+	    events.off(nodeSet, 'mousedown', onMousedown);
+	};
+
+	function onMousedown(event) {
+	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
+	    if (!nodeBubble) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    if (!nodeSet) {
+	        return;
+	    }
+
+	    event.preventDefault();
+	    nodeSet.focus();
+
+	    var drag = nodeSet.__drag__ = {
+	        onMouseup: onMouseup.bind(this, nodeSet),
+	        onMousemove: events.throttle(onMousemove.bind(this, nodeSet)),
+	        onScroll: events.throttle(onScroll.bind(this, nodeSet)),
+	        nodeOffsetX: events.pageX(event) - nodeBubble.offsetLeft,
+	        nodeOffsetY: events.pageY(event) - nodeBubble.offsetTop,
+	        x: 0,
+	        y: 0
+	    };
+
+	    currentDragSet = null;
+	    currentMoveSet = null;
+	    currentDragElement = null;
+
+	    events.one(document, 'mouseup', drag.onMouseup);
+	    events.on(document, 'mousemove', drag.onMousemove);
+	    events.on(document, 'scroll', drag.onScroll);
+	}
+
+	function onMouseup(dragSet, event) {
+	    var drag = dragSet.__drag__;
+	    if (!drag) {
+	        return;
+	    }
+
+	    events.off(document, 'mousemove', drag.onMousemove);
+	    events.off(document, 'scroll', drag.onScroll);
+	    delete dragSet.__drag__;
+
+	    if (currentDragElement) {
+	        currentDragElement.parentNode && currentDragElement.parentNode.removeChild(currentDragElement);
+	        currentDragElement = null;
+	    }
+
+	    if (currentMoveSet) {
+	        currentMoveSet.classList.remove(CLS.DROPZONE);
+	        currentMoveSet = null;
+	    }
+
+	    if (currentDragSet) {
+	        (function () {
+	            var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	            if (nodeSet && nodeSet !== currentDragSet) {
+	                var list = select.get(currentDragSet);
+
+	                if (list.length) {
+	                    list.forEach(function (item) {
+	                        return nodeSet.appendChild(item);
+	                    });
+
+	                    setTimeout(function () {
+	                        nodeSet.focus();
+	                        nodeSet.fireChange();
+	                    }, 0);
+	                }
+	            }
+
+	            currentDragSet.classList.remove(CLS.DRAGSTART);
+	            currentDragSet = null;
+	        })();
+	    }
+	}
+
+	function onMousemove(dragSet, event) {
+	    var drag = dragSet.__drag__;
+	    if (!drag) {
+	        return;
+	    }
+
+	    if (!currentDragSet) {
+	        var selection = context.getSelection();
+	        selection && selection.removeAllRanges();
+
+	        currentDragSet = dragSet;
+	        currentDragSet.classList.add(CLS.DRAGSTART);
+
+	        var nodeBubble = bubbleset.closestNodeBubble(event.target);
+	        var moveElement = void 0;
+
+	        if (nodeBubble) {
+	            select.add(nodeBubble);
+	            if (select.get(currentDragSet).length === 1) {
+	                moveElement = nodeBubble.cloneNode(true);
+	            }
+	        }
+
+	        if (!moveElement) {
+	            moveElement = getDragImage();
+	        }
+
+	        currentDragElement = document.body.appendChild(document.createElement('div'));
+	        currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
+	        currentDragElement.appendChild(moveElement);
+	    }
+
+	    drag.x = event.clientX;
+	    drag.y = event.clientY;
+	    onScroll(dragSet);
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    if (nodeSet && nodeSet !== currentDragSet) {
+	        if (currentMoveSet && currentMoveSet !== nodeSet) {
+	            currentMoveSet.classList.remove(CLS.DROPZONE);
+	            nodeSet.classList.add(CLS.DROPZONE);
+	            currentMoveSet = nodeSet;
+	        } else if (!currentMoveSet) {
+	            nodeSet.classList.add(CLS.DROPZONE);
+	            currentMoveSet = nodeSet;
+	        }
+	    } else if (currentMoveSet) {
+	        currentMoveSet.classList.remove(CLS.DROPZONE);
+	        currentMoveSet = null;
+	    }
+	}
+
+	function onScroll(dragSet) {
+	    var drag = dragSet.__drag__;
+	    if (!drag || !currentDragElement) {
+	        return;
+	    }
+
+	    var x = drag.x - drag.nodeOffsetX + events.scrollX();
+	    var y = drag.y - drag.nodeOffsetY + events.scrollY();
+
+	    if (Modernizr.csstransforms) {
+	        if (Modernizr.csstransforms3d) {
+	            currentDragElement.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0px)';
+	        } else {
+	            currentDragElement.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+	        }
+	    } else {
+	        currentDragElement.style.top = y + 'px';
+	        currentDragElement.style.left = x + 'px';
+	    }
+	}
+
+/***/ },
+/* 18 */
 /***/ function(module, exports) {
 
 	;(function(window){
@@ -2615,16 +3021,15 @@ var XBubbles =
 	})(window);
 
 /***/ },
-/* 15 */,
-/* 16 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var bubbleset = __webpack_require__(11);
 	var bubble = __webpack_require__(9);
-	var cursor = __webpack_require__(17);
-	var select = __webpack_require__(13);
+	var cursor = __webpack_require__(20);
+	var select = __webpack_require__(14);
 
 	var _require = __webpack_require__(7);
 
@@ -2884,7 +3289,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 17 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2895,7 +3300,7 @@ var XBubbles =
 
 	var context = __webpack_require__(1);
 	var text = __webpack_require__(8);
-	var select = __webpack_require__(13);
+	var select = __webpack_require__(14);
 
 	exports.restore = restore;
 	exports.restoreBasis = restoreBasis;
@@ -2938,7 +3343,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 18 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2965,15 +3370,15 @@ var XBubbles =
 	};
 
 /***/ },
-/* 19 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var context = __webpack_require__(1);
 	var bubbleset = __webpack_require__(11);
-	var select = __webpack_require__(13);
-	var cursor = __webpack_require__(17);
+	var select = __webpack_require__(14);
+	var cursor = __webpack_require__(20);
 
 	module.exports = function (event) {
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
@@ -3008,350 +3413,6 @@ var XBubbles =
 	    } else {
 	        select.toggleUniq(nodeBubble);
 	    }
-	};
-
-/***/ },
-/* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var context = __webpack_require__(1);
-	var select = __webpack_require__(13);
-	var bubbleset = __webpack_require__(11);
-
-	var _require = __webpack_require__(7);
-
-	var CLS = _require.CLS;
-
-	var _require2 = __webpack_require__(23);
-
-	var getDragImage = _require2.getDragImage;
-
-
-	var currentDragSet = null;
-
-	exports.init = function (nodeSet) {
-	    nodeSet.addEventListener('drop', onDrop);
-	    nodeSet.addEventListener('dragover', onDragover);
-	    nodeSet.addEventListener('dragenter', onDragenter);
-	    nodeSet.addEventListener('dragleave', onDragleave);
-	    nodeSet.addEventListener('dragstart', onDragstart);
-	    nodeSet.addEventListener('dragend', onDragend);
-	};
-
-	exports.destroy = function (nodeSet) {
-	    nodeSet.removeEventListener('drop', onDrop);
-	    nodeSet.removeEventListener('dragover', onDragover);
-	    nodeSet.removeEventListener('dragenter', onDragenter);
-	    nodeSet.removeEventListener('dragleave', onDragleave);
-	    nodeSet.removeEventListener('dragstart', onDragstart);
-	    nodeSet.removeEventListener('dragend', onDragend);
-	};
-
-	function onDragstart(event) {
-	    event.stopPropagation();
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
-
-	    if (!nodeSet || !nodeBubble) {
-	        event.preventDefault();
-	        return;
-	    }
-
-	    var selection = context.getSelection();
-	    selection && selection.removeAllRanges();
-
-	    currentDragSet = nodeSet;
-	    nodeSet.classList.add(CLS.DRAGSTART);
-	    select.add(nodeBubble);
-
-	    event.dataTransfer.effectAllowed = 'move';
-	    event.dataTransfer.setData('text/plain', '');
-
-	    var list = select.get(currentDragSet);
-	    if (list.length > 1) {
-	        event.dataTransfer.setDragImage(getDragImage(), 16, 16);
-	    }
-	}
-
-	function onDrop(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (!nodeSet || nodeSet === currentDragSet) {
-	        return;
-	    }
-
-	    var list = select.get(currentDragSet);
-
-	    if (!list.length) {
-	        return;
-	    }
-
-	    list.forEach(function (item) {
-	        return nodeSet.appendChild(item);
-	    });
-
-	    setTimeout(function () {
-	        nodeSet.focus();
-	        nodeSet.fireChange();
-	    }, 0);
-	}
-
-	function onDragover(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    event.dataTransfer.dropEffect = 'move';
-	}
-
-	function onDragenter(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (!nodeSet || nodeSet === currentDragSet) {
-	        return;
-	    }
-
-	    nodeSet.classList.add(CLS.DROPZONE);
-	}
-
-	function onDragleave(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (!nodeSet || nodeSet === currentDragSet) {
-	        return;
-	    }
-
-	    nodeSet.classList.remove(CLS.DROPZONE);
-	}
-
-	function onDragend(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    currentDragSet.classList.remove(CLS.DRAGSTART);
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (nodeSet && nodeSet !== currentDragSet) {
-	        nodeSet.classList.remove(CLS.DROPZONE);
-	    }
-
-	    currentDragSet = null;
-	}
-
-/***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var context = __webpack_require__(1);
-	var events = __webpack_require__(2);
-	var select = __webpack_require__(13);
-	var bubbleset = __webpack_require__(11);
-	var Modernizr = __webpack_require__(14);
-
-	var _require = __webpack_require__(7);
-
-	var CLS = _require.CLS;
-
-	var _require2 = __webpack_require__(23);
-
-	var getDragImage = _require2.getDragImage;
-
-
-	var currentDragSet = null;
-	var currentMoveSet = null;
-	var currentDragElement = null;
-
-	exports.init = function (nodeSet) {
-	    events.on(nodeSet, 'mousedown', onMousedown);
-	};
-
-	exports.destroy = function (nodeSet) {
-	    events.off(nodeSet, 'mousedown', onMousedown);
-	};
-
-	function onMousedown(event) {
-	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
-	    if (!nodeBubble) {
-	        return;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-	    if (!nodeSet) {
-	        return;
-	    }
-
-	    event.preventDefault();
-	    nodeSet.focus();
-
-	    var drag = nodeSet.__drag__ = {
-	        onMouseup: onMouseup.bind(this, nodeSet),
-	        onMousemove: events.throttle(onMousemove.bind(this, nodeSet))
-	    };
-
-	    currentDragSet = null;
-	    currentMoveSet = null;
-	    currentDragElement = null;
-
-	    events.one(document, 'mouseup', drag.onMouseup);
-	    events.on(document, 'mousemove', drag.onMousemove);
-	}
-
-	function onMouseup(dragSet, event) {
-	    var drag = dragSet.__drag__;
-	    if (!drag) {
-	        return;
-	    }
-
-	    events.off(document, 'mousemove', drag.onMousemove);
-	    delete dragSet.__drag__;
-
-	    if (currentDragElement) {
-	        currentDragElement.parentNode && currentDragElement.parentNode.removeChild(currentDragElement);
-	        currentDragElement = null;
-	    }
-
-	    if (currentMoveSet) {
-	        currentMoveSet.classList.remove(CLS.DROPZONE);
-	        currentMoveSet = null;
-	    }
-
-	    if (currentDragSet) {
-	        (function () {
-	            var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	            if (nodeSet && nodeSet !== currentDragSet) {
-	                var list = select.get(currentDragSet);
-
-	                if (list.length) {
-	                    list.forEach(function (item) {
-	                        return nodeSet.appendChild(item);
-	                    });
-
-	                    setTimeout(function () {
-	                        nodeSet.focus();
-	                        nodeSet.fireChange();
-	                    }, 0);
-	                }
-	            }
-
-	            currentDragSet.classList.remove(CLS.DRAGSTART);
-	            currentDragSet = null;
-	        })();
-	    }
-	}
-
-	function onMousemove(dragSet, event) {
-	    var drag = dragSet.__drag__;
-	    if (!drag) {
-	        return;
-	    }
-
-	    if (!currentDragSet) {
-	        var selection = context.getSelection();
-	        selection && selection.removeAllRanges();
-
-	        currentDragSet = dragSet;
-	        currentDragSet.classList.add(CLS.DRAGSTART);
-
-	        var nodeBubble = bubbleset.closestNodeBubble(event.target);
-	        nodeBubble && select.add(nodeBubble);
-
-	        currentDragElement = document.body.appendChild(document.createElement('div'));
-	        currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
-
-	        var list = select.get(currentDragSet);
-	        if (list.length > 1) {
-	            currentDragElement.appendChild(getDragImage());
-	        } else {
-	            currentDragElement.appendChild(nodeBubble.cloneNode(true));
-	        }
-	    }
-
-	    var x = event.clientX;
-	    var y = event.clientY + document.body.scrollTop;
-
-	    if (Modernizr.csstransforms) {
-	        if (Modernizr.csstransforms3d) {
-	            currentDragElement.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0px)';
-	        } else {
-	            currentDragElement.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
-	        }
-	    } else {
-	        currentDragElement.style.top = x + 'px';
-	        currentDragElement.style.left = y + 'px';
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-	    if (nodeSet && nodeSet !== currentDragSet) {
-	        if (currentMoveSet && currentMoveSet !== nodeSet) {
-	            currentMoveSet.classList.remove(CLS.DROPZONE);
-	            nodeSet.classList.add(CLS.DROPZONE);
-	            currentMoveSet = nodeSet;
-	        } else if (!currentMoveSet) {
-	            nodeSet.classList.add(CLS.DROPZONE);
-	            currentMoveSet = nodeSet;
-	        }
-	    } else if (currentMoveSet) {
-	        currentMoveSet.classList.remove(CLS.DROPZONE);
-	        currentMoveSet = null;
-	    }
-	}
-
-/***/ },
-/* 22 */
-/***/ function(module, exports) {
-
-	module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAB3klEQVR4XtWWMWgTYRTH/0n0IjWNkSo9jYJTx4KDAXWoIChtqdBFkG6lTm5iiw5OHQQFV4fSunYTOpVucbRDBicVUmmb0GsuJCYGknjfez4+PmjUy8U7cegffty3vPfjfY/jLsbM+J+JC8dbcAIm97aqEwBeCjmEywdhaePOSD5QQETr1y6m7Ww6iTApNTq57XJjHcCFYIEiGyeTKLYQKkmp0bWDrkiRQstD6HikazFYoBQIEWJql9+Ncu9Ons86+d8EBOKoAsLtG9P67FTLuY+fC3onf0zgcfQJKu1tfbaGU2Bm2+eKvKgTmFpdjK5qgtlnB17kHZjanq5M7LvkkltvZs+khxEm3xpNDCUqvwjIX0ALX4o7bwHYAs6fG8HlS1ns7ZdQcavol9NWHVNjb6COBP5XVJgf3+x9G8dXCuwpguu6eDrxAINCjIAJfFCk4Bw6eHZrLvTy+W8EpAiPrt6HYgth0qx1wcylgYKZobuTu59gduKfs6OnYF9J4eDrd9ScNkwOhAWY/NMXbXEtwxmR1KX5q/l6LOB7EAnd9MlqhhGQWM8zLiSM1IC4pn9uCtcfr6QXXz9svADwXsgLnqAEFgE0prklJA2WkSSEWICEDD+ErtAR2jCS4/9X8RPiO+YqXEJbcwAAAABJRU5ErkJggg=="
-
-/***/ },
-/* 23 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var dragImage = null;
-
-	exports.getDragImage = function () {
-	    if (!dragImage) {
-	        dragImage = new Image();
-	        dragImage.src = __webpack_require__(22);
-	    }
-
-	    return dragImage;
 	};
 
 /***/ }

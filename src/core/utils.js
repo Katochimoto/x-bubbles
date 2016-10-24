@@ -44,6 +44,16 @@ exports.unescape = function (data) {
     return data;
 };
 
+exports.msie = (function () {
+    var ua = navigator.userAgent.toLowerCase();
+    var match = /(msie) ([\w.]+)/.exec(ua) || [];
+
+    if (match[1]) {
+        return match[2] || '0';
+    }
+
+    return false;
+}());
 
 function unescapeHtmlChar(chr) {
     return htmlUnescapes[ chr ];

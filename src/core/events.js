@@ -8,6 +8,21 @@ const CustomEventCommon = require('../polyfills/CustomEventCommon');
 const { EV } = require('./constant');
 const text = require('./text');
 
+exports.scrollX = scrollX;
+exports.scrollY = scrollY;
+
+exports.pageX = function (event) {
+    return (event.pageX === null && event.clientX !== null) ?
+        event.clientX + scrollX() :
+        event.pageX;
+};
+
+exports.pageY = function (event) {
+    return (event.pageY === null && event.clientY !== null) ?
+        event.clientY + scrollY() :
+        event.pageY;
+};
+
 exports.one = function (target, eventName, userCallback) {
     return target.addEventListener(eventName, function callback(event) {
         target.removeEventListener(eventName, callback);
@@ -77,6 +92,18 @@ exports.throttle = function (callback) {
         callback.apply(this, arguments);
     };
 };
+
+function scrollX() {
+    const html = context.document.documentElement;
+    const body = context.document.body;
+    return (html && html.scrollLeft || body && body.scrollLeft || 0) - (html.clientLeft || 0);
+}
+
+function scrollY() {
+    const html = context.document.documentElement;
+    const body = context.document.body;
+    return (html && html.scrollTop || body && body.scrollTop || 0) - (html.clientTop || 0);
+}
 
 /**
  * Designer events.
