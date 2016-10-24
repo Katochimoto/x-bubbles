@@ -155,12 +155,11 @@ function onScroll(dragSet) {
     const x = drag.x - drag.nodeOffsetX + events.scrollX();
     const y = drag.y - drag.nodeOffsetY + events.scrollY();
 
-    if (Modernizr.csstransforms) {
-        if (Modernizr.csstransforms3d) {
-            currentDragElement.style.transform = `translate3d(${x}px, ${y}px, 0px)`;
-        } else {
-            currentDragElement.style.transform = `translate(${x}px, ${y}px)`;
-        }
+    if (Modernizr.csstransforms3d) {
+        currentDragElement.style.transform = `translate3d(${x}px, ${y}px, 0px)`;
+        
+    } else if (Modernizr.csstransforms) {
+        currentDragElement.style.transform = `translate(${x}px, ${y}px)`;
 
     } else {
         currentDragElement.style.top = `${y}px`;
