@@ -145,62 +145,73 @@ function arrowLeft(selection, extend) {
         return false;
     }
 
-    if (!selection.isCollapsed && !extend) {
-        let node = selection.anchorNode;
-        let offset = selection.anchorOffset;
+    let startNode = selection.anchorNode;
+    let endNode = selection.focusNode;
+    let startOffset = selection.anchorOffset;
+    let endOffset = selection.focusOffset;
 
-        if (selection.anchorNode === selection.focusNode) {
-            offset = Math.min(selection.anchorOffset, selection.focusOffset);
+    if (startNode === endNode) {
+        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
+        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
 
-        } else {
-            const position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
-            if (position & Node.DOCUMENT_POSITION_FOLLOWING) {
-                offset = selection.focusOffset;
-                node = selection.focusNode;
-            }
+    } else {
+        const position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
+        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+            startNode = selection.focusNode;
+            startOffset = selection.focusOffset;
+            endNode = selection.anchorNode;
+            endOffset = selection.anchorOffset;
         }
+    }
 
-        selection.collapse(node, offset);
+    if (!selection.isCollapsed && !extend) {
+        selection.collapse(startNode, startOffset);
         return true;
     }
 
-    let item = selection.focusNode;
-    let offset = selection.focusOffset;
-
-    while (item) {
-        if (item.nodeType !== Node.TEXT_NODE) {
+    while (startNode) {
+        if (startNode.nodeType !== Node.TEXT_NODE) {
             return false;
         }
 
-        if (offset === null) {
-            offset = item.nodeValue.length;
+        if (startOffset === null) {
+            startOffset = startNode.nodeValue.length;
         }
 
-        if (offset - 1 < 0) {
-            item = item.previousSibling;
-            offset = null;
+        if (startOffset - 1 < 0) {
+            startNode = startNode.previousSibling;
+            startOffset = null;
             continue;
         }
 
-        const text = item.nodeValue.substring(offset - 1, offset);
+        const text = startNode.nodeValue.substring(startOffset - 1, startOffset);
 
         if (checkZws(text)) {
-            offset = offset - 1;
+            startOffset = startOffset - 1;
             continue;
         }
 
         break;
     }
 
-    if (!item || offset === null) {
+    if (!startNode || startOffset === null) {
         return false;
     }
 
     if (extend) {
-        selection.extend(item, offset - 1);
+        if (selection.extend) {
+            selection.extend(startNode, startOffset - 1);
+
+        } else {
+            const range = context.document.createRange();
+            range.setStart(startNode, startOffset - 1);
+            range.setEnd(endNode, endOffset);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
 
     } else {
-        selection.collapse(item, offset - 1);
+        selection.collapse(startNode, startOffset - 1);
     }
 
     return true;
@@ -217,60 +228,71 @@ function arrowRight(selection, extend) {
         return false;
     }
 
-    if (!selection.isCollapsed && !extend) {
-        let node = selection.focusNode;
-        let offset = selection.focusOffset;
+    let startNode = selection.anchorNode;
+    let endNode = selection.focusNode;
+    let startOffset = selection.anchorOffset;
+    let endOffset = selection.focusOffset;
 
-        if (selection.focusNode === selection.anchorNode) {
-            offset = Math.max(selection.focusOffset, selection.anchorOffset);
+    if (startNode === endNode) {
+        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
+        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
 
-        } else {
-            const position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
-            if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-                offset = selection.anchorOffset;
-                node = selection.anchorNode;
-            }
+    } else {
+        const position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
+        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+            startNode = selection.focusNode;
+            startOffset = selection.focusOffset;
+            endNode = selection.anchorNode;
+            endOffset = selection.anchorOffset;
         }
+    }
 
-        selection.collapse(node, offset);
+    if (!selection.isCollapsed && !extend) {
+        selection.collapse(endNode, endOffset);
         return true;
     }
 
-    let item = selection.focusNode;
-    let offset = selection.focusOffset;
-
-    while (item) {
-        if (item.nodeType !== Node.TEXT_NODE) {
+    while (endNode) {
+        if (endNode.nodeType !== Node.TEXT_NODE) {
             return false;
         }
 
-        const len = item.nodeValue.length;
+        const len = endNode.nodeValue.length;
 
-        if (offset + 1 > len) {
-            item = item.nextSibling;
-            offset = 0;
+        if (endOffset + 1 > len) {
+            endNode = endNode.nextSibling;
+            endOffset = 0;
             continue;
         }
 
-        const text = item.nodeValue.substring(offset, offset + 1);
+        const text = endNode.nodeValue.substring(endOffset, endOffset + 1);
 
         if (checkZws(text)) {
-            offset = offset + 1;
+            endOffset = endOffset + 1;
             continue;
         }
 
         break;
     }
 
-    if (!item) {
+    if (!endNode) {
         return false;
     }
 
     if (extend) {
-        selection.extend(item, offset + 1);
+        if (selection.extend) {
+            selection.extend(endNode, endOffset + 1);
+
+        } else {
+            const range = context.document.createRange();
+            range.setStart(startNode, startOffset);
+            range.setEnd(endNode, endOffset + 1);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
 
     } else {
-        selection.collapse(item, offset + 1);
+        selection.collapse(endNode, endOffset + 1);
     }
 
     return true;
