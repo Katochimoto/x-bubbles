@@ -157,7 +157,7 @@ function onScroll(dragSet) {
 
     if (Modernizr.csstransforms3d) {
         currentDragElement.style.transform = `translate3d(${x}px, ${y}px, 0px)`;
-        
+
     } else if (Modernizr.csstransforms) {
         currentDragElement.style.transform = `translate(${x}px, ${y}px)`;
 
