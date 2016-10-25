@@ -1169,6 +1169,7 @@ var XBubbles =
 	var _require = __webpack_require__(10);
 
 	var escape = _require.escape;
+	var canUseDrag = _require.canUseDrag;
 
 
 	exports.isBubbleNode = isBubbleNode;
@@ -1235,7 +1236,7 @@ var XBubbles =
 
 	    var bubbleFormation = nodeSet.options('bubbleFormation');
 	    var classBubble = nodeSet.options('classBubble');
-	    var draggable = nodeSet.options('draggable');
+	    var draggable = canUseDrag() && nodeSet.options('draggable');
 	    var wrap = context.document.createElement('span');
 
 	    wrap.innerText = dataText;
@@ -1400,9 +1401,11 @@ var XBubbles =
 
 /***/ },
 /* 10 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+
+	var context = __webpack_require__(1);
 
 	/* eslint quotes: 0 */
 
@@ -1428,6 +1431,7 @@ var XBubbles =
 	var reUnescapedHtml = /[&<>"'`]/g;
 	var reHasEscapedHtml = RegExp(reEscapedHtml.source);
 	var reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+	var reIEUA = /Trident|Edge/;
 
 	exports.escape = function (data) {
 	    data = String(data);
@@ -1449,16 +1453,9 @@ var XBubbles =
 	    return data;
 	};
 
-	exports.msie = function () {
-	    var ua = navigator.userAgent.toLowerCase();
-	    var match = /(msie) ([\w.]+)/.exec(ua) || [];
-
-	    if (match[1]) {
-	        return match[2] || '0';
-	    }
-
-	    return false;
-	}();
+	exports.canUseDrag = function () {
+	    return !reIEUA.test(context.navigator.userAgent);
+	};
 
 	function unescapeHtmlChar(chr) {
 	    return htmlUnescapes[chr];
@@ -1577,23 +1574,23 @@ var XBubbles =
 
 	var _require = __webpack_require__(10);
 
-	var msie = _require.msie;
+	var canUseDrag = _require.canUseDrag;
 
 
 	exports.init = function (nodeSet) {
-	    if (msie) {
-	        return mouse.init(nodeSet);
+	    if (canUseDrag()) {
+	        return native.init(nodeSet);
 	    }
 
-	    return native.init(nodeSet);
+	    return mouse.init(nodeSet);
 	};
 
 	exports.destroy = function (nodeSet) {
-	    if (msie) {
-	        return mouse.destroy(nodeSet);
+	    if (canUseDrag()) {
+	        return native.destroy(nodeSet);
 	    }
 
-	    return native.destroy(nodeSet);
+	    return mouse.destroy(nodeSet);
 	};
 
 /***/ },

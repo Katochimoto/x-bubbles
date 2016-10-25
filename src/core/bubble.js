@@ -1,6 +1,6 @@
 const context = require('../context');
 const text = require('./text');
-const { escape } = require('./utils');
+const { escape, canUseDrag } = require('./utils');
 
 exports.isBubbleNode = isBubbleNode;
 exports.bubbling = bubbling;
@@ -64,7 +64,7 @@ function create(nodeSet, dataText, data = {}) {
 
     const bubbleFormation = nodeSet.options('bubbleFormation');
     const classBubble = nodeSet.options('classBubble');
-    const draggable = nodeSet.options('draggable');
+    const draggable = canUseDrag() && nodeSet.options('draggable');
     const wrap = context.document.createElement('span');
 
     wrap.innerText = dataText;

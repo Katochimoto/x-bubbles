@@ -1,3 +1,5 @@
+const context = require('../context');
+
 /* eslint quotes: 0 */
 
 const htmlEscapes = {
@@ -22,6 +24,7 @@ const reEscapedHtml = /&(?:amp|lt|gt|quot|#39|#96);/g;
 const reUnescapedHtml = /[&<>"'`]/g;
 const reHasEscapedHtml = RegExp(reEscapedHtml.source);
 const reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+const reIEUA = /Trident|Edge/;
 
 exports.escape = function (data) {
     data = String(data);
@@ -44,16 +47,9 @@ exports.unescape = function (data) {
     return data;
 };
 
-exports.msie = (function () {
-    var ua = navigator.userAgent.toLowerCase();
-    var match = /(msie) ([\w.]+)/.exec(ua) || [];
-
-    if (match[1]) {
-        return match[2] || '0';
-    }
-
-    return false;
-}());
+exports.canUseDrag = function () {
+    return !reIEUA.test(context.navigator.userAgent);
+};
 
 function unescapeHtmlChar(chr) {
     return htmlUnescapes[ chr ];
