@@ -1630,6 +1630,7 @@ var XBubbles =
 	var _require2 = __webpack_require__(15);
 
 	var getDragImage = _require2.getDragImage;
+	var DRAG_IMG_WIDTH = _require2.DRAG_IMG_WIDTH;
 
 
 	var currentDragSet = null;
@@ -1675,7 +1676,7 @@ var XBubbles =
 
 	    var list = select.get(currentDragSet);
 	    if (list.length > 1) {
-	        event.dataTransfer.setDragImage(getDragImage(), 16, 16);
+	        event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG_WIDTH, DRAG_IMG_WIDTH);
 	    }
 	}
 
@@ -1948,6 +1949,10 @@ var XBubbles =
 
 	var dragImage = null;
 
+	var DRAG_IMG_WIDTH = 16;
+
+	exports.DRAG_IMG_WIDTH = DRAG_IMG_WIDTH;
+
 	exports.getDragImage = function () {
 	    if (!dragImage) {
 	        dragImage = new Image();
@@ -1982,6 +1987,7 @@ var XBubbles =
 	var _require2 = __webpack_require__(15);
 
 	var getDragImage = _require2.getDragImage;
+	var DRAG_IMG_WIDTH = _require2.DRAG_IMG_WIDTH;
 
 
 	var currentDragSet = null;
@@ -2099,6 +2105,8 @@ var XBubbles =
 
 	        if (!moveElement) {
 	            moveElement = getDragImage();
+	            drag.nodeOffsetX = DRAG_IMG_WIDTH;
+	            drag.nodeOffsetY = DRAG_IMG_WIDTH;
 	        }
 
 	        currentDragElement = document.body.appendChild(document.createElement('div'));

@@ -4,7 +4,7 @@ const select = require('../select');
 const bubbleset = require('../bubbleset');
 const Modernizr = require('modernizr');
 const { CLS } = require('../constant');
-const { getDragImage } = require('./common');
+const { getDragImage, DRAG_IMG_WIDTH } = require('./common');
 
 let currentDragSet = null;
 let currentMoveSet = null;
@@ -117,6 +117,8 @@ function onMousemove(dragSet, event) {
 
         if (!moveElement) {
             moveElement = getDragImage();
+            drag.nodeOffsetX = DRAG_IMG_WIDTH;
+            drag.nodeOffsetY = DRAG_IMG_WIDTH;
         }
 
         currentDragElement = document.body.appendChild(document.createElement('div'));

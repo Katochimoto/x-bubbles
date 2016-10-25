@@ -2,7 +2,7 @@ const context = require('../../context');
 const select = require('../select');
 const bubbleset = require('../bubbleset');
 const { CLS } = require('../constant');
-const { getDragImage } = require('./common');
+const { getDragImage, DRAG_IMG_WIDTH } = require('./common');
 
 let currentDragSet = null;
 
@@ -47,7 +47,7 @@ function onDragstart(event) {
 
     const list = select.get(currentDragSet);
     if (list.length > 1) {
-        event.dataTransfer.setDragImage(getDragImage(), 16, 16);
+        event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG_WIDTH, DRAG_IMG_WIDTH);
     }
 }
 
