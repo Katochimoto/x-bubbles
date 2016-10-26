@@ -248,6 +248,8 @@ var XBubbles =
 
 	'use strict';
 
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 	/**
 	 * @module x-bubbles/event
 	 */
@@ -281,11 +283,17 @@ var XBubbles =
 	};
 
 	exports.on = function (target, eventName, userCallback) {
-	    return target.addEventListener(eventName, userCallback);
+	    var events = userCallback ? _defineProperty({}, eventName, userCallback) : eventName;
+	    for (var name in events) {
+	        target.addEventListener(name, events[name]);
+	    }
 	};
 
 	exports.off = function (target, eventName, userCallback) {
-	    return target.removeEventListener(eventName, userCallback);
+	    var events = userCallback ? _defineProperty({}, eventName, userCallback) : eventName;
+	    for (var name in events) {
+	        target.removeEventListener(name, events[name]);
+	    }
 	};
 
 	exports.prevent = function (event) {
@@ -1622,6 +1630,7 @@ var XBubbles =
 	var context = __webpack_require__(1);
 	var select = __webpack_require__(14);
 	var bubbleset = __webpack_require__(11);
+	var events = __webpack_require__(2);
 
 	var _require = __webpack_require__(7);
 
@@ -1636,21 +1645,25 @@ var XBubbles =
 	var currentDragSet = null;
 
 	exports.init = function (nodeSet) {
-	    nodeSet.addEventListener('drop', onDrop);
-	    nodeSet.addEventListener('dragover', onDragover);
-	    nodeSet.addEventListener('dragenter', onDragenter);
-	    nodeSet.addEventListener('dragleave', onDragleave);
-	    nodeSet.addEventListener('dragstart', onDragstart);
-	    nodeSet.addEventListener('dragend', onDragend);
+	    events.on(nodeSet, {
+	        dragend: onDragend,
+	        dragenter: onDragenter,
+	        dragleave: onDragleave,
+	        dragover: onDragover,
+	        dragstart: onDragstart,
+	        drop: onDrop
+	    });
 	};
 
 	exports.destroy = function (nodeSet) {
-	    nodeSet.removeEventListener('drop', onDrop);
-	    nodeSet.removeEventListener('dragover', onDragover);
-	    nodeSet.removeEventListener('dragenter', onDragenter);
-	    nodeSet.removeEventListener('dragleave', onDragleave);
-	    nodeSet.removeEventListener('dragstart', onDragstart);
-	    nodeSet.removeEventListener('dragend', onDragend);
+	    events.off(nodeSet, {
+	        dragend: onDragend,
+	        dragenter: onDragenter,
+	        dragleave: onDragleave,
+	        dragover: onDragover,
+	        dragstart: onDragstart,
+	        drop: onDrop
+	    });
 	};
 
 	function onDragstart(event) {
@@ -3058,26 +3071,40 @@ var XBubbles =
 
 	var context = __webpack_require__(1);
 	var text = __webpack_require__(8);
+	var events = __webpack_require__(2);
 
 	exports.init = function (nodeSet) {
-	    nodeSet.addEventListener('focus', focus);
-	    nodeSet.addEventListener('blur', blur);
-	    nodeSet.addEventListener('keyup', keyup);
-	    nodeSet.addEventListener('keydown', keydown);
-	    nodeSet.addEventListener('keypress', keypress);
-	    nodeSet.addEventListener('paste', paste);
+	    events.on(nodeSet, {
+	        blur: onBlur,
+	        focus: onFocus,
+	        keydown: onKeydown,
+	        keypress: onKeypress,
+	        keyup: onKeyup,
+	        paste: onPaste
+	    });
 	};
 
 	exports.destroy = function (nodeSet) {
-	    nodeSet.removeEventListener('focus', focus);
-	    nodeSet.removeEventListener('blur', blur);
-	    nodeSet.removeEventListener('keyup', keyup);
-	    nodeSet.removeEventListener('keydown', keydown);
-	    nodeSet.removeEventListener('keypress', keypress);
-	    nodeSet.removeEventListener('paste', paste);
+	    events.off(nodeSet, {
+	        blur: onBlur,
+	        focus: onFocus,
+	        keydown: onKeydown,
+	        keypress: onKeypress,
+	        keyup: onKeyup,
+	        paste: onPaste
+	    });
 	};
 
-	function keyup(event) {
+	function onBlur(event) {
+	    select.clear(event.currentTarget);
+	    bubble.bubbling(event.currentTarget);
+	}
+
+	function onFocus(event) {
+	    cursor.restore(event.currentTarget);
+	}
+
+	function onKeyup(event) {
 	    var code = event.charCode || event.keyCode;
 	    var isPrintableChar = event.key ? event.key.length === 1 : (code > 47 || code === KEY.Space || code === KEY.Backspace) && code !== KEY.Cmd;
 
@@ -3086,7 +3113,7 @@ var XBubbles =
 	    }
 	}
 
-	function keypress(event) {
+	function onKeypress(event) {
 	    var code = event.charCode || event.keyCode;
 	    var nodeSet = event.currentTarget;
 
@@ -3109,7 +3136,7 @@ var XBubbles =
 	    }
 	}
 
-	function keydown(event) {
+	function onKeydown(event) {
 	    var code = event.charCode || event.keyCode;
 	    var metaKey = event.ctrlKey || event.metaKey;
 	    var nodeSet = event.currentTarget;
@@ -3277,7 +3304,7 @@ var XBubbles =
 	    }
 	}
 
-	function paste(event) {
+	function onPaste(event) {
 	    event.preventDefault();
 
 	    var clipboardData = event.clipboardData;
@@ -3296,15 +3323,6 @@ var XBubbles =
 	            return true;
 	        });
 	    }
-	}
-
-	function blur(event) {
-	    select.clear(event.currentTarget);
-	    bubble.bubbling(event.currentTarget);
-	}
-
-	function focus(event) {
-	    cursor.restore(event.currentTarget);
 	}
 
 /***/ },

@@ -1,27 +1,32 @@
 const context = require('../../context');
 const select = require('../select');
 const bubbleset = require('../bubbleset');
+const events = require('../events');
 const { CLS } = require('../constant');
 const { getDragImage, DRAG_IMG_WIDTH } = require('./common');
 
 let currentDragSet = null;
 
 exports.init = function (nodeSet) {
-    nodeSet.addEventListener('drop', onDrop);
-    nodeSet.addEventListener('dragover', onDragover);
-    nodeSet.addEventListener('dragenter', onDragenter);
-    nodeSet.addEventListener('dragleave', onDragleave);
-    nodeSet.addEventListener('dragstart', onDragstart);
-    nodeSet.addEventListener('dragend', onDragend);
+    events.on(nodeSet, {
+        dragend: onDragend,
+        dragenter: onDragenter,
+        dragleave: onDragleave,
+        dragover: onDragover,
+        dragstart: onDragstart,
+        drop: onDrop,
+    });
 };
 
 exports.destroy = function (nodeSet) {
-    nodeSet.removeEventListener('drop', onDrop);
-    nodeSet.removeEventListener('dragover', onDragover);
-    nodeSet.removeEventListener('dragenter', onDragenter);
-    nodeSet.removeEventListener('dragleave', onDragleave);
-    nodeSet.removeEventListener('dragstart', onDragstart);
-    nodeSet.removeEventListener('dragend', onDragend);
+    events.off(nodeSet, {
+        dragend: onDragend,
+        dragenter: onDragenter,
+        dragleave: onDragleave,
+        dragover: onDragover,
+        dragstart: onDragstart,
+        drop: onDrop,
+    });
 };
 
 function onDragstart(event) {

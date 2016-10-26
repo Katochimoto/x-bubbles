@@ -5,26 +5,40 @@ const select = require('./select');
 const { KEY } = require('./constant');
 const context = require('../context');
 const text = require('./text');
+const events = require('./events');
 
 exports.init = function (nodeSet) {
-    nodeSet.addEventListener('focus', focus);
-    nodeSet.addEventListener('blur', blur);
-    nodeSet.addEventListener('keyup', keyup);
-    nodeSet.addEventListener('keydown', keydown);
-    nodeSet.addEventListener('keypress', keypress);
-    nodeSet.addEventListener('paste', paste);
+    events.on(nodeSet, {
+        blur: onBlur,
+        focus: onFocus,
+        keydown: onKeydown,
+        keypress: onKeypress,
+        keyup: onKeyup,
+        paste: onPaste,
+    });
 };
 
 exports.destroy = function (nodeSet) {
-    nodeSet.removeEventListener('focus', focus);
-    nodeSet.removeEventListener('blur', blur);
-    nodeSet.removeEventListener('keyup', keyup);
-    nodeSet.removeEventListener('keydown', keydown);
-    nodeSet.removeEventListener('keypress', keypress);
-    nodeSet.removeEventListener('paste', paste);
+    events.off(nodeSet, {
+        blur: onBlur,
+        focus: onFocus,
+        keydown: onKeydown,
+        keypress: onKeypress,
+        keyup: onKeyup,
+        paste: onPaste,
+    });
 };
 
-function keyup(event) {
+function onBlur(event) {
+    select.clear(event.currentTarget);
+    bubble.bubbling(event.currentTarget);
+}
+
+function onFocus(event) {
+    cursor.restore(event.currentTarget);
+}
+
+function onKeyup(event) {
     const code = event.charCode || event.keyCode;
     const isPrintableChar = do {
         if (event.key) {
@@ -39,7 +53,7 @@ function keyup(event) {
     }
 }
 
-function keypress(event) {
+function onKeypress(event) {
     const code = event.charCode || event.keyCode;
     const nodeSet = event.currentTarget;
 
@@ -62,7 +76,7 @@ function keypress(event) {
     }
 }
 
-function keydown(event) {
+function onKeydown(event) {
     const code = event.charCode || event.keyCode;
     const metaKey = event.ctrlKey || event.metaKey;
     const nodeSet = event.currentTarget;
@@ -249,7 +263,7 @@ function backSpace(event) {
     }
 }
 
-function paste(event) {
+function onPaste(event) {
     event.preventDefault();
 
     const clipboardData = event.clipboardData;
@@ -268,13 +282,4 @@ function paste(event) {
                 return true;
             });
     }
-}
-
-function blur(event) {
-    select.clear(event.currentTarget);
-    bubble.bubbling(event.currentTarget);
-}
-
-function focus(event) {
-    cursor.restore(event.currentTarget);
 }

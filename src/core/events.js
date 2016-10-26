@@ -31,11 +31,17 @@ exports.one = function (target, eventName, userCallback) {
 };
 
 exports.on = function (target, eventName, userCallback) {
-    return target.addEventListener(eventName, userCallback);
+    const events = userCallback ? { [ eventName ]: userCallback } : eventName;
+    for (let name in events) {
+        target.addEventListener(name, events[ name ]);
+    }
 };
 
 exports.off = function (target, eventName, userCallback) {
-    return target.removeEventListener(eventName, userCallback);
+    const events = userCallback ? { [ eventName ]: userCallback } : eventName;
+    for (let name in events) {
+        target.removeEventListener(name, events[ name ]);
+    }
 };
 
 exports.prevent = function (event) {
