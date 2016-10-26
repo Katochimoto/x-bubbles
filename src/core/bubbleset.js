@@ -1,38 +1,43 @@
 const bubble = require('./bubble');
 const text = require('./text');
-const context = require('../context');
 
-const slice = Array.prototype.slice;
-
-exports.lastBubble = function (nodeSet) {
-    return nodeSet.querySelector('[bubble]:last-child');
-};
-
-exports.headBubble = function (nodeSet) {
-    return nodeSet.querySelector('[bubble]:first-child');
-};
-
-exports.getBubbles = function (nodeSet) {
-    return slice.call(nodeSet.querySelectorAll('[bubble]'));
-};
-
-exports.hasBubbles = function (nodeSet) {
-    return Boolean(nodeSet.querySelector('[bubble]'));
-};
-
-exports.closestNodeSet = closestNodeSet;
 exports.closestNodeBubble = closestNodeBubble;
-exports.prevBubble = prevBubble;
+exports.closestNodeSet = closestNodeSet;
+exports.findBubbleLeft = findBubbleLeft;
+exports.getBubbles = getBubbles;
+exports.hasBubbles = hasBubbles;
+exports.headBubble = headBubble;
+exports.lastBubble = lastBubble;
 exports.nextBubble = nextBubble;
+exports.prevBubble = prevBubble;
 
-exports.findBubbleLeft = function (selection) {
-    selection = selection || context.getSelection();
+function lastBubble(nodeSet) {
+    return nodeSet.querySelector('[bubble]:last-child');
+}
 
-    if (!selection || !selection.focusNode) {
+function headBubble(nodeSet) {
+    return nodeSet.querySelector('[bubble]:first-child');
+}
+
+function getBubbles(nodeSet) {
+    return Array.prototype.slice.call(nodeSet.querySelectorAll('[bubble]'));
+}
+
+function hasBubbles(nodeSet) {
+    return Boolean(nodeSet.querySelector('[bubble]'));
+}
+
+function findBubbleLeft(selection) {
+    if (!selection.focusNode || !selection.anchorNode) {
         return;
     }
 
     let node = selection.focusNode.previousSibling;
+
+    if (selection.anchorNode !== selection.focusNode &&
+        selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        node = selection.anchorNode.previousSibling;
+    }
 
     while (node) {
         if (bubble.isBubbleNode(node)) {
@@ -45,7 +50,7 @@ exports.findBubbleLeft = function (selection) {
 
         node = node.previousSibling;
     }
-};
+}
 
 function closestNodeSet(node) {
     while (node) {

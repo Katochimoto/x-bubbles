@@ -47,39 +47,6 @@ describe('text', function () {
             expect(res).to.be.eql(true);
         });
 
-        xit('выделение направо должен схлопнуть слева если нод больше', function () {
-            var t1 = this.buffer.appendChild(document.createTextNode('12345'));
-            var t2 = this.buffer.appendChild(document.createTextNode('67890'));
-
-            var range = document.createRange();
-            range.setStart(t2, 2);
-            range.setEnd(t1, 3);
-
-            this.selection.addRange(range);
-
-            var res = testable.arrowLeft(this.selection);
-
-            expect(this.selection.anchorOffset).to.be.eql(4);
-            expect(this.selection.anchorNode).to.be.eql(t1);
-            expect(res).to.be.eql(true);
-        });
-
-        xit('выделение направо должен схлопнуть слева', function () {
-            var t1 = this.buffer.appendChild(document.createTextNode('12345'));
-
-            var range = document.createRange();
-            range.setStart(t1, 4);
-            range.setEnd(t1, 3);
-
-            this.selection.addRange(range);
-
-            var res = testable.arrowLeft(this.selection);
-
-            expect(this.selection.anchorOffset).to.be.eql(3);
-            expect(this.selection.anchorNode).to.be.eql(t1);
-            expect(res).to.be.eql(true);
-        });
-
         it('при достижении конца надо, выделить начало следующей текстовой ноды', function () {
             var t1 = this.buffer.appendChild(document.createTextNode('1'));
             var t2 = this.buffer.appendChild(document.createTextNode('2'));

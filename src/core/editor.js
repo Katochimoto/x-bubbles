@@ -6,8 +6,6 @@ const { KEY } = require('./constant');
 const context = require('../context');
 const text = require('./text');
 
-const slice = Array.prototype.slice;
-
 exports.init = function (nodeSet) {
     nodeSet.addEventListener('focus', focus);
     nodeSet.addEventListener('blur', blur);
@@ -263,7 +261,7 @@ function paste(event) {
     let data = clipboardData.getData && clipboardData.getData(contentType);
 
     if (!text.replaceString(data) && clipboardData.items) {
-        slice.call(clipboardData.items)
+        Array.prototype.slice.call(clipboardData.items)
             .filter(item => item.kind === 'string' && item.type === contentType)
             .some(function (item) {
                 item.getAsString(text.replaceString);

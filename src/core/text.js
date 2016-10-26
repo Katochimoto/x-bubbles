@@ -137,32 +137,14 @@ function replaceString(data, selection) {
 function arrowLeft(selection, extend) {
     selection = selection || context.getSelection();
 
-    if (!selection) {
+    if (!selection ||
+        !selection.anchorNode ||
+        selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+
         return false;
     }
 
-    if (!selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
-        return false;
-    }
-
-    let startNode = selection.anchorNode;
-    let endNode = selection.focusNode;
-    let startOffset = selection.anchorOffset;
-    let endOffset = selection.focusOffset;
-
-    if (startNode === endNode) {
-        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
-        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
-
-    } else {
-        const position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
-        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-            startNode = selection.focusNode;
-            startOffset = selection.focusOffset;
-            endNode = selection.anchorNode;
-            endOffset = selection.anchorOffset;
-        }
-    }
+    let { startNode, endNode, startOffset, endOffset } = selectionCorrect(selection);
 
     if (!selection.isCollapsed && !extend) {
         selection.collapse(startNode, startOffset);
@@ -220,32 +202,14 @@ function arrowLeft(selection, extend) {
 function arrowRight(selection, extend) {
     selection = selection || context.getSelection();
 
-    if (!selection) {
+    if (!selection ||
+        !selection.focusNode ||
+        selection.focusNode.nodeType !== Node.TEXT_NODE) {
+
         return false;
     }
 
-    if (!selection.focusNode || selection.focusNode.nodeType !== Node.TEXT_NODE) {
-        return false;
-    }
-
-    let startNode = selection.anchorNode;
-    let endNode = selection.focusNode;
-    let startOffset = selection.anchorOffset;
-    let endOffset = selection.focusOffset;
-
-    if (startNode === endNode) {
-        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
-        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
-
-    } else {
-        const position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
-        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-            startNode = selection.focusNode;
-            startOffset = selection.focusOffset;
-            endNode = selection.anchorNode;
-            endOffset = selection.anchorOffset;
-        }
-    }
+    let { startNode, endNode, startOffset, endOffset } = selectionCorrect(selection);
 
     if (!selection.isCollapsed && !extend) {
         selection.collapse(endNode, endOffset);
@@ -303,7 +267,7 @@ function html2text(value) {
         return '';
     }
 
-    var DOMContainer = document.implementation.createHTMLDocument('').body;
+    var DOMContainer = context.document.implementation.createHTMLDocument('').body;
     DOMContainer.innerText = value;
 
     return DOMContainer.innerText
@@ -337,7 +301,7 @@ function selectAll(selection, nodeSet) {
     }
 
     const hasBubbles = bubbleset.hasBubbles(nodeSet);
-    const range = document.createRange();
+    const range = context.document.createRange();
     range.setStartBefore(fromNode);
     range.setEndAfter(toNode);
 
@@ -357,7 +321,7 @@ function selectAll(selection, nodeSet) {
 }
 
 function createZws() {
-    return document.createTextNode(TEXT_ZWS);
+    return context.document.createTextNode(TEXT_ZWS);
 }
 
 function checkZws(value) {
@@ -368,4 +332,27 @@ function textClean(value) {
     return String(value || '')
         .trim()
         .replace(REG_REPLACE_NON_PRINTABLE, '');
+}
+
+function selectionCorrect(selection) {
+    let startNode = selection.anchorNode;
+    let endNode = selection.focusNode;
+    let startOffset = selection.anchorOffset;
+    let endOffset = selection.focusOffset;
+
+    if (startNode === endNode) {
+        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
+        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
+
+    } else {
+        const position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
+        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+            startNode = selection.focusNode;
+            startOffset = selection.focusOffset;
+            endNode = selection.anchorNode;
+            endOffset = selection.anchorOffset;
+        }
+    }
+
+    return { startNode, endNode, startOffset, endOffset };
 }

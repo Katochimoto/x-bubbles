@@ -955,31 +955,18 @@ var XBubbles =
 	function arrowLeft(selection, extend) {
 	    selection = selection || context.getSelection();
 
-	    if (!selection) {
+	    if (!selection || !selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+
 	        return false;
 	    }
 
-	    if (!selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
-	        return false;
-	    }
+	    var _selectionCorrect = selectionCorrect(selection);
 
-	    var startNode = selection.anchorNode;
-	    var endNode = selection.focusNode;
-	    var startOffset = selection.anchorOffset;
-	    var endOffset = selection.focusOffset;
+	    var startNode = _selectionCorrect.startNode;
+	    var endNode = _selectionCorrect.endNode;
+	    var startOffset = _selectionCorrect.startOffset;
+	    var endOffset = _selectionCorrect.endOffset;
 
-	    if (startNode === endNode) {
-	        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
-	        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
-	    } else {
-	        var position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
-	        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-	            startNode = selection.focusNode;
-	            startOffset = selection.focusOffset;
-	            endNode = selection.anchorNode;
-	            endOffset = selection.anchorOffset;
-	        }
-	    }
 
 	    if (!selection.isCollapsed && !extend) {
 	        selection.collapse(startNode, startOffset);
@@ -1035,31 +1022,18 @@ var XBubbles =
 	function arrowRight(selection, extend) {
 	    selection = selection || context.getSelection();
 
-	    if (!selection) {
+	    if (!selection || !selection.focusNode || selection.focusNode.nodeType !== Node.TEXT_NODE) {
+
 	        return false;
 	    }
 
-	    if (!selection.focusNode || selection.focusNode.nodeType !== Node.TEXT_NODE) {
-	        return false;
-	    }
+	    var _selectionCorrect2 = selectionCorrect(selection);
 
-	    var startNode = selection.anchorNode;
-	    var endNode = selection.focusNode;
-	    var startOffset = selection.anchorOffset;
-	    var endOffset = selection.focusOffset;
+	    var startNode = _selectionCorrect2.startNode;
+	    var endNode = _selectionCorrect2.endNode;
+	    var startOffset = _selectionCorrect2.startOffset;
+	    var endOffset = _selectionCorrect2.endOffset;
 
-	    if (startNode === endNode) {
-	        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
-	        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
-	    } else {
-	        var position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
-	        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-	            startNode = selection.focusNode;
-	            startOffset = selection.focusOffset;
-	            endNode = selection.anchorNode;
-	            endOffset = selection.anchorOffset;
-	        }
-	    }
 
 	    if (!selection.isCollapsed && !extend) {
 	        selection.collapse(endNode, endOffset);
@@ -1115,7 +1089,7 @@ var XBubbles =
 	        return '';
 	    }
 
-	    var DOMContainer = document.implementation.createHTMLDocument('').body;
+	    var DOMContainer = context.document.implementation.createHTMLDocument('').body;
 	    DOMContainer.innerText = value;
 
 	    return DOMContainer.innerText.replace(/^[\u0020\u00a0]+$/gm, '').replace(/\n/gm, ' ').trim();
@@ -1146,7 +1120,7 @@ var XBubbles =
 	    }
 
 	    var hasBubbles = bubbleset.hasBubbles(nodeSet);
-	    var range = document.createRange();
+	    var range = context.document.createRange();
 	    range.setStartBefore(fromNode);
 	    range.setEndAfter(toNode);
 
@@ -1166,7 +1140,7 @@ var XBubbles =
 	}
 
 	function createZws() {
-	    return document.createTextNode(TEXT_ZWS);
+	    return context.document.createTextNode(TEXT_ZWS);
 	}
 
 	function checkZws(value) {
@@ -1175,6 +1149,28 @@ var XBubbles =
 
 	function textClean(value) {
 	    return String(value || '').trim().replace(REG_REPLACE_NON_PRINTABLE, '');
+	}
+
+	function selectionCorrect(selection) {
+	    var startNode = selection.anchorNode;
+	    var endNode = selection.focusNode;
+	    var startOffset = selection.anchorOffset;
+	    var endOffset = selection.focusOffset;
+
+	    if (startNode === endNode) {
+	        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
+	        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
+	    } else {
+	        var position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
+	        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+	            startNode = selection.focusNode;
+	            startOffset = selection.focusOffset;
+	            endNode = selection.anchorNode;
+	            endOffset = selection.anchorOffset;
+	        }
+	    }
+
+	    return { startNode: startNode, endNode: endNode, startOffset: startOffset, endOffset: endOffset };
 	}
 
 /***/ },
@@ -1493,39 +1489,43 @@ var XBubbles =
 
 	var bubble = __webpack_require__(9);
 	var text = __webpack_require__(8);
-	var context = __webpack_require__(1);
 
-	var slice = Array.prototype.slice;
-
-	exports.lastBubble = function (nodeSet) {
-	    return nodeSet.querySelector('[bubble]:last-child');
-	};
-
-	exports.headBubble = function (nodeSet) {
-	    return nodeSet.querySelector('[bubble]:first-child');
-	};
-
-	exports.getBubbles = function (nodeSet) {
-	    return slice.call(nodeSet.querySelectorAll('[bubble]'));
-	};
-
-	exports.hasBubbles = function (nodeSet) {
-	    return Boolean(nodeSet.querySelector('[bubble]'));
-	};
-
-	exports.closestNodeSet = closestNodeSet;
 	exports.closestNodeBubble = closestNodeBubble;
-	exports.prevBubble = prevBubble;
+	exports.closestNodeSet = closestNodeSet;
+	exports.findBubbleLeft = findBubbleLeft;
+	exports.getBubbles = getBubbles;
+	exports.hasBubbles = hasBubbles;
+	exports.headBubble = headBubble;
+	exports.lastBubble = lastBubble;
 	exports.nextBubble = nextBubble;
+	exports.prevBubble = prevBubble;
 
-	exports.findBubbleLeft = function (selection) {
-	    selection = selection || context.getSelection();
+	function lastBubble(nodeSet) {
+	    return nodeSet.querySelector('[bubble]:last-child');
+	}
 
-	    if (!selection || !selection.focusNode) {
+	function headBubble(nodeSet) {
+	    return nodeSet.querySelector('[bubble]:first-child');
+	}
+
+	function getBubbles(nodeSet) {
+	    return Array.prototype.slice.call(nodeSet.querySelectorAll('[bubble]'));
+	}
+
+	function hasBubbles(nodeSet) {
+	    return Boolean(nodeSet.querySelector('[bubble]'));
+	}
+
+	function findBubbleLeft(selection) {
+	    if (!selection.focusNode || !selection.anchorNode) {
 	        return;
 	    }
 
 	    var node = selection.focusNode.previousSibling;
+
+	    if (selection.anchorNode !== selection.focusNode && selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING) {
+	        node = selection.anchorNode.previousSibling;
+	    }
 
 	    while (node) {
 	        if (bubble.isBubbleNode(node)) {
@@ -1538,7 +1538,7 @@ var XBubbles =
 
 	        node = node.previousSibling;
 	    }
-	};
+	}
 
 	function closestNodeSet(node) {
 	    while (node) {
@@ -3059,8 +3059,6 @@ var XBubbles =
 	var context = __webpack_require__(1);
 	var text = __webpack_require__(8);
 
-	var slice = Array.prototype.slice;
-
 	exports.init = function (nodeSet) {
 	    nodeSet.addEventListener('focus', focus);
 	    nodeSet.addEventListener('blur', blur);
@@ -3291,7 +3289,7 @@ var XBubbles =
 	    var data = clipboardData.getData && clipboardData.getData(contentType);
 
 	    if (!text.replaceString(data) && clipboardData.items) {
-	        slice.call(clipboardData.items).filter(function (item) {
+	        Array.prototype.slice.call(clipboardData.items).filter(function (item) {
 	            return item.kind === 'string' && item.type === contentType;
 	        }).some(function (item) {
 	            item.getAsString(text.replaceString);
