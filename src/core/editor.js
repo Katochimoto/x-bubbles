@@ -7,26 +7,21 @@ const context = require('../context');
 const text = require('./text');
 const events = require('./events');
 
+const EVENTS = {
+    blur: onBlur,
+    focus: onFocus,
+    keydown: onKeydown,
+    keypress: onKeypress,
+    keyup: onKeyup,
+    paste: onPaste,
+};
+
 exports.init = function (nodeSet) {
-    events.on(nodeSet, {
-        blur: onBlur,
-        focus: onFocus,
-        keydown: onKeydown,
-        keypress: onKeypress,
-        keyup: onKeyup,
-        paste: onPaste,
-    });
+    events.on(nodeSet, EVENTS);
 };
 
 exports.destroy = function (nodeSet) {
-    events.off(nodeSet, {
-        blur: onBlur,
-        focus: onFocus,
-        keydown: onKeydown,
-        keypress: onKeypress,
-        keyup: onKeyup,
-        paste: onPaste,
-    });
+    events.off(nodeSet, EVENTS);
 };
 
 function onBlur(event) {

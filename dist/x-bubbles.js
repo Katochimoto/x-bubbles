@@ -1433,7 +1433,7 @@ var XBubbles =
 
 	/* eslint quotes: 0 */
 
-	var htmlEscapes = {
+	var HTML_ESCAPES = {
 	    '&': '&amp;',
 	    '<': '&lt;',
 	    '>': '&gt;',
@@ -1442,7 +1442,7 @@ var XBubbles =
 	    '`': '&#96;'
 	};
 
-	var htmlUnescapes = {
+	var HTML_UNESCAPES = {
 	    '&amp;': '&',
 	    '&lt;': '<',
 	    '&gt;': '>',
@@ -1451,17 +1451,17 @@ var XBubbles =
 	    '&#96;': '`'
 	};
 
-	var reEscapedHtml = /&(?:amp|lt|gt|quot|#39|#96);/g;
-	var reUnescapedHtml = /[&<>"'`]/g;
-	var reHasEscapedHtml = RegExp(reEscapedHtml.source);
-	var reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
-	var reIEUA = /Trident|Edge/;
+	var REG_ESCAPED_HTML = /&(?:amp|lt|gt|quot|#39|#96);/g;
+	var REG_UNESCAPED_HTML = /[&<>"'`]/g;
+	var REG_HAS_ESCAPED_HTML = RegExp(REG_ESCAPED_HTML.source);
+	var REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
+	var REG_IE = /Trident|Edge/;
 
 	exports.escape = function (data) {
 	    data = String(data);
 
-	    if (data && reHasUnescapedHtml.test(data)) {
-	        return data.replace(reUnescapedHtml, escapeHtmlChar);
+	    if (data && REG_HAS_UNESCAPED_HTML.test(data)) {
+	        return data.replace(REG_UNESCAPED_HTML, escapeHtmlChar);
 	    }
 
 	    return data;
@@ -1470,23 +1470,23 @@ var XBubbles =
 	exports.unescape = function (data) {
 	    data = String(data);
 
-	    if (data && reHasEscapedHtml.test(data)) {
-	        return data.replace(reEscapedHtml, unescapeHtmlChar);
+	    if (data && REG_HAS_ESCAPED_HTML.test(data)) {
+	        return data.replace(REG_ESCAPED_HTML, unescapeHtmlChar);
 	    }
 
 	    return data;
 	};
 
 	exports.canUseDrag = function () {
-	    return !reIEUA.test(context.navigator.userAgent);
+	    return !REG_IE.test(context.navigator.userAgent);
 	};
 
 	function unescapeHtmlChar(chr) {
-	    return htmlUnescapes[chr];
+	    return HTML_UNESCAPES[chr];
 	}
 
 	function escapeHtmlChar(chr) {
-	    return htmlEscapes[chr];
+	    return HTML_ESCAPES[chr];
 	}
 
 /***/ },
@@ -1642,28 +1642,23 @@ var XBubbles =
 	var DRAG_IMG_WIDTH = _require2.DRAG_IMG_WIDTH;
 
 
+	var EVENTS = {
+	    dragend: onDragend,
+	    dragenter: onDragenter,
+	    dragleave: onDragleave,
+	    dragover: onDragover,
+	    dragstart: onDragstart,
+	    drop: onDrop
+	};
+
 	var currentDragSet = null;
 
 	exports.init = function (nodeSet) {
-	    events.on(nodeSet, {
-	        dragend: onDragend,
-	        dragenter: onDragenter,
-	        dragleave: onDragleave,
-	        dragover: onDragover,
-	        dragstart: onDragstart,
-	        drop: onDrop
-	    });
+	    events.on(nodeSet, EVENTS);
 	};
 
 	exports.destroy = function (nodeSet) {
-	    events.off(nodeSet, {
-	        dragend: onDragend,
-	        dragenter: onDragenter,
-	        dragleave: onDragleave,
-	        dragover: onDragover,
-	        dragstart: onDragstart,
-	        drop: onDrop
-	    });
+	    events.off(nodeSet, EVENTS);
 	};
 
 	function onDragstart(event) {
@@ -1960,9 +1955,9 @@ var XBubbles =
 
 	'use strict';
 
-	var dragImage = null;
-
 	var DRAG_IMG_WIDTH = 16;
+
+	var dragImage = null;
 
 	exports.DRAG_IMG_WIDTH = DRAG_IMG_WIDTH;
 
@@ -3073,26 +3068,21 @@ var XBubbles =
 	var text = __webpack_require__(8);
 	var events = __webpack_require__(2);
 
+	var EVENTS = {
+	    blur: onBlur,
+	    focus: onFocus,
+	    keydown: onKeydown,
+	    keypress: onKeypress,
+	    keyup: onKeyup,
+	    paste: onPaste
+	};
+
 	exports.init = function (nodeSet) {
-	    events.on(nodeSet, {
-	        blur: onBlur,
-	        focus: onFocus,
-	        keydown: onKeydown,
-	        keypress: onKeypress,
-	        keyup: onKeyup,
-	        paste: onPaste
-	    });
+	    events.on(nodeSet, EVENTS);
 	};
 
 	exports.destroy = function (nodeSet) {
-	    events.off(nodeSet, {
-	        blur: onBlur,
-	        focus: onFocus,
-	        keydown: onKeydown,
-	        keypress: onKeypress,
-	        keyup: onKeyup,
-	        paste: onPaste
-	    });
+	    events.off(nodeSet, EVENTS);
 	};
 
 	function onBlur(event) {

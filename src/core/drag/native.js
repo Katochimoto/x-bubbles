@@ -5,28 +5,23 @@ const events = require('../events');
 const { CLS } = require('../constant');
 const { getDragImage, DRAG_IMG_WIDTH } = require('./common');
 
+const EVENTS = {
+    dragend: onDragend,
+    dragenter: onDragenter,
+    dragleave: onDragleave,
+    dragover: onDragover,
+    dragstart: onDragstart,
+    drop: onDrop,
+};
+
 let currentDragSet = null;
 
 exports.init = function (nodeSet) {
-    events.on(nodeSet, {
-        dragend: onDragend,
-        dragenter: onDragenter,
-        dragleave: onDragleave,
-        dragover: onDragover,
-        dragstart: onDragstart,
-        drop: onDrop,
-    });
+    events.on(nodeSet, EVENTS);
 };
 
 exports.destroy = function (nodeSet) {
-    events.off(nodeSet, {
-        dragend: onDragend,
-        dragenter: onDragenter,
-        dragleave: onDragleave,
-        dragover: onDragover,
-        dragstart: onDragstart,
-        drop: onDrop,
-    });
+    events.off(nodeSet, EVENTS);
 };
 
 function onDragstart(event) {
