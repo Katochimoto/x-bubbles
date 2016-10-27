@@ -7,6 +7,16 @@ const bubbleset = require('./core/bubbleset');
 const text = require('./core/text');
 const cursor = require('./core/cursor');
 
+const OPTIONS = {
+    begining:           [ 'noop', null ],
+    bubbleDeformation:  [ 'funk', function () {} ],
+    bubbleFormation:    [ 'funk', function () {} ],
+    classBubble:        [ 'noop', 'bubble' ],
+    draggable:          [ 'bool', true ],
+    ending:             [ 'noop', null ], // /\@ya\.ru/g;
+    separator:          [ 'noop', /[,;]/ ],
+};
+
 const XBubbles = Object.create(HTMLDivElement.prototype, {
     createdCallback: {
         value: function () {
@@ -48,13 +58,11 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
         value: function (name, value) {
             if (!this._options) {
                 this._options = {
-                    classBubble: 'bubble',
-                    draggable: true,
-                    separator: /[,;]/,
-                    ending: null, // /\@ya\.ru/g;
-                    begining: null,
-                    bubbleFormation: function () {},
-                    bubbleDeformation: function () {},
+                    ...Object.keys(OPTIONS).reduce(function (result, item) {
+                        result[ item ] = undefined;
+                        return result;
+                    }, {}),
+
                     ...this.dataset
                 };
 
@@ -135,38 +143,38 @@ module.exports = context.document.registerElement('x-bubbles', {
     prototype: XBubbles
 });
 
+const OPTIONS_PREPARE = {
+    funk: function (value) {
+        const type = typeof value;
+        switch (type) {
+        case 'string':
+            return new Function('context', `return context.${value};`)(context);
+
+        case 'function':
+            return value;
+        }
+    },
+    bool: function (value) {
+        const type = typeof value;
+        switch (type) {
+        case 'string':
+            return (value === 'true' || value === 'on');
+
+        case 'boolean':
+            return value;
+        }
+    },
+    noop: function (value) {
+        return value;
+    },
+};
+
 function optionsPrepare(options) {
-    const typeBubbleFormation = typeof options.bubbleFormation;
-    const typeBubbleDeformation = typeof options.bubbleDeformation;
-    const typeDraggable = typeof options.draggable;
-
-    switch (typeBubbleFormation) {
-    case 'string':
-        options.bubbleFormation = new Function('wrap', `(function(wrap) { ${options.bubbleFormation}(wrap); }(wrap));`);
-        break;
-    case 'function':
-        break;
-    default:
-        options.bubbleFormation = function () {};
-    }
-
-    switch (typeBubbleDeformation) {
-    case 'string':
-        options.bubbleDeformation = new Function('wrap', `return (function(wrap) { return ${options.bubbleDeformation}(wrap); }(wrap));`);
-        break;
-    case 'function':
-        break;
-    default:
-        options.bubbleDeformation = function () {};
-    }
-
-    switch (typeDraggable) {
-    case 'string':
-        options.draggable = (options.draggable === 'true' || options.draggable === 'on');
-        break;
-    case 'boolean':
-        break;
-    default:
-        options.draggable = true;
+    for (let name in OPTIONS) {
+        const [ type, def ] = OPTIONS[ name ];
+        options[ name ] = OPTIONS_PREPARE[ type ](options[ name ]);
+        if (typeof options[ name ] === 'undefined') {
+            options[ name ] = def;
+        }
     }
 }

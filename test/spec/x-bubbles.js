@@ -1,4 +1,5 @@
 const testable = require('../../src/index');
+const context = require('../../src/context');
 const { EV } = require('../../src/core/constant');
 const Promise = require('es6-promise').Promise;
 
@@ -9,7 +10,7 @@ describe('x-bubbles ->', function () {
     });
 
     afterEach(function () {
-        this.buffer && this.buffer.parentNode.removeChild(this.buffer);
+        this.buffer && this.buffer.parentNode && this.buffer.parentNode.removeChild(this.buffer);
     });
 
     describe('создание элемента ->', function () {
@@ -307,6 +308,72 @@ describe('x-bubbles ->', function () {
 
             return this.webcomponentsready().then(() => {
                 expect(this.buffer.editBubble(document.createElement('div'))).to.be.eql(false);
+            });
+        });
+    });
+
+    describe('#options', function () {
+        it('draggable по умолчанию true', function () {
+            this.buffer = document.body.appendChild(document.createElement('div', 'x-bubbles'));
+
+            return this.webcomponentsready().then(() => {
+                expect(this.buffer.options('draggable')).to.be.eql(true);
+            });
+        });
+
+        it('bubbleDeformation по умолчанию function() {}', function () {
+            const func = function () {};
+            this.buffer = document.body.appendChild(document.createElement('div', 'x-bubbles'));
+            this.buffer.options('bubbleDeformation', func);
+
+            return this.webcomponentsready().then(() => {
+                expect(this.buffer.options('bubbleDeformation')).to.be.eql(func);
+            });
+        });
+
+        it('bubbleDeformation строку преобразовывает в функцию', function () {
+            context.testBubbleDeformation = function () {};
+            this.buffer = document.body.appendChild(document.createElement('div', 'x-bubbles'));
+            this.buffer.options('bubbleDeformation', 'testBubbleDeformation');
+
+            return this.webcomponentsready().then(() => {
+                expect(this.buffer.options('bubbleDeformation')).to.be.eql(context.testBubbleDeformation);
+            });
+        });
+
+        it('data атрибут draggable должен быть преобразован в параметр true -> true', function () {
+            this.buffer = document.body.appendChild(document.createElement('div', 'x-bubbles'));
+            this.buffer.setAttribute('data-draggable', 'true');
+
+            return this.webcomponentsready().then(() => {
+                expect(this.buffer.options('draggable')).to.be.eql(true);
+            });
+        });
+
+        it('data атрибут draggable должен быть преобразован в параметр on -> true', function () {
+            this.buffer = document.body.appendChild(document.createElement('div', 'x-bubbles'));
+            this.buffer.setAttribute('data-draggable', 'on');
+
+            return this.webcomponentsready().then(() => {
+                expect(this.buffer.options('draggable')).to.be.eql(true);
+            });
+        });
+
+        it('data атрибут draggable должен быть преобразован в параметр off -> false', function () {
+            this.buffer = document.body.appendChild(document.createElement('div', 'x-bubbles'));
+            this.buffer.setAttribute('data-draggable', 'off');
+
+            return this.webcomponentsready().then(() => {
+                expect(this.buffer.options('draggable')).to.be.eql(false);
+            });
+        });
+
+        it('data атрибут draggable должен быть преобразован в параметр false -> false', function () {
+            this.buffer = document.body.appendChild(document.createElement('div', 'x-bubbles'));
+            this.buffer.setAttribute('data-draggable', 'false');
+
+            return this.webcomponentsready().then(() => {
+                expect(this.buffer.options('draggable')).to.be.eql(false);
             });
         });
     });

@@ -47,6 +47,8 @@ var XBubbles =
 
 	'use strict';
 
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -59,6 +61,16 @@ var XBubbles =
 	var bubbleset = __webpack_require__(11);
 	var text = __webpack_require__(8);
 	var cursor = __webpack_require__(20);
+
+	var OPTIONS = {
+	    begining: ['noop', null],
+	    bubbleDeformation: ['funk', function () {}],
+	    bubbleFormation: ['funk', function () {}],
+	    classBubble: ['noop', 'bubble'],
+	    draggable: ['bool', true],
+	    ending: ['noop', null], // /\@ya\.ru/g;
+	    separator: ['noop', /[,;]/]
+	};
 
 	var XBubbles = Object.create(HTMLDivElement.prototype, {
 	    createdCallback: {
@@ -100,15 +112,10 @@ var XBubbles =
 	    options: {
 	        value: function value(name, _value) {
 	            if (!this._options) {
-	                this._options = _extends({
-	                    classBubble: 'bubble',
-	                    draggable: true,
-	                    separator: /[,;]/,
-	                    ending: null, // /\@ya\.ru/g;
-	                    begining: null,
-	                    bubbleFormation: function bubbleFormation() {},
-	                    bubbleDeformation: function bubbleDeformation() {}
-	                }, this.dataset);
+	                this._options = _extends({}, Object.keys(OPTIONS).reduce(function (result, item) {
+	                    result[item] = undefined;
+	                    return result;
+	                }, {}), this.dataset);
 
 	                optionsPrepare(this._options);
 	            }
@@ -186,39 +193,43 @@ var XBubbles =
 	    prototype: XBubbles
 	});
 
+	var OPTIONS_PREPARE = {
+	    funk: function funk(value) {
+	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+	        switch (type) {
+	            case 'string':
+	                return new Function('context', 'return context.' + value + ';')(context);
+
+	            case 'function':
+	                return value;
+	        }
+	    },
+	    bool: function bool(value) {
+	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+	        switch (type) {
+	            case 'string':
+	                return value === 'true' || value === 'on';
+
+	            case 'boolean':
+	                return value;
+	        }
+	    },
+	    noop: function noop(value) {
+	        return value;
+	    }
+	};
+
 	function optionsPrepare(options) {
-	    var typeBubbleFormation = _typeof(options.bubbleFormation);
-	    var typeBubbleDeformation = _typeof(options.bubbleDeformation);
-	    var typeDraggable = _typeof(options.draggable);
+	    for (var name in OPTIONS) {
+	        var _OPTIONS$name = _slicedToArray(OPTIONS[name], 2);
 
-	    switch (typeBubbleFormation) {
-	        case 'string':
-	            options.bubbleFormation = new Function('wrap', '(function(wrap) { ' + options.bubbleFormation + '(wrap); }(wrap));');
-	            break;
-	        case 'function':
-	            break;
-	        default:
-	            options.bubbleFormation = function () {};
-	    }
+	        var type = _OPTIONS$name[0];
+	        var def = _OPTIONS$name[1];
 
-	    switch (typeBubbleDeformation) {
-	        case 'string':
-	            options.bubbleDeformation = new Function('wrap', 'return (function(wrap) { return ' + options.bubbleDeformation + '(wrap); }(wrap));');
-	            break;
-	        case 'function':
-	            break;
-	        default:
-	            options.bubbleDeformation = function () {};
-	    }
-
-	    switch (typeDraggable) {
-	        case 'string':
-	            options.draggable = options.draggable === 'true' || options.draggable === 'on';
-	            break;
-	        case 'boolean':
-	            break;
-	        default:
-	            options.draggable = true;
+	        options[name] = OPTIONS_PREPARE[type](options[name]);
+	        if (typeof options[name] === 'undefined') {
+	            options[name] = def;
+	        }
 	    }
 	}
 
