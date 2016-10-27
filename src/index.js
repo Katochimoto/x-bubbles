@@ -7,9 +7,6 @@ const bubbleset = require('./core/bubbleset');
 const text = require('./core/text');
 const cursor = require('./core/cursor');
 
-const dblclick = require('./core/events/dblclick');
-const click = require('./core/events/click');
-
 const XBubbles = Object.create(HTMLDivElement.prototype, {
     createdCallback: {
         value: function () {
@@ -28,9 +25,6 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
 
     attachedCallback: {
         value: function () {
-            this.addEventListener('click', click);
-            this.addEventListener('dblclick', dblclick);
-
             drag.init(this);
             editor.init(this);
             bubble.bubbling(this);
@@ -39,9 +33,6 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
 
     detachedCallback: {
         value: function () {
-            this.removeEventListener('click', click);
-            this.removeEventListener('dblclick', dblclick);
-
             drag.destroy(this);
             editor.destroy(this);
         }

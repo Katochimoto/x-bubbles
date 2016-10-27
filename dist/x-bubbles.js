@@ -60,9 +60,6 @@ var XBubbles =
 	var text = __webpack_require__(8);
 	var cursor = __webpack_require__(20);
 
-	var dblclick = __webpack_require__(21);
-	var click = __webpack_require__(22);
-
 	var XBubbles = Object.create(HTMLDivElement.prototype, {
 	    createdCallback: {
 	        value: function value() {
@@ -81,9 +78,6 @@ var XBubbles =
 
 	    attachedCallback: {
 	        value: function value() {
-	            this.addEventListener('click', click);
-	            this.addEventListener('dblclick', dblclick);
-
 	            drag.init(this);
 	            editor.init(this);
 	            bubble.bubbling(this);
@@ -92,9 +86,6 @@ var XBubbles =
 
 	    detachedCallback: {
 	        value: function value() {
-	            this.removeEventListener('click', click);
-	            this.removeEventListener('dblclick', dblclick);
-
 	            drag.destroy(this);
 	            editor.destroy(this);
 	        }
@@ -3055,6 +3046,7 @@ var XBubbles =
 
 	'use strict';
 
+	var context = __webpack_require__(1);
 	var bubbleset = __webpack_require__(11);
 	var bubble = __webpack_require__(9);
 	var cursor = __webpack_require__(20);
@@ -3064,12 +3056,13 @@ var XBubbles =
 
 	var KEY = _require.KEY;
 
-	var context = __webpack_require__(1);
 	var text = __webpack_require__(8);
 	var events = __webpack_require__(2);
 
 	var EVENTS = {
 	    blur: onBlur,
+	    click: onClick,
+	    dblclick: onDblclick,
 	    focus: onFocus,
 	    keydown: onKeydown,
 	    keypress: onKeypress,
@@ -3315,6 +3308,51 @@ var XBubbles =
 	    }
 	}
 
+	function onDblclick(event) {
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
+
+	    if (nodeSet && nodeBubble) {
+	        event.preventDefault();
+	        bubble.edit(nodeSet, nodeBubble);
+	    }
+	}
+
+	function onClick(event) {
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	    if (!nodeSet) {
+	        return;
+	    }
+
+	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
+
+	    if (!nodeBubble) {
+	        select.clear(nodeSet);
+
+	        var selection = context.getSelection();
+
+	        if (!selection || !selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+
+	            cursor.restore(nodeSet);
+	        }
+
+	        return;
+	    }
+
+	    if (event.metaKey || event.ctrlKey) {
+	        select.add(nodeBubble);
+	    } else if (event.shiftKey) {
+	        if (!nodeSet.startRangeSelect) {
+	            select.uniq(nodeBubble);
+	        } else {
+	            select.range(nodeBubble);
+	        }
+	    } else {
+	        select.toggleUniq(nodeBubble);
+	    }
+	}
+
 /***/ },
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
@@ -3368,79 +3406,6 @@ var XBubbles =
 
 	    return fakeText;
 	}
-
-/***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var bubbleset = __webpack_require__(11);
-	var bubble = __webpack_require__(9);
-
-	module.exports = function (event) {
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (!nodeSet) {
-	        return;
-	    }
-
-	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
-
-	    if (!nodeBubble) {
-	        return;
-	    }
-
-	    event.preventDefault();
-
-	    bubble.edit(nodeSet, nodeBubble);
-	};
-
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var context = __webpack_require__(1);
-	var bubbleset = __webpack_require__(11);
-	var select = __webpack_require__(14);
-	var cursor = __webpack_require__(20);
-
-	module.exports = function (event) {
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (!nodeSet) {
-	        return;
-	    }
-
-	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
-
-	    if (!nodeBubble) {
-	        select.clear(nodeSet);
-
-	        var selection = context.getSelection();
-
-	        if (!selection || !selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
-
-	            cursor.restore(nodeSet);
-	        }
-
-	        return;
-	    }
-
-	    if (event.metaKey || event.ctrlKey) {
-	        select.add(nodeBubble);
-	    } else if (event.shiftKey) {
-	        if (!nodeSet.startRangeSelect) {
-	            select.uniq(nodeBubble);
-	        } else {
-	            select.range(nodeBubble);
-	        }
-	    } else {
-	        select.toggleUniq(nodeBubble);
-	    }
-	};
 
 /***/ }
 /******/ ]);

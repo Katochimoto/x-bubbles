@@ -1,14 +1,16 @@
+const context = require('../context');
 const bubbleset = require('./bubbleset');
 const bubble = require('./bubble');
 const cursor = require('./cursor');
 const select = require('./select');
 const { KEY } = require('./constant');
-const context = require('../context');
 const text = require('./text');
 const events = require('./events');
 
 const EVENTS = {
     blur: onBlur,
+    click: onClick,
+    dblclick: onDblclick,
     focus: onFocus,
     keydown: onKeydown,
     keypress: onKeypress,
@@ -276,5 +278,55 @@ function onPaste(event) {
                 item.getAsString(text.replaceString);
                 return true;
             });
+    }
+}
+
+function onDblclick(event) {
+    const nodeSet = bubbleset.closestNodeSet(event.target);
+    const nodeBubble = bubbleset.closestNodeBubble(event.target);
+
+    if (nodeSet && nodeBubble) {
+        event.preventDefault();
+        bubble.edit(nodeSet, nodeBubble);
+    }
+}
+
+function onClick(event) {
+    const nodeSet = bubbleset.closestNodeSet(event.target);
+
+    if (!nodeSet) {
+        return;
+    }
+
+    const nodeBubble = bubbleset.closestNodeBubble(event.target);
+
+    if (!nodeBubble) {
+        select.clear(nodeSet);
+
+        const selection = context.getSelection();
+
+        if (!selection ||
+            !selection.anchorNode ||
+            selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+
+            cursor.restore(nodeSet);
+        }
+
+        return;
+    }
+
+    if (event.metaKey || event.ctrlKey) {
+        select.add(nodeBubble);
+
+    } else if (event.shiftKey) {
+        if (!nodeSet.startRangeSelect) {
+            select.uniq(nodeBubble);
+
+        } else {
+            select.range(nodeBubble);
+        }
+
+    } else {
+        select.toggleUniq(nodeBubble);
     }
 }
