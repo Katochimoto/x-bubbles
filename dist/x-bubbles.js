@@ -3367,7 +3367,19 @@ var XBubbles =
 
 	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
 
-	    if (!nodeBubble) {
+	    if (nodeBubble) {
+	        if (event.metaKey || event.ctrlKey) {
+	            select.add(nodeBubble);
+	        } else if (event.shiftKey) {
+	            if (!nodeSet.startRangeSelect) {
+	                select.uniq(nodeBubble);
+	            } else {
+	                select.range(nodeBubble);
+	            }
+	        } else {
+	            select.toggleUniq(nodeBubble);
+	        }
+	    } else {
 	        select.clear(nodeSet);
 
 	        var selection = context.getSelection();
@@ -3376,20 +3388,6 @@ var XBubbles =
 
 	            cursor.restore(nodeSet);
 	        }
-
-	        return;
-	    }
-
-	    if (event.metaKey || event.ctrlKey) {
-	        select.add(nodeBubble);
-	    } else if (event.shiftKey) {
-	        if (!nodeSet.startRangeSelect) {
-	            select.uniq(nodeBubble);
-	        } else {
-	            select.range(nodeBubble);
-	        }
-	    } else {
-	        select.toggleUniq(nodeBubble);
 	    }
 	}
 
