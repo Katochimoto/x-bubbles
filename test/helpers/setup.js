@@ -1,3 +1,5 @@
+require('../../src/index');
+
 (function () {
     const Promise = require('es6-promise').Promise;
 

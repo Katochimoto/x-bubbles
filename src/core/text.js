@@ -144,56 +144,69 @@ function arrowLeft(selection, extend) {
         return false;
     }
 
-    let { startNode, endNode, startOffset, endOffset } = selectionCorrect(selection);
+    let { startNode, endNode, startOffset, endOffset, revert } = selectionCorrect(selection);
 
     if (!selection.isCollapsed && !extend) {
         selection.collapse(startNode, startOffset);
         return true;
     }
 
-    while (startNode) {
-        if (startNode.nodeType !== Node.TEXT_NODE) {
+    const isNativeExtend = Boolean(selection.extend);
+    revert = isNativeExtend ? revert : !revert;
+    let node = revert ? startNode : endNode;
+    let offset = revert ? startOffset : endOffset;
+
+    while (node) {
+        if (node.nodeType !== Node.TEXT_NODE) {
             return false;
         }
 
-        if (startOffset === null) {
-            startOffset = startNode.nodeValue.length;
+        if (offset === null) {
+            offset = node.nodeValue.length;
         }
 
-        if (startOffset - 1 < 0) {
-            startNode = startNode.previousSibling;
-            startOffset = null;
+        if (offset - 1 < 0) {
+            node = node.previousSibling;
+            offset = null;
             continue;
         }
 
-        const text = startNode.nodeValue.substring(startOffset - 1, startOffset);
+        const text = node.nodeValue.substring(offset - 1, offset);
 
         if (checkZws(text)) {
-            startOffset = startOffset - 1;
+            offset = offset - 1;
             continue;
         }
 
         break;
     }
 
-    if (!startNode || startOffset === null) {
+    if (!node || offset === null) {
         return false;
     }
 
     if (extend) {
-        if (selection.extend) {
-            selection.extend(startNode, startOffset - 1);
+        if (isNativeExtend) {
+            selection.extend(node, offset - 1);
 
         } else {
             const range = context.document.createRange();
-            range.setStart(startNode, startOffset - 1);
-            range.setEnd(endNode, endOffset);
+
+            if (revert) {
+                range.setStart(node, offset - 1);
+                range.setEnd(endNode, endOffset);
+
+            } else {
+                range.setStart(startNode, startOffset);
+                range.setEnd(node, offset - 1);
+            }
+
             selection.removeAllRanges();
             selection.addRange(range);
         }
 
     } else {
-        selection.collapse(startNode, startOffset - 1);
+        selection.collapse(node, offset - 1);
     }
 
     return true;
@@ -209,54 +222,67 @@ function arrowRight(selection, extend) {
         return false;
     }
 
-    let { startNode, endNode, startOffset, endOffset } = selectionCorrect(selection);
+    let { startNode, endNode, startOffset, endOffset, revert } = selectionCorrect(selection);
 
     if (!selection.isCollapsed && !extend) {
         selection.collapse(endNode, endOffset);
         return true;
     }
 
-    while (endNode) {
-        if (endNode.nodeType !== Node.TEXT_NODE) {
+    let node = revert ? startNode : endNode;
+    let offset = revert ? startOffset : endOffset;
+
+    while (node) {
+        if (node.nodeType !== Node.TEXT_NODE) {
             return false;
         }
 
-        const len = endNode.nodeValue.length;
+        const len = node.nodeValue.length;
 
-        if (endOffset + 1 > len) {
-            endNode = endNode.nextSibling;
-            endOffset = 0;
+        if (offset + 1 > len) {
+            node = node.nextSibling;
+            offset = 0;
             continue;
         }
 
-        const text = endNode.nodeValue.substring(endOffset, endOffset + 1);
+        const text = node.nodeValue.substring(offset, offset + 1);
 
         if (checkZws(text)) {
-            endOffset = endOffset + 1;
+            offset = offset + 1;
             continue;
         }
 
         break;
     }
 
-    if (!endNode) {
+    if (!node) {
         return false;
     }
 
     if (extend) {
-        if (selection.extend) {
-            selection.extend(endNode, endOffset + 1);
+        const isNativeExtend = Boolean(selection.extend);
+
+        if (isNativeExtend) {
+            selection.extend(node, offset + 1);
 
         } else {
             const range = context.document.createRange();
-            range.setStart(startNode, startOffset);
-            range.setEnd(endNode, endOffset + 1);
+
+            if (revert) {
+                range.setStart(node, offset + 1);
+                range.setEnd(endNode, endOffset);
+
+            } else {
+                range.setStart(startNode, startOffset);
+                range.setEnd(node, offset + 1);
+            }
+
             selection.removeAllRanges();
             selection.addRange(range);
         }
 
     } else {
-        selection.collapse(endNode, endOffset + 1);
+        selection.collapse(node, offset + 1);
     }
 
     return true;
@@ -339,10 +365,12 @@ function selectionCorrect(selection) {
     let endNode = selection.focusNode;
     let startOffset = selection.anchorOffset;
     let endOffset = selection.focusOffset;
+    let revert = false;
 
     if (startNode === endNode) {
         startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
         endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
+        revert = selection.anchorOffset > selection.focusOffset;
 
     } else {
         const position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
@@ -351,8 +379,9 @@ function selectionCorrect(selection) {
             startOffset = selection.focusOffset;
             endNode = selection.anchorNode;
             endOffset = selection.anchorOffset;
+            revert = true;
         }
     }
 
-    return { startNode, endNode, startOffset, endOffset };
+    return { startNode, endNode, startOffset, endOffset, revert };
 }

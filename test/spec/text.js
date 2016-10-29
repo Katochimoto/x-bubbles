@@ -1,17 +1,15 @@
 const testable = require('../../src/core/text');
+const context = require('../../src/context');
 
 describe('text', function () {
     beforeEach(function () {
-        this.selection = window.getSelection();
+        this.selection = context.getSelection();
         this.selection.removeAllRanges();
-
         this.buffer = document.body.appendChild(document.createElement('div'));
     });
 
     afterEach(function () {
         this.buffer && this.buffer.parentNode.removeChild(this.buffer);
-        delete this.buffer;
-        delete this.selection;
     });
 
     describe('#arrowLeft', function () {
@@ -145,8 +143,8 @@ describe('text', function () {
 
             var res = testable.arrowLeft(this.selection);
 
-            expect(this.selection.anchorOffset).to.be.eql(0);
-            expect(this.selection.anchorNode).to.be.eql(document.body);
+            expect(this.selection.anchorOffset).to.be.eql(0, 'начало выделения имеет смещение 0');
+            expect(this.selection.anchorNode).to.be.eql(document.body, 'начало выделения содержит body');
             expect(res).to.be.eql(false);
         });
     });
@@ -315,8 +313,8 @@ describe('text', function () {
 
             var res = testable.arrowRight(this.selection);
 
-            expect(this.selection.focusOffset).to.be.eql(0);
-            expect(this.selection.focusNode).to.be.eql(document.body);
+            expect(this.selection.focusOffset).to.be.eql(0, 'конец выделения имеет смещение 0');
+            expect(this.selection.focusNode).to.be.eql(document.body, 'конец выделения содержит body');
             expect(res).to.be.eql(false);
         });
     });
