@@ -10,6 +10,7 @@ const text = require('./text');
 
 exports.scrollX = scrollX;
 exports.scrollY = scrollY;
+exports.dispatch = dispatch;
 
 exports.pageX = function (event) {
     return (event.pageX === null && event.clientX !== null) ?

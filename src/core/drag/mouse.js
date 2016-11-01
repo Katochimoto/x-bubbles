@@ -3,7 +3,7 @@ const events = require('../events');
 const select = require('../select');
 const bubbleset = require('../bubbleset');
 const Modernizr = require('modernizr');
-const { CLS } = require('../constant');
+const { CLS, EV } = require('../constant');
 const { getDragImage, DRAG_IMG_WIDTH } = require('./common');
 
 let currentDragSet = null;
@@ -36,8 +36,8 @@ function onMousedown(event) {
         onMouseup: onMouseup.bind(this, nodeSet),
         onMousemove: events.throttle(onMousemove.bind(this, nodeSet)),
         onScroll: events.throttle(onScroll.bind(this, nodeSet)),
-        nodeOffsetX: events.pageX(event) - nodeBubble.offsetLeft,
-        nodeOffsetY: events.pageY(event) - nodeBubble.offsetTop,
+        nodeOffsetX: event.offsetX,
+        nodeOffsetY: event.offsetY,
         x: 0,
         y: 0
     };
@@ -67,8 +67,11 @@ function onMouseup(dragSet, event) {
     }
 
     if (currentMoveSet) {
-        currentMoveSet.classList.remove(CLS.DROPZONE);
+        const _ = currentMoveSet;
         currentMoveSet = null;
+
+        _.classList.remove(CLS.DROPZONE);
+        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false });
     }
 
     if (currentDragSet) {
@@ -87,8 +90,12 @@ function onMouseup(dragSet, event) {
             }
         }
 
-        currentDragSet.classList.remove(CLS.DRAGSTART);
+        const _ = currentDragSet;
         currentDragSet = null;
+
+        _.classList.remove(CLS.DRAGSTART);
+        events.dispatch(_, EV.DROP, { bubbles: false, cancelable: false });
+        events.dispatch(_, EV.DRAGEND, { bubbles: false, cancelable: false });
     }
 }
 
@@ -124,6 +131,8 @@ function onMousemove(dragSet, event) {
         currentDragElement = document.body.appendChild(document.createElement('div'));
         currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
         currentDragElement.appendChild(moveElement);
+
+        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false });
     }
 
     drag.x = event.clientX;
@@ -136,15 +145,20 @@ function onMousemove(dragSet, event) {
             currentMoveSet.classList.remove(CLS.DROPZONE);
             nodeSet.classList.add(CLS.DROPZONE);
             currentMoveSet = nodeSet;
+            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false });
 
         } else if (!currentMoveSet) {
             nodeSet.classList.add(CLS.DROPZONE);
             currentMoveSet = nodeSet;
+            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false });
         }
 
     } else if (currentMoveSet) {
-        currentMoveSet.classList.remove(CLS.DROPZONE);
+        const _ = currentMoveSet;
         currentMoveSet = null;
+
+        _.classList.remove(CLS.DROPZONE);
+        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false });
     }
 }
 

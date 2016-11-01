@@ -23,4 +23,9 @@ exports.EV = {
     BUBBLE_EDIT: 'bubble-edit',
     BUBBLE_INPUT: 'bubble-input',
     CHANGE: 'change',
+    DRAGEND: 'dragend',
+    DRAGENTER: 'dragenter',
+    DRAGLEAVE: 'dragleave',
+    DRAGSTART: 'dragstart',
+    DROP: 'drop',
 };

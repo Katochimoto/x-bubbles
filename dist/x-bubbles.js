@@ -268,6 +268,7 @@ var XBubbles =
 
 	exports.scrollX = scrollX;
 	exports.scrollY = scrollY;
+	exports.dispatch = dispatch;
 
 	exports.pageX = function (event) {
 	    return event.pageX === null && event.clientX !== null ? event.clientX + scrollX() : event.pageX;
@@ -828,7 +829,12 @@ var XBubbles =
 	exports.EV = {
 	    BUBBLE_EDIT: 'bubble-edit',
 	    BUBBLE_INPUT: 'bubble-input',
-	    CHANGE: 'change'
+	    CHANGE: 'change',
+	    DRAGEND: 'dragend',
+	    DRAGENTER: 'dragenter',
+	    DRAGLEAVE: 'dragleave',
+	    DRAGSTART: 'dragstart',
+	    DROP: 'drop'
 	};
 
 /***/ },
@@ -2022,6 +2028,7 @@ var XBubbles =
 	var _require = __webpack_require__(7);
 
 	var CLS = _require.CLS;
+	var EV = _require.EV;
 
 	var _require2 = __webpack_require__(15);
 
@@ -2059,8 +2066,8 @@ var XBubbles =
 	        onMouseup: onMouseup.bind(this, nodeSet),
 	        onMousemove: events.throttle(onMousemove.bind(this, nodeSet)),
 	        onScroll: events.throttle(onScroll.bind(this, nodeSet)),
-	        nodeOffsetX: events.pageX(event) - nodeBubble.offsetLeft,
-	        nodeOffsetY: events.pageY(event) - nodeBubble.offsetTop,
+	        nodeOffsetX: event.offsetX,
+	        nodeOffsetY: event.offsetY,
 	        x: 0,
 	        y: 0
 	    };
@@ -2090,8 +2097,11 @@ var XBubbles =
 	    }
 
 	    if (currentMoveSet) {
-	        currentMoveSet.classList.remove(CLS.DROPZONE);
+	        var _ = currentMoveSet;
 	        currentMoveSet = null;
+
+	        _.classList.remove(CLS.DROPZONE);
+	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false });
 	    }
 
 	    if (currentDragSet) {
@@ -2113,8 +2123,12 @@ var XBubbles =
 	                }
 	            }
 
-	            currentDragSet.classList.remove(CLS.DRAGSTART);
+	            var _ = currentDragSet;
 	            currentDragSet = null;
+
+	            _.classList.remove(CLS.DRAGSTART);
+	            events.dispatch(_, EV.DROP, { bubbles: false, cancelable: false });
+	            events.dispatch(_, EV.DRAGEND, { bubbles: false, cancelable: false });
 	        })();
 	    }
 	}
@@ -2151,6 +2165,8 @@ var XBubbles =
 	        currentDragElement = document.body.appendChild(document.createElement('div'));
 	        currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
 	        currentDragElement.appendChild(moveElement);
+
+	        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false });
 	    }
 
 	    drag.x = event.clientX;
@@ -2163,13 +2179,18 @@ var XBubbles =
 	            currentMoveSet.classList.remove(CLS.DROPZONE);
 	            nodeSet.classList.add(CLS.DROPZONE);
 	            currentMoveSet = nodeSet;
+	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false });
 	        } else if (!currentMoveSet) {
 	            nodeSet.classList.add(CLS.DROPZONE);
 	            currentMoveSet = nodeSet;
+	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false });
 	        }
 	    } else if (currentMoveSet) {
-	        currentMoveSet.classList.remove(CLS.DROPZONE);
+	        var _ = currentMoveSet;
 	        currentMoveSet = null;
+
+	        _.classList.remove(CLS.DROPZONE);
+	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false });
 	    }
 	}
 
