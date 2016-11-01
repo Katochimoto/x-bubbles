@@ -20,9 +20,20 @@ var params = {
         'libraryTarget': 'var',
         'path': distPath
     },
+    /*
     'resolve': {
         'alias': {
             'modernizr$': path.resolve(__dirname, '.modernizrrc')
+        }
+    },
+    */
+    'externals': {
+        'modernizr': {
+            'var': 'Modernizr',
+            'root': 'modernizr',
+            'commonjs2': 'modernizr',
+            'commonjs': 'modernizr',
+            'amd': 'modernizr'
         }
     },
     'module': {
