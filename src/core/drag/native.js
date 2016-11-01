@@ -71,6 +71,7 @@ function onDrop(event) {
         list.forEach(item => nodeSet.appendChild(item));
 
         setTimeout(() => {
+            currentDragSet.fireChange();
             nodeSet.focus();
             nodeSet.fireChange();
         }, 0);

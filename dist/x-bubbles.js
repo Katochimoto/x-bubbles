@@ -1747,6 +1747,7 @@ var XBubbles =
 	        });
 
 	        setTimeout(function () {
+	            currentDragSet.fireChange();
 	            nodeSet.focus();
 	            nodeSet.fireChange();
 	        }, 0);
@@ -2117,6 +2118,7 @@ var XBubbles =
 	                    });
 
 	                    setTimeout(function () {
+	                        currentDragSet.fireChange();
 	                        nodeSet.focus();
 	                        nodeSet.fireChange();
 	                    }, 0);
