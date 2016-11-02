@@ -1746,11 +1746,11 @@ var XBubbles =
 	            return nodeSet.appendChild(item);
 	        });
 
-	        setTimeout(function () {
-	            currentDragSet.fireChange();
-	            nodeSet.focus();
-	            nodeSet.fireChange();
-	        }, 0);
+	        context.setTimeout(function (fromNodeSet, toNodeSet) {
+	            fromNodeSet.fireChange();
+	            toNodeSet.focus();
+	            toNodeSet.fireChange();
+	        }, 0, currentDragSet, nodeSet);
 	    }
 	}
 
@@ -2117,11 +2117,11 @@ var XBubbles =
 	                        return nodeSet.appendChild(item);
 	                    });
 
-	                    setTimeout(function () {
-	                        currentDragSet.fireChange();
-	                        nodeSet.focus();
-	                        nodeSet.fireChange();
-	                    }, 0);
+	                    context.setTimeout(function (fromNodeSet, toNodeSet) {
+	                        fromNodeSet.fireChange();
+	                        toNodeSet.focus();
+	                        toNodeSet.fireChange();
+	                    }, 0, currentDragSet, nodeSet);
 	                }
 	            }
 
