@@ -1676,6 +1676,7 @@ var XBubbles =
 	var _require2 = __webpack_require__(15);
 
 	var getDragImage = _require2.getDragImage;
+	var onDropSuccess = _require2.onDropSuccess;
 	var DRAG_IMG_WIDTH = _require2.DRAG_IMG_WIDTH;
 
 
@@ -1745,12 +1746,7 @@ var XBubbles =
 	        list.forEach(function (item) {
 	            return nodeSet.appendChild(item);
 	        });
-
-	        context.setTimeout(function (fromNodeSet, toNodeSet) {
-	            fromNodeSet.fireChange();
-	            toNodeSet.focus();
-	            toNodeSet.fireChange();
-	        }, 0, currentDragSet, nodeSet);
+	        context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
 	    }
 	}
 
@@ -2008,6 +2004,12 @@ var XBubbles =
 	    return dragImage;
 	};
 
+	exports.onDropSuccess = function (fromNodeSet, toNodeSet) {
+	    fromNodeSet.fireChange();
+	    toNodeSet.focus();
+	    toNodeSet.fireChange();
+	};
+
 /***/ },
 /* 16 */
 /***/ function(module, exports) {
@@ -2034,6 +2036,7 @@ var XBubbles =
 	var _require2 = __webpack_require__(15);
 
 	var getDragImage = _require2.getDragImage;
+	var onDropSuccess = _require2.onDropSuccess;
 	var DRAG_IMG_WIDTH = _require2.DRAG_IMG_WIDTH;
 
 
@@ -2116,12 +2119,7 @@ var XBubbles =
 	                    list.forEach(function (item) {
 	                        return nodeSet.appendChild(item);
 	                    });
-
-	                    context.setTimeout(function (fromNodeSet, toNodeSet) {
-	                        fromNodeSet.fireChange();
-	                        toNodeSet.focus();
-	                        toNodeSet.fireChange();
-	                    }, 0, currentDragSet, nodeSet);
+	                    context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
 	                }
 	            }
 

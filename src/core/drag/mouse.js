@@ -4,7 +4,7 @@ const select = require('../select');
 const bubbleset = require('../bubbleset');
 const Modernizr = require('modernizr');
 const { CLS, EV } = require('../constant');
-const { getDragImage, DRAG_IMG_WIDTH } = require('./common');
+const { getDragImage, onDropSuccess, DRAG_IMG_WIDTH } = require('./common');
 
 let currentDragSet = null;
 let currentMoveSet = null;
@@ -82,12 +82,7 @@ function onMouseup(dragSet, event) {
 
             if (list.length) {
                 list.forEach(item => nodeSet.appendChild(item));
-
-                context.setTimeout(function (fromNodeSet, toNodeSet) {
-                    fromNodeSet.fireChange();
-                    toNodeSet.focus();
-                    toNodeSet.fireChange();
-                }, 0, currentDragSet, nodeSet);
+                context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
             }
         }
 

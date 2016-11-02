@@ -3,7 +3,7 @@ const select = require('../select');
 const bubbleset = require('../bubbleset');
 const events = require('../events');
 const { CLS } = require('../constant');
-const { getDragImage, DRAG_IMG_WIDTH } = require('./common');
+const { getDragImage, onDropSuccess, DRAG_IMG_WIDTH } = require('./common');
 
 const EVENTS = {
     dragend: onDragend,
@@ -69,12 +69,7 @@ function onDrop(event) {
 
     if (list.length) {
         list.forEach(item => nodeSet.appendChild(item));
-
-        context.setTimeout(function (fromNodeSet, toNodeSet) {
-            fromNodeSet.fireChange();
-            toNodeSet.focus();
-            toNodeSet.fireChange();
-        }, 0, currentDragSet, nodeSet);
+        context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
     }
 }
 

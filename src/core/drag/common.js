@@ -12,3 +12,9 @@ exports.getDragImage = function () {
 
     return dragImage;
 };
+
+exports.onDropSuccess = function (fromNodeSet, toNodeSet) {
+    fromNodeSet.fireChange();
+    toNodeSet.focus();
+    toNodeSet.fireChange();
+};
