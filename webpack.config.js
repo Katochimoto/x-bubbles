@@ -15,18 +15,11 @@ var params = {
     },
     'context': srcPath,
     'output': {
-        'filename': '[name].js',
+        'filename': '[name]-compact.js',
         'library': 'XBubbles',
         'libraryTarget': 'var',
         'path': distPath
     },
-    /*
-    'resolve': {
-        'alias': {
-            'modernizr$': path.resolve(__dirname, '.modernizrrc')
-        }
-    },
-    */
     'externals': {
         'modernizr': {
             'var': 'Modernizr',
@@ -62,10 +55,22 @@ var runs = [
     params
 ];
 
+runs.push(merge({}, params, {
+    'output': {
+        'filename': '[name].js',
+    },
+    'resolve': {
+        'alias': {
+            'modernizr$': path.resolve(__dirname, '.modernizrrc')
+        }
+    },
+    'externals': null
+}));
+
 if (!isDev) {
-    runs.push(merge({}, params, {
+    var prodParams = merge({}, params, {
         'output': {
-            'filename': '[name].min.js',
+            'filename': '[name]-compact.min.js',
         },
         'plugins': [
             new webpack.optimize.UglifyJsPlugin({
@@ -78,6 +83,20 @@ if (!isDev) {
             })
         ],
         'devtool': '#source-map'
+    });
+
+    runs.push(prodParams);
+
+    runs.push(merge({}, prodParams, {
+        'output': {
+            'filename': '[name].min.js',
+        },
+        'resolve': {
+            'alias': {
+                'modernizr$': path.resolve(__dirname, '.modernizrrc')
+            }
+        },
+        'externals': null
     }));
 }
 

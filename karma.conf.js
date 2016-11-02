@@ -16,7 +16,6 @@ module.exports = function(config) {
         files: [
             'node_modules/jquery/dist/jquery.min.js',
             'node_modules/document-register-element/build/document-register-element.js',
-            'docs/modernizr-custom.js',
             'test/helpers/setup.js',
             'test/spec/**/*.js'
         ],
@@ -35,20 +34,9 @@ module.exports = function(config) {
 
         webpack: {
             'devtool': '#inline-source-map',
-            /*
             'resolve': {
                 'alias': {
                     'modernizr$': path.resolve(__dirname, '.modernizrrc')
-                }
-            },
-            */
-            'externals': {
-                'modernizr': {
-                    'var': 'Modernizr',
-                    'root': 'modernizr',
-                    'commonjs2': 'modernizr',
-                    'commonjs': 'modernizr',
-                    'amd': 'modernizr'
                 }
             },
             'module': {
