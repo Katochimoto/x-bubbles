@@ -45,8 +45,6 @@ function text2bubble(nodeSet, nodeBubble, selection) {
         nodeSet.appendChild(nodeBubble);
     }
 
-    nodeSet.fireInput();
-    nodeSet.fireChange();
     return true;
 }
 

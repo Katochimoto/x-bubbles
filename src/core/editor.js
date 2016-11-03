@@ -262,22 +262,32 @@ function backSpace(event) {
 
 function onPaste(event) {
     event.preventDefault();
+    const nodeSet = event.currentTarget;
 
-    const clipboardData = event.clipboardData;
-    if (!clipboardData) {
-        return;
-    }
+    if (context.clipboardData && context.clipboardData.getData) {
+        text.replaceString(context.clipboardData.getData('Text'));
+        nodeSet.fireInput();
 
-    const contentType = 'text/plain';
-    let data = clipboardData.getData && clipboardData.getData(contentType);
+    } else if (event.clipboardData) {
+        const contentType = 'text/plain';
+        const clipboardData = event.clipboardData;
+        let data = clipboardData.getData && clipboardData.getData(contentType);
 
-    if (!text.replaceString(data) && clipboardData.items) {
-        Array.prototype.slice.call(clipboardData.items)
-            .filter(item => item.kind === 'string' && item.type === contentType)
-            .some(function (item) {
-                item.getAsString(text.replaceString);
-                return true;
-            });
+        if (text.replaceString(data)) {
+            nodeSet.fireInput();
+
+        } else if (clipboardData.items) {
+            Array.prototype.slice.call(clipboardData.items)
+                .filter(item => item.kind === 'string' && item.type === contentType)
+                .some(function (item) {
+                    item.getAsString(function (dataPaste) {
+                        text.replaceString(dataPaste);
+                        nodeSet.fireInput();
+                    });
+
+                    return true;
+                });
+        }
     }
 }
 

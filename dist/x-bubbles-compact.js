@@ -157,6 +157,8 @@ var XBubbles =
 	            }
 
 	            if (text.text2bubble(this, nodeBubble)) {
+	                this.fireInput();
+	                this.fireChange();
 	                cursor.restore(this);
 	                return true;
 	            }
@@ -889,8 +891,6 @@ var XBubbles =
 	        nodeSet.appendChild(nodeBubble);
 	    }
 
-	    nodeSet.fireInput();
-	    nodeSet.fireChange();
 	    return true;
 	}
 
@@ -2468,22 +2468,32 @@ var XBubbles =
 
 	function onPaste(event) {
 	    event.preventDefault();
+	    var nodeSet = event.currentTarget;
 
-	    var clipboardData = event.clipboardData;
-	    if (!clipboardData) {
-	        return;
-	    }
+	    if (context.clipboardData && context.clipboardData.getData) {
+	        text.replaceString(context.clipboardData.getData('Text'));
+	        nodeSet.fireInput();
+	    } else if (event.clipboardData) {
+	        (function () {
+	            var contentType = 'text/plain';
+	            var clipboardData = event.clipboardData;
+	            var data = clipboardData.getData && clipboardData.getData(contentType);
 
-	    var contentType = 'text/plain';
-	    var data = clipboardData.getData && clipboardData.getData(contentType);
+	            if (text.replaceString(data)) {
+	                nodeSet.fireInput();
+	            } else if (clipboardData.items) {
+	                Array.prototype.slice.call(clipboardData.items).filter(function (item) {
+	                    return item.kind === 'string' && item.type === contentType;
+	                }).some(function (item) {
+	                    item.getAsString(function (dataPaste) {
+	                        text.replaceString(dataPaste);
+	                        nodeSet.fireInput();
+	                    });
 
-	    if (!text.replaceString(data) && clipboardData.items) {
-	        Array.prototype.slice.call(clipboardData.items).filter(function (item) {
-	            return item.kind === 'string' && item.type === contentType;
-	        }).some(function (item) {
-	            item.getAsString(text.replaceString);
-	            return true;
-	        });
+	                    return true;
+	                });
+	            }
+	        })();
 	    }
 	}
 

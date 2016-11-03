@@ -107,6 +107,8 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
             }
 
             if (text.text2bubble(this, nodeBubble)) {
+                this.fireInput();
+                this.fireChange();
                 cursor.restore(this);
                 return true;
             }
