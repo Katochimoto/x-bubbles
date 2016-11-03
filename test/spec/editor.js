@@ -1,5 +1,6 @@
 const Promise = require('es6-promise').Promise;
 const context = require('../../src/context');
+const { EV } = require('../../src/core/constant');
 
 describe('editor ->', function () {
     beforeEach(function () {
@@ -12,7 +13,64 @@ describe('editor ->', function () {
         this.buffer && this.buffer.parentNode && this.buffer.parentNode.removeChild(this.buffer);
     });
 
+    describe('keyup ->', function () {
+        beforeEach(function () {
+            this.keyup = (node, character) => {
+                while (node.firstChild) {
+                    node.removeChild(node.firstChild);
+                }
+
+                const code = character.charCodeAt(0);
+                const event = new Event('keyup', {
+                    view: node.ownerDocument.defaultView,
+                    bubbles: true,
+                    cancelable: true
+                });
+
+                event.keyCode = code;
+                event.charCode = code;
+                event.key = character;
+
+                const characterNode = node.appendChild(node.ownerDocument.createTextNode(character));
+
+                const range = node.ownerDocument.createRange();
+                range.setEndAfter(characterNode);
+                range.collapse();
+
+                this.selection.addRange(range);
+
+                node.dispatchEvent(event);
+            };
+        });
+
+        it('должен создать событие ввода текста если указываем печатный символ', function () {
+            document.body.appendChild(this.buffer);
+
+            return this.webcomponentsready().then(() => {
+                return new Promise(resolve => {
+                    this.buffer.addEventListener(EV.BUBBLE_INPUT, function _callback(event) {
+                        event.currentTarget.removeEventListener(EV.BUBBLE_INPUT, _callback);
+                        expect(event.detail.data).to.be.eql('a');
+                        resolve();
+                    });
+
+                    this.keyup(this.buffer, 'a');
+                });
+            });
+        });
+    });
+
     describe('click ->', function () {
+        beforeEach(function () {
+            this.click = function (node) {
+                node.dispatchEvent(new Event('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                }));
+            };
+        });
+
         it('должен установить курсор в созданный пустой текстовый узел', function () {
             document.body.appendChild(this.buffer);
             const that = this;
@@ -26,13 +84,7 @@ describe('editor ->', function () {
 
                     expect(this.selection.anchorNode).to.be.eql(null);
 
-                    const event = new Event('click', {
-                        view: window,
-                        bubbles: true,
-                        cancelable: true
-                    });
-
-                    this.buffer.dispatchEvent(event);
+                    this.click(this.buffer);
                 });
             });
         });
@@ -51,13 +103,7 @@ describe('editor ->', function () {
                         });
 
                         const bubble = this.buffer.items[0];
-                        const event = new Event('click', {
-                            view: window,
-                            bubbles: true,
-                            cancelable: true
-                        });
-
-                        bubble.dispatchEvent(event);
+                        this.click(bubble);
                     });
                 });
             });
@@ -81,18 +127,10 @@ describe('editor ->', function () {
                                 resolve();
                             });
 
-                            bubble.dispatchEvent(new Event('click', {
-                                view: window,
-                                bubbles: true,
-                                cancelable: true
-                            }));
+                            that.click(bubble);
                         });
 
-                        bubble.dispatchEvent(new Event('click', {
-                            view: window,
-                            bubbles: true,
-                            cancelable: true
-                        }));
+                        this.click(bubble);
                     });
                 });
             });

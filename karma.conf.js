@@ -91,18 +91,10 @@ module.exports = function(config) {
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: true,
 
-        customLaunchers: {
-            'ChromiumES6': {
-                base: 'Chromium',
-                flags: ['--enable-javascript-harmony']
-            }
-        },
-
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: [
-            'PhantomJS',
-            'Chromium'
+            'PhantomJS'
         ],
 
         // Continuous Integration mode
