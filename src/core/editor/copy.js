@@ -1,26 +1,30 @@
 const events = require('../events');
 const select = require('../select');
+const { PROPS } = require('../constant');
 
-module.exports = function (nodeSet) {
-    const selection = nodeSet.ownerDocument.defaultView.getSelection();
+module.exports = function (event) {
+    const nodeEditor = event.currentTarget;
+    const doc = nodeEditor.ownerDocument;
+    const selection = doc.defaultView.getSelection();
+
     if (selection && selection.anchorNode) {
         return;
     }
 
-    const list = select.get(nodeSet);
+    const list = select.get(nodeEditor);
     if (!list.length) {
         return;
     }
 
-    const bubbleCopy = nodeSet.options('bubbleCopy');
+    const bubbleCopy = nodeEditor.options('bubbleCopy');
     const value = bubbleCopy(list);
     if (!value) {
         return;
     }
 
-    nodeSet._lockCopy = true;
+    nodeEditor[ PROPS.LOCK_COPY ] = true;
 
-    const target = nodeSet.ownerDocument.createElement('input');
+    const target = doc.createElement('input');
     target.value = value;
     target.style.cssText = `
         position: absolute;
@@ -31,12 +35,12 @@ module.exports = function (nodeSet) {
         padding: 0;
         border: none;`;
 
-    nodeSet.ownerDocument.body.appendChild(target);
+    doc.body.appendChild(target);
 
     events.one(target, {
         blur: () => removeNode(target),
         keyup: () => {
-            nodeSet.focus();
+            nodeEditor.focus();
             removeNode(target);
         }
     });

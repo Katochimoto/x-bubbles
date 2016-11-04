@@ -27,7 +27,7 @@ const REG_HAS_ESCAPED_HTML = RegExp(REG_ESCAPED_HTML.source);
 const REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
 const REG_IE = /Trident|Edge/;
 
-exports.throttle = function (callback) {
+exports.throttle = function (callback, runContext) {
     let throttle = 0;
     const animationCallback = function () {
         throttle = 0;
@@ -40,7 +40,7 @@ exports.throttle = function (callback) {
 
         throttle = raf(animationCallback);
 
-        callback.apply(this, arguments);
+        callback.apply(runContext || this, arguments);
     };
 };
 

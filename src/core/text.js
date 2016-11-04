@@ -1,5 +1,4 @@
 const context = require('../context');
-const bubble = require('./bubble');
 const bubbleset = require('./bubbleset');
 
 /* eslint-disable max-len */
@@ -19,22 +18,13 @@ exports.textClean = textClean;
 exports.checkZws = checkZws;
 exports.createZws = createZws;
 
-function text2bubble(nodeSet, nodeBubble, selection) {
-    selection = selection || context.getSelection();
-
+function text2bubble(nodeSet, nodeBubble) {
+    const selection = context.getSelection();
     if (!selection) {
         return false;
     }
 
     const range = currentTextRange(selection);
-
-    if (range && !nodeBubble) {
-        nodeBubble = bubble.create(nodeSet, range.toString());
-    }
-
-    if (!nodeBubble) {
-        return false;
-    }
 
     if (range) {
         selection.removeAllRanges();

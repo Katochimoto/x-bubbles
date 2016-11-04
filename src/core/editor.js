@@ -4,7 +4,7 @@ const bubbleset = require('./bubbleset');
 const bubble = require('./bubble');
 const cursor = require('./cursor');
 const select = require('./select');
-const { KEY, EV } = require('./constant');
+const { KEY, EV, PROPS } = require('./constant');
 const text = require('./text');
 const events = require('./events');
 const utils = require('./utils');
@@ -24,13 +24,14 @@ const EVENTS = {
     resizestart: events.prevent,
 };
 
-exports.init = function (nodeEditor) {
+exports.init = function (nodeWrap) {
+    const nodeEditor = nodeWrap;
     nodeEditor.setAttribute('contenteditable', 'true');
     nodeEditor.setAttribute('spellcheck', 'false');
 
-    nodeEditor.fireChange = utils.throttle(fireChange);
-    nodeEditor.fireEdit = utils.throttle(fireEdit);
-    nodeEditor.fireInput = utils.throttle(fireInput);
+    nodeEditor.fireChange = utils.throttle(fireChange, nodeWrap);
+    nodeEditor.fireEdit = utils.throttle(fireEdit, nodeWrap);
+    nodeEditor.fireInput = utils.throttle(fireInput, nodeWrap);
 
     events.on(nodeEditor, EVENTS);
 
@@ -48,7 +49,7 @@ exports.destroy = function (nodeEditor) {
 
 function onBlur(event) {
     const nodeEditor = event.currentTarget;
-    if (nodeEditor._lockCopy) {
+    if (nodeEditor[ PROPS.LOCK_COPY ]) {
         return events.prevent(event);
     }
 
@@ -58,9 +59,9 @@ function onBlur(event) {
 
 function onFocus(event) {
     const nodeEditor = event.currentTarget;
-    if (nodeEditor._lockCopy) {
+    if (nodeEditor[ PROPS.LOCK_COPY ]) {
         events.prevent(event);
-        delete nodeEditor._lockCopy;
+        delete nodeEditor[ PROPS.LOCK_COPY ];
 
         // Safary 10 не сбрасывает курсор без задержки
         raf(() => {
@@ -172,7 +173,7 @@ function onKeydown(event) {
 
     case KEY.c:
         if (metaKey) {
-            copy(nodeEditor);
+            copy(event);
         }
         break;
     }
@@ -393,13 +394,13 @@ function setContent(data) {
     }
 
     data = text.html2text(data);
-    this.appendChild(context.document.createTextNode(data));
+    this.appendChild(this.ownerDocument.createTextNode(data));
     bubble.bubbling(this);
     cursor.restore(this);
 }
 
-function addBubble(bubbleText, data) {
-    const nodeBubble = bubble.create(this, bubbleText, data);
+function addBubble(bubbleText, dataAttributes) {
+    const nodeBubble = bubble.create(this, bubbleText, dataAttributes);
     if (!nodeBubble) {
         return false;
     }
@@ -432,6 +433,14 @@ function editBubble(nodeBubble) {
     return false;
 }
 
+/**
+ * Генерация события редактирования бабла.
+ * Выполняется в контексте узла-обертки.
+ * @alias module:x-bubbles/editor.fireEdit
+ * @param {HTMLElement} nodeBubble нода бабл
+ * @this HTMLElement
+ * @private
+ */
 function fireEdit(nodeBubble) {
     events.dispatch(this, EV.BUBBLE_EDIT, {
         bubbles: false,
@@ -440,6 +449,13 @@ function fireEdit(nodeBubble) {
     });
 }
 
+/**
+ * Генерация события изменения набора баблов.
+ * Выполняется в контексте узла-обертки.
+ * @alias module:x-bubbles/editor.fireChange
+ * @this HTMLElement
+ * @private
+ */
 function fireChange() {
     events.dispatch(this, EV.CHANGE, {
         bubbles: false,
@@ -447,12 +463,19 @@ function fireChange() {
     });
 }
 
+/**
+ * Генерация события ввода текста.
+ * Выполняется в контексте узла-обертки.
+ * @alias module:x-bubbles/editor.fireInput
+ * @this HTMLElement
+ * @private
+ */
 function fireInput() {
     const textRange = text.currentTextRange();
     const editText = textRange && text.textClean(textRange.toString()) || '';
 
-    if (this._bubbleValue !== editText) {
-        this._bubbleValue = editText;
+    if (this[ PROPS.BUBBLE_VALUE ] !== editText) {
+        this[ PROPS.BUBBLE_VALUE ] = editText;
 
         events.dispatch(this, EV.BUBBLE_INPUT, {
             bubbles: false,

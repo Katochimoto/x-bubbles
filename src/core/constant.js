@@ -30,3 +30,8 @@ exports.EV = {
     DRAGSTART: 'dragstart',
     DROP: 'drop',
 };
+
+exports.PROPS = {
+    BUBBLE_VALUE: '_bubbleValue',
+    LOCK_COPY: '_lockCopy'
+};

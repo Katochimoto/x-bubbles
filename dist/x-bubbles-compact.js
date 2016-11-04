@@ -646,7 +646,7 @@ var XBubbles =
 	}
 
 	function create(nodeSet, dataText) {
-	    var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+	    var dataAttributes = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 	    dataText = text.textClean(dataText);
 
@@ -657,17 +657,13 @@ var XBubbles =
 	    var bubbleFormation = nodeSet.options('bubbleFormation');
 	    var classBubble = nodeSet.options('classBubble');
 	    var draggable = canUseDrag() && nodeSet.options('draggable');
-	    var wrap = context.document.createElement('span');
+	    var wrap = nodeSet.ownerDocument.createElement('span');
 
 	    wrap.innerText = dataText;
 
-	    if (draggable) {
-	        wrap.setAttribute('draggable', 'true');
-	    }
-
-	    for (var key in data) {
-	        if (data[key]) {
-	            wrap.setAttribute('data-' + key, escape(data[key]));
+	    for (var key in dataAttributes) {
+	        if (dataAttributes[key]) {
+	            wrap.setAttribute('data-' + key, escape(dataAttributes[key]));
 	        }
 	    }
 
@@ -684,6 +680,7 @@ var XBubbles =
 
 	    wrap.setAttribute('bubble', '');
 	    wrap.setAttribute('contenteditable', 'false');
+	    draggable && wrap.setAttribute('draggable', 'true');
 
 	    return wrap;
 	}
@@ -826,7 +823,6 @@ var XBubbles =
 	'use strict';
 
 	var context = __webpack_require__(1);
-	var bubble = __webpack_require__(5);
 	var bubbleset = __webpack_require__(7);
 
 	/* eslint-disable max-len */
@@ -846,22 +842,13 @@ var XBubbles =
 	exports.checkZws = checkZws;
 	exports.createZws = createZws;
 
-	function text2bubble(nodeSet, nodeBubble, selection) {
-	    selection = selection || context.getSelection();
-
+	function text2bubble(nodeSet, nodeBubble) {
+	    var selection = context.getSelection();
 	    if (!selection) {
 	        return false;
 	    }
 
 	    var range = currentTextRange(selection);
-
-	    if (range && !nodeBubble) {
-	        nodeBubble = bubble.create(nodeSet, range.toString());
-	    }
-
-	    if (!nodeBubble) {
-	        return false;
-	    }
 
 	    if (range) {
 	        selection.removeAllRanges();
@@ -1335,7 +1322,7 @@ var XBubbles =
 	var REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
 	var REG_IE = /Trident|Edge/;
 
-	exports.throttle = function (callback) {
+	exports.throttle = function (callback, runContext) {
 	    var throttle = 0;
 	    var animationCallback = function animationCallback() {
 	        throttle = 0;
@@ -1348,7 +1335,7 @@ var XBubbles =
 
 	        throttle = raf(animationCallback);
 
-	        callback.apply(this, arguments);
+	        callback.apply(runContext || this, arguments);
 	    };
 	};
 
@@ -1940,6 +1927,11 @@ var XBubbles =
 	    DROP: 'drop'
 	};
 
+	exports.PROPS = {
+	    BUBBLE_VALUE: '_bubbleValue',
+	    LOCK_COPY: '_lockCopy'
+	};
+
 /***/ },
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
@@ -2194,6 +2186,7 @@ var XBubbles =
 
 	var KEY = _require.KEY;
 	var EV = _require.EV;
+	var PROPS = _require.PROPS;
 
 	var text = __webpack_require__(6);
 	var events = __webpack_require__(12);
@@ -2214,13 +2207,14 @@ var XBubbles =
 	    resizestart: events.prevent
 	};
 
-	exports.init = function (nodeEditor) {
+	exports.init = function (nodeWrap) {
+	    var nodeEditor = nodeWrap;
 	    nodeEditor.setAttribute('contenteditable', 'true');
 	    nodeEditor.setAttribute('spellcheck', 'false');
 
-	    nodeEditor.fireChange = utils.throttle(fireChange);
-	    nodeEditor.fireEdit = utils.throttle(fireEdit);
-	    nodeEditor.fireInput = utils.throttle(fireInput);
+	    nodeEditor.fireChange = utils.throttle(fireChange, nodeWrap);
+	    nodeEditor.fireEdit = utils.throttle(fireEdit, nodeWrap);
+	    nodeEditor.fireInput = utils.throttle(fireInput, nodeWrap);
 
 	    events.on(nodeEditor, EVENTS);
 
@@ -2238,7 +2232,7 @@ var XBubbles =
 
 	function onBlur(event) {
 	    var nodeEditor = event.currentTarget;
-	    if (nodeEditor._lockCopy) {
+	    if (nodeEditor[PROPS.LOCK_COPY]) {
 	        return events.prevent(event);
 	    }
 
@@ -2248,9 +2242,9 @@ var XBubbles =
 
 	function onFocus(event) {
 	    var nodeEditor = event.currentTarget;
-	    if (nodeEditor._lockCopy) {
+	    if (nodeEditor[PROPS.LOCK_COPY]) {
 	        events.prevent(event);
-	        delete nodeEditor._lockCopy;
+	        delete nodeEditor[PROPS.LOCK_COPY];
 
 	        // Safary 10 не сбрасывает курсор без задержки
 	        raf(function () {
@@ -2355,7 +2349,7 @@ var XBubbles =
 
 	        case KEY.c:
 	            if (metaKey) {
-	                copy(nodeEditor);
+	                copy(event);
 	            }
 	            break;
 	    }
@@ -2551,13 +2545,13 @@ var XBubbles =
 	    }
 
 	    data = text.html2text(data);
-	    this.appendChild(context.document.createTextNode(data));
+	    this.appendChild(this.ownerDocument.createTextNode(data));
 	    bubble.bubbling(this);
 	    cursor.restore(this);
 	}
 
-	function addBubble(bubbleText, data) {
-	    var nodeBubble = bubble.create(this, bubbleText, data);
+	function addBubble(bubbleText, dataAttributes) {
+	    var nodeBubble = bubble.create(this, bubbleText, dataAttributes);
 	    if (!nodeBubble) {
 	        return false;
 	    }
@@ -2590,6 +2584,14 @@ var XBubbles =
 	    return false;
 	}
 
+	/**
+	 * Генерация события редактирования бабла.
+	 * Выполняется в контексте узла-обертки.
+	 * @alias module:x-bubbles/editor.fireEdit
+	 * @param {HTMLElement} nodeBubble нода бабл
+	 * @this HTMLElement
+	 * @private
+	 */
 	function fireEdit(nodeBubble) {
 	    events.dispatch(this, EV.BUBBLE_EDIT, {
 	        bubbles: false,
@@ -2598,6 +2600,13 @@ var XBubbles =
 	    });
 	}
 
+	/**
+	 * Генерация события изменения набора баблов.
+	 * Выполняется в контексте узла-обертки.
+	 * @alias module:x-bubbles/editor.fireChange
+	 * @this HTMLElement
+	 * @private
+	 */
 	function fireChange() {
 	    events.dispatch(this, EV.CHANGE, {
 	        bubbles: false,
@@ -2605,12 +2614,19 @@ var XBubbles =
 	    });
 	}
 
+	/**
+	 * Генерация события ввода текста.
+	 * Выполняется в контексте узла-обертки.
+	 * @alias module:x-bubbles/editor.fireInput
+	 * @this HTMLElement
+	 * @private
+	 */
 	function fireInput() {
 	    var textRange = text.currentTextRange();
 	    var editText = textRange && text.textClean(textRange.toString()) || '';
 
-	    if (this._bubbleValue !== editText) {
-	        this._bubbleValue = editText;
+	    if (this[PROPS.BUBBLE_VALUE] !== editText) {
+	        this[PROPS.BUBBLE_VALUE] = editText;
 
 	        events.dispatch(this, EV.BUBBLE_INPUT, {
 	            bubbles: false,
@@ -2683,37 +2699,45 @@ var XBubbles =
 	var events = __webpack_require__(12);
 	var select = __webpack_require__(4);
 
-	module.exports = function (nodeSet) {
-	    var selection = nodeSet.ownerDocument.defaultView.getSelection();
+	var _require = __webpack_require__(14);
+
+	var PROPS = _require.PROPS;
+
+
+	module.exports = function (event) {
+	    var nodeEditor = event.currentTarget;
+	    var doc = nodeEditor.ownerDocument;
+	    var selection = doc.defaultView.getSelection();
+
 	    if (selection && selection.anchorNode) {
 	        return;
 	    }
 
-	    var list = select.get(nodeSet);
+	    var list = select.get(nodeEditor);
 	    if (!list.length) {
 	        return;
 	    }
 
-	    var bubbleCopy = nodeSet.options('bubbleCopy');
+	    var bubbleCopy = nodeEditor.options('bubbleCopy');
 	    var value = bubbleCopy(list);
 	    if (!value) {
 	        return;
 	    }
 
-	    nodeSet._lockCopy = true;
+	    nodeEditor[PROPS.LOCK_COPY] = true;
 
-	    var target = nodeSet.ownerDocument.createElement('input');
+	    var target = doc.createElement('input');
 	    target.value = value;
 	    target.style.cssText = '\n        position: absolute;\n        top: -9999px;\n        width: 1px;\n        height: 1px;\n        margin: 0;\n        padding: 0;\n        border: none;';
 
-	    nodeSet.ownerDocument.body.appendChild(target);
+	    doc.body.appendChild(target);
 
 	    events.one(target, {
 	        blur: function blur() {
 	            return removeNode(target);
 	        },
 	        keyup: function keyup() {
-	            nodeSet.focus();
+	            nodeEditor.focus();
 	            removeNode(target);
 	        }
 	    });

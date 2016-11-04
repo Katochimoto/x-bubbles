@@ -55,7 +55,7 @@ function edit(nodeSet, nodeBubble) {
     return true;
 }
 
-function create(nodeSet, dataText, data = {}) {
+function create(nodeSet, dataText, dataAttributes = {}) {
     dataText = text.textClean(dataText);
 
     if (!dataText) {
@@ -65,17 +65,13 @@ function create(nodeSet, dataText, data = {}) {
     const bubbleFormation = nodeSet.options('bubbleFormation');
     const classBubble = nodeSet.options('classBubble');
     const draggable = canUseDrag() && nodeSet.options('draggable');
-    const wrap = context.document.createElement('span');
+    const wrap = nodeSet.ownerDocument.createElement('span');
 
     wrap.innerText = dataText;
 
-    if (draggable) {
-        wrap.setAttribute('draggable', 'true');
-    }
-
-    for (let key in data) {
-        if (data[ key ]) {
-            wrap.setAttribute(`data-${key}`, escape(data[ key ]));
+    for (let key in dataAttributes) {
+        if (dataAttributes[ key ]) {
+            wrap.setAttribute(`data-${key}`, escape(dataAttributes[ key ]));
         }
     }
 
@@ -92,6 +88,7 @@ function create(nodeSet, dataText, data = {}) {
 
     wrap.setAttribute('bubble', '');
     wrap.setAttribute('contenteditable', 'false');
+    draggable && wrap.setAttribute('draggable', 'true');
 
     return wrap;
 }
