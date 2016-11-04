@@ -2,11 +2,8 @@
  * @module x-bubbles/event
  */
 
-const raf = require('raf');
 const context = require('../context');
 const CustomEventCommon = require('../polyfills/CustomEventCommon');
-const { EV } = require('./constant');
-const text = require('./text');
 
 exports.scrollX = scrollX;
 exports.scrollY = scrollY;
@@ -60,53 +57,6 @@ exports.prevent = function (event) {
     event.stopPropagation();
     event.preventDefault();
     return false;
-};
-
-exports.fireEdit = function (nodeBubble) {
-    dispatch(this, EV.BUBBLE_EDIT, {
-        bubbles: false,
-        cancelable: false,
-        detail: { data: nodeBubble }
-    });
-};
-
-exports.fireChange = function () {
-    dispatch(this, EV.CHANGE, {
-        bubbles: false,
-        cancelable: false
-    });
-};
-
-exports.fireInput = function () {
-    const textRange = text.currentTextRange();
-    const editText = textRange && text.textClean(textRange.toString()) || '';
-
-    if (this._bubbleValue !== editText) {
-        this._bubbleValue = editText;
-
-        dispatch(this, EV.BUBBLE_INPUT, {
-            bubbles: false,
-            cancelable: false,
-            detail: { data: editText }
-        });
-    }
-};
-
-exports.throttle = function (callback) {
-    let throttle = 0;
-    const animationCallback = function () {
-        throttle = 0;
-    };
-
-    return function () {
-        if (throttle) {
-            return;
-        }
-
-        throttle = raf(animationCallback);
-
-        callback.apply(this, arguments);
-    };
 };
 
 function scrollX() {

@@ -261,7 +261,7 @@ var XBubbles =
 	var context = __webpack_require__(1);
 	var select = __webpack_require__(4);
 	var bubbleset = __webpack_require__(7);
-	var events = __webpack_require__(9);
+	var events = __webpack_require__(12);
 
 	var _require = __webpack_require__(14);
 
@@ -1306,6 +1306,7 @@ var XBubbles =
 
 	'use strict';
 
+	var raf = __webpack_require__(9);
 	var context = __webpack_require__(1);
 
 	/* eslint quotes: 0 */
@@ -1333,6 +1334,23 @@ var XBubbles =
 	var REG_HAS_ESCAPED_HTML = RegExp(REG_ESCAPED_HTML.source);
 	var REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
 	var REG_IE = /Trident|Edge/;
+
+	exports.throttle = function (callback) {
+	    var throttle = 0;
+	    var animationCallback = function animationCallback() {
+	        throttle = 0;
+	    };
+
+	    return function () {
+	        if (throttle) {
+	            return;
+	        }
+
+	        throttle = raf(animationCallback);
+
+	        callback.apply(this, arguments);
+	    };
+	};
 
 	exports.escape = function (data) {
 	    data = String(data);
@@ -1370,193 +1388,7 @@ var XBubbles =
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	/**
-	 * @module x-bubbles/event
-	 */
-
-	var raf = __webpack_require__(10);
-	var context = __webpack_require__(1);
-	var CustomEventCommon = __webpack_require__(13);
-
-	var _require = __webpack_require__(14);
-
-	var EV = _require.EV;
-
-	var text = __webpack_require__(6);
-
-	exports.scrollX = scrollX;
-	exports.scrollY = scrollY;
-	exports.dispatch = dispatch;
-
-	exports.keyCode = function (event) {
-	    return event.charCode || event.keyCode;
-	};
-
-	exports.metaKey = function (event) {
-	    return event.ctrlKey || event.metaKey;
-	};
-
-	exports.pageX = function (event) {
-	    return event.pageX === null && event.clientX !== null ? event.clientX + scrollX() : event.pageX;
-	};
-
-	exports.pageY = function (event) {
-	    return event.pageY === null && event.clientY !== null ? event.clientY + scrollY() : event.pageY;
-	};
-
-	exports.one = function (target, eventName, callback) {
-	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
-	    for (var name in events) {
-	        target.addEventListener(name, oneCallback(target, name, events[name]));
-	    }
-	};
-
-	exports.on = function (target, eventName, callback) {
-	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
-	    for (var name in events) {
-	        target.addEventListener(name, events[name]);
-	    }
-	};
-
-	exports.off = function (target, eventName, callback) {
-	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
-	    for (var name in events) {
-	        target.removeEventListener(name, events[name]);
-	    }
-	};
-
-	exports.prevent = function (event) {
-	    event.cancelBubble = true;
-	    event.returnValue = false;
-	    event.stopImmediatePropagation();
-	    event.stopPropagation();
-	    event.preventDefault();
-	    return false;
-	};
-
-	exports.fireEdit = function (nodeBubble) {
-	    dispatch(this, EV.BUBBLE_EDIT, {
-	        bubbles: false,
-	        cancelable: false,
-	        detail: { data: nodeBubble }
-	    });
-	};
-
-	exports.fireChange = function () {
-	    dispatch(this, EV.CHANGE, {
-	        bubbles: false,
-	        cancelable: false
-	    });
-	};
-
-	exports.fireInput = function () {
-	    var textRange = text.currentTextRange();
-	    var editText = textRange && text.textClean(textRange.toString()) || '';
-
-	    if (this._bubbleValue !== editText) {
-	        this._bubbleValue = editText;
-
-	        dispatch(this, EV.BUBBLE_INPUT, {
-	            bubbles: false,
-	            cancelable: false,
-	            detail: { data: editText }
-	        });
-	    }
-	};
-
-	exports.throttle = function (callback) {
-	    var throttle = 0;
-	    var animationCallback = function animationCallback() {
-	        throttle = 0;
-	    };
-
-	    return function () {
-	        if (throttle) {
-	            return;
-	        }
-
-	        throttle = raf(animationCallback);
-
-	        callback.apply(this, arguments);
-	    };
-	};
-
-	function scrollX() {
-	    var html = context.document.documentElement;
-	    var body = context.document.body;
-	    return (html && html.scrollLeft || body && body.scrollLeft || 0) - (html.clientLeft || 0);
-	}
-
-	function scrollY() {
-	    var html = context.document.documentElement;
-	    var body = context.document.body;
-	    return (html && html.scrollTop || body && body.scrollTop || 0) - (html.clientTop || 0);
-	}
-
-	/**
-	 * Designer events.
-	 *
-	 * @example
-	 * const { Custom } = require('event');
-	 *
-	 * new Custom('custom-event', {
-	 *     bubbles: true,
-	 *     cancelable: true,
-	 *     detail: { data: '123' }
-	 * })
-	 *
-	 * @alias module:x-bubbles/event~Custom
-	 * @constructor
-	 */
-	var Custom = function () {
-	    if (typeof context.CustomEvent === 'function') {
-	        return context.CustomEvent;
-	    }
-
-	    return CustomEventCommon;
-	}();
-
-	/**
-	 * Dispatch event.
-	 *
-	 * @example
-	 * const { dispatch } = require('event');
-	 * dispatch(node, 'custom-event', {
-	 *     bubbles: true,
-	 *     cancelable: true,
-	 *     detail: { data: '123' }
-	 * })
-	 *
-	 * @alias module:x-bubbles/event.dispatch
-	 * @param {HTMLElement} element node events
-	 * @param {string} name event name
-	 * @param {Object} params the event parameters
-	 * @param {boolean} [params.bubbles=false]
-	 * @param {boolean} [params.cancelable=false]
-	 * @param {*} [params.detail]
-	 */
-	function dispatch(element, name) {
-	    var params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-	    element.dispatchEvent(new Custom(name, params));
-	}
-
-	function oneCallback(target, eventName, callback) {
-	    return function _callback(event) {
-	        target.removeEventListener(eventName, _callback);
-	        callback(event);
-	    };
-	}
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(11)
+	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(10)
 	  , root = typeof window === 'undefined' ? global : window
 	  , vendors = ['moz', 'webkit']
 	  , suffix = 'AnimationFrame'
@@ -1632,7 +1464,7 @@ var XBubbles =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.7.1
@@ -1668,10 +1500,10 @@ var XBubbles =
 
 	}).call(this);
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(11)))
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -1857,6 +1689,138 @@ var XBubbles =
 
 
 /***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	/**
+	 * @module x-bubbles/event
+	 */
+
+	var context = __webpack_require__(1);
+	var CustomEventCommon = __webpack_require__(13);
+
+	exports.scrollX = scrollX;
+	exports.scrollY = scrollY;
+	exports.dispatch = dispatch;
+
+	exports.keyCode = function (event) {
+	    return event.charCode || event.keyCode;
+	};
+
+	exports.metaKey = function (event) {
+	    return event.ctrlKey || event.metaKey;
+	};
+
+	exports.pageX = function (event) {
+	    return event.pageX === null && event.clientX !== null ? event.clientX + scrollX() : event.pageX;
+	};
+
+	exports.pageY = function (event) {
+	    return event.pageY === null && event.clientY !== null ? event.clientY + scrollY() : event.pageY;
+	};
+
+	exports.one = function (target, eventName, callback) {
+	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
+	    for (var name in events) {
+	        target.addEventListener(name, oneCallback(target, name, events[name]));
+	    }
+	};
+
+	exports.on = function (target, eventName, callback) {
+	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
+	    for (var name in events) {
+	        target.addEventListener(name, events[name]);
+	    }
+	};
+
+	exports.off = function (target, eventName, callback) {
+	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
+	    for (var name in events) {
+	        target.removeEventListener(name, events[name]);
+	    }
+	};
+
+	exports.prevent = function (event) {
+	    event.cancelBubble = true;
+	    event.returnValue = false;
+	    event.stopImmediatePropagation();
+	    event.stopPropagation();
+	    event.preventDefault();
+	    return false;
+	};
+
+	function scrollX() {
+	    var html = context.document.documentElement;
+	    var body = context.document.body;
+	    return (html && html.scrollLeft || body && body.scrollLeft || 0) - (html.clientLeft || 0);
+	}
+
+	function scrollY() {
+	    var html = context.document.documentElement;
+	    var body = context.document.body;
+	    return (html && html.scrollTop || body && body.scrollTop || 0) - (html.clientTop || 0);
+	}
+
+	/**
+	 * Designer events.
+	 *
+	 * @example
+	 * const { Custom } = require('event');
+	 *
+	 * new Custom('custom-event', {
+	 *     bubbles: true,
+	 *     cancelable: true,
+	 *     detail: { data: '123' }
+	 * })
+	 *
+	 * @alias module:x-bubbles/event~Custom
+	 * @constructor
+	 */
+	var Custom = function () {
+	    if (typeof context.CustomEvent === 'function') {
+	        return context.CustomEvent;
+	    }
+
+	    return CustomEventCommon;
+	}();
+
+	/**
+	 * Dispatch event.
+	 *
+	 * @example
+	 * const { dispatch } = require('event');
+	 * dispatch(node, 'custom-event', {
+	 *     bubbles: true,
+	 *     cancelable: true,
+	 *     detail: { data: '123' }
+	 * })
+	 *
+	 * @alias module:x-bubbles/event.dispatch
+	 * @param {HTMLElement} element node events
+	 * @param {string} name event name
+	 * @param {Object} params the event parameters
+	 * @param {boolean} [params.bubbles=false]
+	 * @param {boolean} [params.cancelable=false]
+	 * @param {*} [params.detail]
+	 */
+	function dispatch(element, name) {
+	    var params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+	    element.dispatchEvent(new Custom(name, params));
+	}
+
+	function oneCallback(target, eventName, callback) {
+	    return function _callback(event) {
+	        target.removeEventListener(eventName, _callback);
+	        callback(event);
+	    };
+	}
+
+/***/ },
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -2016,7 +1980,8 @@ var XBubbles =
 	'use strict';
 
 	var context = __webpack_require__(1);
-	var events = __webpack_require__(9);
+	var events = __webpack_require__(12);
+	var utils = __webpack_require__(8);
 	var select = __webpack_require__(4);
 	var bubbleset = __webpack_require__(7);
 	var Modernizr = __webpack_require__(18);
@@ -2061,8 +2026,8 @@ var XBubbles =
 
 	    var drag = nodeSet.__drag__ = {
 	        onMouseup: onMouseup.bind(this, nodeSet),
-	        onMousemove: events.throttle(onMousemove.bind(this, nodeSet)),
-	        onScroll: events.throttle(onScroll.bind(this, nodeSet)),
+	        onMousemove: utils.throttle(onMousemove.bind(this, nodeSet)),
+	        onScroll: utils.throttle(onScroll.bind(this, nodeSet)),
 	        nodeOffsetX: event.offsetX,
 	        nodeOffsetY: event.offsetY,
 	        x: 0,
@@ -3100,7 +3065,7 @@ var XBubbles =
 
 	'use strict';
 
-	var raf = __webpack_require__(10);
+	var raf = __webpack_require__(9);
 	var context = __webpack_require__(1);
 	var bubbleset = __webpack_require__(7);
 	var bubble = __webpack_require__(5);
@@ -3110,9 +3075,11 @@ var XBubbles =
 	var _require = __webpack_require__(14);
 
 	var KEY = _require.KEY;
+	var EV = _require.EV;
 
 	var text = __webpack_require__(6);
-	var events = __webpack_require__(9);
+	var events = __webpack_require__(12);
+	var utils = __webpack_require__(8);
 	var copy = __webpack_require__(21);
 
 	var EVENTS = {
@@ -3133,9 +3100,9 @@ var XBubbles =
 	    nodeEditor.setAttribute('contenteditable', 'true');
 	    nodeEditor.setAttribute('spellcheck', 'false');
 
-	    nodeEditor.fireChange = events.throttle(events.fireChange);
-	    nodeEditor.fireEdit = events.throttle(events.fireEdit);
-	    nodeEditor.fireInput = events.throttle(events.fireInput);
+	    nodeEditor.fireChange = utils.throttle(fireChange);
+	    nodeEditor.fireEdit = utils.throttle(fireEdit);
+	    nodeEditor.fireInput = utils.throttle(fireInput);
 
 	    events.on(nodeEditor, EVENTS);
 
@@ -3505,6 +3472,36 @@ var XBubbles =
 	    return false;
 	}
 
+	function fireEdit(nodeBubble) {
+	    events.dispatch(this, EV.BUBBLE_EDIT, {
+	        bubbles: false,
+	        cancelable: false,
+	        detail: { data: nodeBubble }
+	    });
+	}
+
+	function fireChange() {
+	    events.dispatch(this, EV.CHANGE, {
+	        bubbles: false,
+	        cancelable: false
+	    });
+	}
+
+	function fireInput() {
+	    var textRange = text.currentTextRange();
+	    var editText = textRange && text.textClean(textRange.toString()) || '';
+
+	    if (this._bubbleValue !== editText) {
+	        this._bubbleValue = editText;
+
+	        events.dispatch(this, EV.BUBBLE_INPUT, {
+	            bubbles: false,
+	            cancelable: false,
+	            detail: { data: editText }
+	        });
+	    }
+	}
+
 /***/ },
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
@@ -3565,7 +3562,7 @@ var XBubbles =
 
 	'use strict';
 
-	var events = __webpack_require__(9);
+	var events = __webpack_require__(12);
 	var select = __webpack_require__(4);
 
 	module.exports = function (nodeSet) {

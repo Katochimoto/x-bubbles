@@ -4,9 +4,10 @@ const bubbleset = require('./bubbleset');
 const bubble = require('./bubble');
 const cursor = require('./cursor');
 const select = require('./select');
-const { KEY } = require('./constant');
+const { KEY, EV } = require('./constant');
 const text = require('./text');
 const events = require('./events');
+const utils = require('./utils');
 const copy = require('./editor/copy');
 
 const EVENTS = {
@@ -27,9 +28,9 @@ exports.init = function (nodeEditor) {
     nodeEditor.setAttribute('contenteditable', 'true');
     nodeEditor.setAttribute('spellcheck', 'false');
 
-    nodeEditor.fireChange = events.throttle(events.fireChange);
-    nodeEditor.fireEdit = events.throttle(events.fireEdit);
-    nodeEditor.fireInput = events.throttle(events.fireInput);
+    nodeEditor.fireChange = utils.throttle(fireChange);
+    nodeEditor.fireEdit = utils.throttle(fireEdit);
+    nodeEditor.fireInput = utils.throttle(fireInput);
 
     events.on(nodeEditor, EVENTS);
 
@@ -429,4 +430,34 @@ function editBubble(nodeBubble) {
     }
 
     return false;
+}
+
+function fireEdit(nodeBubble) {
+    events.dispatch(this, EV.BUBBLE_EDIT, {
+        bubbles: false,
+        cancelable: false,
+        detail: { data: nodeBubble }
+    });
+}
+
+function fireChange() {
+    events.dispatch(this, EV.CHANGE, {
+        bubbles: false,
+        cancelable: false
+    });
+}
+
+function fireInput() {
+    const textRange = text.currentTextRange();
+    const editText = textRange && text.textClean(textRange.toString()) || '';
+
+    if (this._bubbleValue !== editText) {
+        this._bubbleValue = editText;
+
+        events.dispatch(this, EV.BUBBLE_INPUT, {
+            bubbles: false,
+            cancelable: false,
+            detail: { data: editText }
+        });
+    }
 }

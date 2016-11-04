@@ -1,5 +1,6 @@
 const context = require('../../context');
 const events = require('../events');
+const utils = require('../utils');
 const select = require('../select');
 const bubbleset = require('../bubbleset');
 const Modernizr = require('modernizr');
@@ -34,8 +35,8 @@ function onMousedown(event) {
 
     const drag = nodeSet.__drag__ = {
         onMouseup: onMouseup.bind(this, nodeSet),
-        onMousemove: events.throttle(onMousemove.bind(this, nodeSet)),
-        onScroll: events.throttle(onScroll.bind(this, nodeSet)),
+        onMousemove: utils.throttle(onMousemove.bind(this, nodeSet)),
+        onScroll: utils.throttle(onScroll.bind(this, nodeSet)),
         nodeOffsetX: event.offsetX,
         nodeOffsetY: event.offsetY,
         x: 0,

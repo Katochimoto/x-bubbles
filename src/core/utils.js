@@ -1,3 +1,4 @@
+const raf = require('raf');
 const context = require('../context');
 
 /* eslint quotes: 0 */
@@ -25,6 +26,23 @@ const REG_UNESCAPED_HTML = /[&<>"'`]/g;
 const REG_HAS_ESCAPED_HTML = RegExp(REG_ESCAPED_HTML.source);
 const REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
 const REG_IE = /Trident|Edge/;
+
+exports.throttle = function (callback) {
+    let throttle = 0;
+    const animationCallback = function () {
+        throttle = 0;
+    };
+
+    return function () {
+        if (throttle) {
+            return;
+        }
+
+        throttle = raf(animationCallback);
+
+        callback.apply(this, arguments);
+    };
+};
 
 exports.escape = function (data) {
     data = String(data);
