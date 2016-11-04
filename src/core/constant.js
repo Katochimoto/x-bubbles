@@ -1,5 +1,6 @@
 exports.KEY = {
     a: 65,
+    c: 67,
     Backspace: 8,
     Bottom: 40,
     Cmd: 91,

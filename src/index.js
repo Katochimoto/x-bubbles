@@ -9,6 +9,7 @@ const cursor = require('./core/cursor');
 
 const OPTIONS = {
     begining:           [ 'noop', null ],
+    bubbleCopy:         [ 'funk', function () {} ],
     bubbleDeformation:  [ 'funk', function () {} ],
     bubbleFormation:    [ 'funk', function () {} ],
     classBubble:        [ 'noop', 'bubble' ],
@@ -85,6 +86,7 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
         }
     },
 
+    // TODO перенести в editor
     setContent: {
         value: function (data) {
             while (this.firstChild) {
@@ -98,6 +100,7 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
         }
     },
 
+    // TODO перенести в editor
     addBubble: {
         value: function (bubbleText, data) {
             const nodeBubble = bubble.create(this, bubbleText, data);
@@ -117,6 +120,7 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
         }
     },
 
+    // TODO перенести в editor
     removeBubble: {
         value: function (nodeBubble) {
             if (this.contains(nodeBubble)) {
@@ -129,6 +133,7 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
         }
     },
 
+    // TODO перенести в editor
     editBubble: {
         value: function (nodeBubble) {
             if (this.contains(nodeBubble)) {

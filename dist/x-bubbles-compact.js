@@ -64,6 +64,7 @@ var XBubbles =
 
 	var OPTIONS = {
 	    begining: ['noop', null],
+	    bubbleCopy: ['funk', function () {}],
 	    bubbleDeformation: ['funk', function () {}],
 	    bubbleFormation: ['funk', function () {}],
 	    classBubble: ['noop', 'bubble'],
@@ -135,6 +136,7 @@ var XBubbles =
 	        }
 	    },
 
+	    // TODO перенести в editor
 	    setContent: {
 	        value: function value(data) {
 	            while (this.firstChild) {
@@ -148,6 +150,7 @@ var XBubbles =
 	        }
 	    },
 
+	    // TODO перенести в editor
 	    addBubble: {
 	        value: function value(bubbleText, data) {
 	            var nodeBubble = bubble.create(this, bubbleText, data);
@@ -167,6 +170,7 @@ var XBubbles =
 	        }
 	    },
 
+	    // TODO перенести в editor
 	    removeBubble: {
 	        value: function value(nodeBubble) {
 	            if (this.contains(nodeBubble)) {
@@ -179,6 +183,7 @@ var XBubbles =
 	        }
 	    },
 
+	    // TODO перенести в editor
 	    editBubble: {
 	        value: function value(nodeBubble) {
 	            if (this.contains(nodeBubble)) {
@@ -280,22 +285,22 @@ var XBubbles =
 	    return event.pageY === null && event.clientY !== null ? event.clientY + scrollY() : event.pageY;
 	};
 
-	exports.one = function (target, eventName, userCallback) {
-	    return target.addEventListener(eventName, function callback(event) {
-	        target.removeEventListener(eventName, callback);
-	        userCallback(event);
-	    });
+	exports.one = function (target, eventName, callback) {
+	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
+	    for (var name in events) {
+	        target.addEventListener(name, oneCallback(target, name, events[name]));
+	    }
 	};
 
-	exports.on = function (target, eventName, userCallback) {
-	    var events = userCallback ? _defineProperty({}, eventName, userCallback) : eventName;
+	exports.on = function (target, eventName, callback) {
+	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
 	    for (var name in events) {
 	        target.addEventListener(name, events[name]);
 	    }
 	};
 
-	exports.off = function (target, eventName, userCallback) {
-	    var events = userCallback ? _defineProperty({}, eventName, userCallback) : eventName;
+	exports.off = function (target, eventName, callback) {
+	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
 	    for (var name in events) {
 	        target.removeEventListener(name, events[name]);
 	    }
@@ -414,6 +419,13 @@ var XBubbles =
 	    var params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 	    element.dispatchEvent(new Custom(name, params));
+	}
+
+	function oneCallback(target, eventName, callback) {
+	    return function _callback(event) {
+	        target.removeEventListener(eventName, _callback);
+	        callback(event);
+	    };
 	}
 
 /***/ },
@@ -809,6 +821,7 @@ var XBubbles =
 
 	exports.KEY = {
 	    a: 65,
+	    c: 67,
 	    Backspace: 8,
 	    Bottom: 40,
 	    Cmd: 91,
@@ -2237,6 +2250,8 @@ var XBubbles =
 
 	var text = __webpack_require__(8);
 	var events = __webpack_require__(2);
+	var copy = __webpack_require__(21);
+	var raf = __webpack_require__(3);
 
 	var EVENTS = {
 	    blur: onBlur,
@@ -2258,12 +2273,36 @@ var XBubbles =
 	};
 
 	function onBlur(event) {
-	    select.clear(event.currentTarget);
-	    bubble.bubbling(event.currentTarget);
+	    var nodeSet = event.currentTarget;
+	    if (nodeSet._lockCopy) {
+	        event.stopImmediatePropagation();
+	        event.stopPropagation();
+	        event.preventDefault();
+	        return;
+	    }
+
+	    select.clear(nodeSet);
+	    bubble.bubbling(nodeSet);
 	}
 
 	function onFocus(event) {
-	    cursor.restore(event.currentTarget);
+	    var nodeSet = event.currentTarget;
+	    if (nodeSet._lockCopy) {
+	        event.stopImmediatePropagation();
+	        event.stopPropagation();
+	        event.preventDefault();
+
+	        delete nodeSet._lockCopy;
+
+	        // Safary 10 не сбрасывает курсор без задержки
+	        raf(function () {
+	            var selection = context.getSelection();
+	            selection && selection.removeAllRanges();
+	        });
+	        return;
+	    }
+
+	    cursor.restore(nodeSet);
 	}
 
 	function onKeyup(event) {
@@ -2351,6 +2390,12 @@ var XBubbles =
 	                if (!text.selectAll(null, event.currentTarget)) {
 	                    select.all(nodeSet);
 	                }
+	            }
+	            break;
+
+	        case KEY.c:
+	            if (metaKey) {
+	                copy(nodeSet);
 	            }
 	            break;
 	    }
@@ -2592,6 +2637,58 @@ var XBubbles =
 	    }
 
 	    return fakeText;
+	}
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(1);
+	var events = __webpack_require__(2);
+	var select = __webpack_require__(14);
+
+	module.exports = function (nodeSet) {
+	    var selection = context.getSelection();
+	    if (selection && selection.anchorNode) {
+	        return;
+	    }
+
+	    var list = select.get(nodeSet);
+	    if (!list.length) {
+	        return;
+	    }
+
+	    var bubbleCopy = nodeSet.options('bubbleCopy');
+	    var value = bubbleCopy(list);
+	    if (!value) {
+	        return;
+	    }
+
+	    nodeSet._lockCopy = true;
+
+	    var target = nodeSet.ownerDocument.createElement('input');
+	    target.value = value;
+	    target.style.cssText = '\n        position: absolute;\n        top: -9999px;\n        width: 1px;\n        height: 1px;\n        margin: 0;\n        padding: 0;\n        border: none;';
+
+	    nodeSet.ownerDocument.body.appendChild(target);
+
+	    events.one(target, {
+	        blur: function blur() {
+	            removeNode(target);
+	        },
+	        keyup: function keyup() {
+	            nodeSet.focus();
+	            removeNode(target);
+	        }
+	    });
+
+	    target.select();
+	};
+
+	function removeNode(node) {
+	    node.parentNode && node.parentNode.removeChild(node);
 	}
 
 /***/ }

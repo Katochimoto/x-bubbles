@@ -6,6 +6,8 @@ const select = require('./select');
 const { KEY } = require('./constant');
 const text = require('./text');
 const events = require('./events');
+const copy = require('./editor/copy');
+const raf = require('raf');
 
 const EVENTS = {
     blur: onBlur,
@@ -27,12 +29,36 @@ exports.destroy = function (nodeSet) {
 };
 
 function onBlur(event) {
-    select.clear(event.currentTarget);
-    bubble.bubbling(event.currentTarget);
+    const nodeSet = event.currentTarget;
+    if (nodeSet._lockCopy) {
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+        event.preventDefault();
+        return;
+    }
+
+    select.clear(nodeSet);
+    bubble.bubbling(nodeSet);
 }
 
 function onFocus(event) {
-    cursor.restore(event.currentTarget);
+    const nodeSet = event.currentTarget;
+    if (nodeSet._lockCopy) {
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+        event.preventDefault();
+
+        delete nodeSet._lockCopy;
+
+        // Safary 10 не сбрасывает курсор без задержки
+        raf(() => {
+            const selection = context.getSelection();
+            selection && selection.removeAllRanges();
+        });
+        return;
+    }
+
+    cursor.restore(nodeSet);
 }
 
 function onKeyup(event) {
@@ -127,6 +153,12 @@ function onKeydown(event) {
             if (!text.selectAll(null, event.currentTarget)) {
                 select.all(nodeSet);
             }
+        }
+        break;
+
+    case KEY.c:
+        if (metaKey) {
+            copy(nodeSet);
         }
         break;
     }

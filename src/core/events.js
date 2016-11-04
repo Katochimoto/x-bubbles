@@ -24,23 +24,23 @@ exports.pageY = function (event) {
         event.pageY;
 };
 
-exports.one = function (target, eventName, userCallback) {
-    return target.addEventListener(eventName, function callback(event) {
-        target.removeEventListener(eventName, callback);
-        userCallback(event);
-    });
+exports.one = function (target, eventName, callback) {
+    const events = callback ? { [ eventName ]: callback } : eventName;
+    for (const name in events) {
+        target.addEventListener(name, oneCallback(target, name, events[ name ]));
+    }
 };
 
-exports.on = function (target, eventName, userCallback) {
-    const events = userCallback ? { [ eventName ]: userCallback } : eventName;
-    for (let name in events) {
+exports.on = function (target, eventName, callback) {
+    const events = callback ? { [ eventName ]: callback } : eventName;
+    for (const name in events) {
         target.addEventListener(name, events[ name ]);
     }
 };
 
-exports.off = function (target, eventName, userCallback) {
-    const events = userCallback ? { [ eventName ]: userCallback } : eventName;
-    for (let name in events) {
+exports.off = function (target, eventName, callback) {
+    const events = callback ? { [ eventName ]: callback } : eventName;
+    for (const name in events) {
         target.removeEventListener(name, events[ name ]);
     }
 };
@@ -156,4 +156,11 @@ const Custom = (function () {
  */
 function dispatch(element, name, params = {}) {
     element.dispatchEvent(new Custom(name, params));
+}
+
+function oneCallback(target, eventName, callback) {
+    return function _callback(event) {
+        target.removeEventListener(eventName, _callback);
+        callback(event);
+    };
 }
