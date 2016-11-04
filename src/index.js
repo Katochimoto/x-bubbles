@@ -1,11 +1,8 @@
 const context = require('./context');
-const events = require('./core/events');
 const drag = require('./core/drag');
 const editor = require('./core/editor');
 const bubble = require('./core/bubble');
 const bubbleset = require('./core/bubbleset');
-const text = require('./core/text');
-const cursor = require('./core/cursor');
 
 const OPTIONS = {
     begining:           [ 'noop', null ],
@@ -14,6 +11,7 @@ const OPTIONS = {
     bubbleFormation:    [ 'funk', function () {} ],
     classBubble:        [ 'noop', 'bubble' ],
     draggable:          [ 'bool', true ],
+    disableControls:    [ 'bool', false ],
     ending:             [ 'noop', null ], // /\@ya\.ru/g;
     separator:          [ 'noop', /[,;]/ ],
 };
@@ -21,23 +19,14 @@ const OPTIONS = {
 const XBubbles = Object.create(HTMLDivElement.prototype, {
     createdCallback: {
         value: function () {
-            this.setAttribute('contenteditable', 'true');
-            this.setAttribute('spellcheck', 'false');
-
-            this.fireChange = events.throttle(events.fireChange);
-            this.fireEdit = events.throttle(events.fireEdit);
-            this.fireInput = events.throttle(events.fireInput);
-
-            this.addEventListener('resize', events.prevent);
-            this.addEventListener('resizestart', events.prevent);
-            this.addEventListener('mscontrolselect', events.prevent);
+            initEditor(this);
         }
     },
 
     attachedCallback: {
         value: function () {
+            initEditor(this);
             drag.init(this);
-            editor.init(this);
             bubble.bubbling(this);
         }
     },
@@ -45,7 +34,7 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
     detachedCallback: {
         value: function () {
             drag.destroy(this);
-            editor.destroy(this);
+            destroyEditor(this);
         }
     },
 
@@ -86,61 +75,27 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
         }
     },
 
-    // TODO перенести в editor
     setContent: {
         value: function (data) {
-            while (this.firstChild) {
-                this.removeChild(this.firstChild);
-            }
-
-            data = text.html2text(data);
-            this.appendChild(context.document.createTextNode(data));
-            bubble.bubbling(this);
-            cursor.restore(this);
+            return this.editor.setContent(data);
         }
     },
 
-    // TODO перенести в editor
     addBubble: {
         value: function (bubbleText, data) {
-            const nodeBubble = bubble.create(this, bubbleText, data);
-
-            if (!nodeBubble) {
-                return false;
-            }
-
-            if (text.text2bubble(this, nodeBubble)) {
-                this.fireInput();
-                this.fireChange();
-                cursor.restore(this);
-                return true;
-            }
-
-            return false;
+            return this.editor.addBubble(bubbleText, data);
         }
     },
 
-    // TODO перенести в editor
     removeBubble: {
         value: function (nodeBubble) {
-            if (this.contains(nodeBubble)) {
-                this.removeChild(nodeBubble);
-                this.fireChange();
-                return true;
-            }
-
-            return false;
+            return this.editor.removeBubble(nodeBubble);
         }
     },
 
-    // TODO перенести в editor
     editBubble: {
         value: function (nodeBubble) {
-            if (this.contains(nodeBubble)) {
-                return bubble.edit(this, nodeBubble);
-            }
-
-            return false;
+            return this.editor.editBubble(nodeBubble);
         }
     }
 });
@@ -183,5 +138,21 @@ function optionsPrepare(options) {
         if (typeof options[ name ] === 'undefined') {
             options[ name ] = def;
         }
+    }
+}
+
+function initEditor(node) {
+    if (!node.editor) {
+        Object.defineProperty(node, 'editor', {
+            configurable: true,
+            value: editor.init(node)
+        });
+    }
+}
+
+function destroyEditor(node) {
+    if (node.editor) {
+        editor.destroy(node);
+        delete node.editor;
     }
 }

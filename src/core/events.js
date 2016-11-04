@@ -12,6 +12,14 @@ exports.scrollX = scrollX;
 exports.scrollY = scrollY;
 exports.dispatch = dispatch;
 
+exports.keyCode = function (event) {
+    return event.charCode || event.keyCode;
+};
+
+exports.metaKey = function (event) {
+    return event.ctrlKey || event.metaKey;
+};
+
 exports.pageX = function (event) {
     return (event.pageX === null && event.clientX !== null) ?
         event.clientX + scrollX() :
@@ -48,6 +56,7 @@ exports.off = function (target, eventName, callback) {
 exports.prevent = function (event) {
     event.cancelBubble = true;
     event.returnValue = false;
+    event.stopImmediatePropagation();
     event.stopPropagation();
     event.preventDefault();
     return false;

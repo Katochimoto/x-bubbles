@@ -1,3 +1,4 @@
+const raf = require('raf');
 const context = require('../context');
 const bubbleset = require('./bubbleset');
 const bubble = require('./bubble');
@@ -7,7 +8,6 @@ const { KEY } = require('./constant');
 const text = require('./text');
 const events = require('./events');
 const copy = require('./editor/copy');
-const raf = require('raf');
 
 const EVENTS = {
     blur: onBlur,
@@ -17,52 +17,65 @@ const EVENTS = {
     keydown: onKeydown,
     keypress: onKeypress,
     keyup: onKeyup,
+    mscontrolselect: events.prevent,
     paste: onPaste,
+    resize: events.prevent,
+    resizestart: events.prevent,
 };
 
-exports.init = function (nodeSet) {
-    events.on(nodeSet, EVENTS);
+exports.init = function (nodeEditor) {
+    nodeEditor.setAttribute('contenteditable', 'true');
+    nodeEditor.setAttribute('spellcheck', 'false');
+
+    nodeEditor.fireChange = events.throttle(events.fireChange);
+    nodeEditor.fireEdit = events.throttle(events.fireEdit);
+    nodeEditor.fireInput = events.throttle(events.fireInput);
+
+    events.on(nodeEditor, EVENTS);
+
+    return {
+        addBubble: addBubble.bind(nodeEditor),
+        editBubble: editBubble.bind(nodeEditor),
+        removeBubble: removeBubble.bind(nodeEditor),
+        setContent: setContent.bind(nodeEditor),
+    };
 };
 
-exports.destroy = function (nodeSet) {
-    events.off(nodeSet, EVENTS);
+exports.destroy = function (nodeEditor) {
+    events.off(nodeEditor, EVENTS);
 };
 
 function onBlur(event) {
-    const nodeSet = event.currentTarget;
-    if (nodeSet._lockCopy) {
-        event.stopImmediatePropagation();
-        event.stopPropagation();
-        event.preventDefault();
-        return;
+    const nodeEditor = event.currentTarget;
+    if (nodeEditor._lockCopy) {
+        return events.prevent(event);
     }
 
-    select.clear(nodeSet);
-    bubble.bubbling(nodeSet);
+    select.clear(nodeEditor);
+    bubble.bubbling(nodeEditor);
 }
 
 function onFocus(event) {
-    const nodeSet = event.currentTarget;
-    if (nodeSet._lockCopy) {
-        event.stopImmediatePropagation();
-        event.stopPropagation();
-        event.preventDefault();
-
-        delete nodeSet._lockCopy;
+    const nodeEditor = event.currentTarget;
+    if (nodeEditor._lockCopy) {
+        events.prevent(event);
+        delete nodeEditor._lockCopy;
 
         // Safary 10 не сбрасывает курсор без задержки
         raf(() => {
             const selection = context.getSelection();
             selection && selection.removeAllRanges();
         });
-        return;
+
+        return false;
     }
 
-    cursor.restore(nodeSet);
+    cursor.restore(nodeEditor);
 }
 
 function onKeyup(event) {
-    const code = event.charCode || event.keyCode;
+    const nodeEditor = event.currentTarget;
+    const code = events.keyCode(event);
     const isPrintableChar = do {
         if (event.key) {
             event.key.length === 1;
@@ -73,44 +86,44 @@ function onKeyup(event) {
     };
 
     if (isPrintableChar) {
-        event.currentTarget.fireInput();
+        nodeEditor.fireInput();
     }
 }
 
 function onKeypress(event) {
-    const code = event.charCode || event.keyCode;
-    const nodeSet = event.currentTarget;
+    const code = events.keyCode(event);
+    const nodeEditor = event.currentTarget;
 
     /* eslint no-case-declarations: 0 */
     switch (code) {
     case KEY.Enter:
         event.preventDefault();
-        if (!nodeSet.hasAttribute('disable-controls')) {
-            bubble.bubbling(nodeSet);
-            cursor.restore(nodeSet);
+        if (!nodeEditor.options('disableControls')) {
+            bubble.bubbling(nodeEditor);
+            cursor.restore(nodeEditor);
         }
         break;
 
     case KEY.Comma:
     case KEY.Semicolon:
         event.preventDefault();
-        bubble.bubbling(nodeSet);
-        cursor.restore(nodeSet);
+        bubble.bubbling(nodeEditor);
+        cursor.restore(nodeEditor);
         break;
     }
 }
 
 function onKeydown(event) {
-    const code = event.charCode || event.keyCode;
-    const metaKey = event.ctrlKey || event.metaKey;
-    const nodeSet = event.currentTarget;
-    const enable = !nodeSet.hasAttribute('disable-controls');
+    const code = events.keyCode(event);
+    const metaKey = events.metaKey(event);
+    const nodeEditor = event.currentTarget;
+    const enable = !nodeEditor.options('disableControls');
 
     switch (code) {
     case KEY.Esc:
         event.preventDefault();
-        bubble.bubbling(nodeSet);
-        cursor.restore(nodeSet);
+        bubble.bubbling(nodeEditor);
+        cursor.restore(nodeEditor);
         break;
 
     case KEY.Backspace:
@@ -127,7 +140,7 @@ function onKeydown(event) {
     case KEY.Top:
         event.preventDefault();
         if (enable) {
-            const headBubble = bubbleset.headBubble(nodeSet);
+            const headBubble = bubbleset.headBubble(nodeEditor);
             headBubble && select.uniq(headBubble);
         }
         break;
@@ -141,8 +154,8 @@ function onKeydown(event) {
     // case KEY.Tab:
     case KEY.Bottom:
         event.preventDefault();
-        if (enable && select.has(nodeSet)) {
-            cursor.restore(nodeSet);
+        if (enable && select.has(nodeEditor)) {
+            cursor.restore(nodeEditor);
         }
         break;
 
@@ -151,14 +164,14 @@ function onKeydown(event) {
             event.preventDefault();
 
             if (!text.selectAll(null, event.currentTarget)) {
-                select.all(nodeSet);
+                select.all(nodeEditor);
             }
         }
         break;
 
     case KEY.c:
         if (metaKey) {
-            copy(nodeSet);
+            copy(nodeEditor);
         }
         break;
     }
@@ -344,7 +357,7 @@ function onClick(event) {
     const nodeBubble = bubbleset.closestNodeBubble(event.target);
 
     if (nodeBubble) {
-        if (event.metaKey || event.ctrlKey) {
+        if (events.metaKey(event)) {
             select.add(nodeBubble);
 
         } else if (event.shiftKey) {
@@ -371,4 +384,49 @@ function onClick(event) {
             cursor.restore(nodeSet);
         }
     }
+}
+
+function setContent(data) {
+    while (this.firstChild) {
+        this.removeChild(this.firstChild);
+    }
+
+    data = text.html2text(data);
+    this.appendChild(context.document.createTextNode(data));
+    bubble.bubbling(this);
+    cursor.restore(this);
+}
+
+function addBubble(bubbleText, data) {
+    const nodeBubble = bubble.create(this, bubbleText, data);
+    if (!nodeBubble) {
+        return false;
+    }
+
+    if (text.text2bubble(this, nodeBubble)) {
+        this.fireInput();
+        this.fireChange();
+        cursor.restore(this);
+        return true;
+    }
+
+    return false;
+}
+
+function removeBubble(nodeBubble) {
+    if (this.contains(nodeBubble)) {
+        this.removeChild(nodeBubble);
+        this.fireChange();
+        return true;
+    }
+
+    return false;
+}
+
+function editBubble(nodeBubble) {
+    if (this.contains(nodeBubble)) {
+        return bubble.edit(this, nodeBubble);
+    }
+
+    return false;
 }

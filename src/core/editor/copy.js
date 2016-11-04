@@ -1,9 +1,8 @@
-const context = require('../../context');
 const events = require('../events');
 const select = require('../select');
 
 module.exports = function (nodeSet) {
-    const selection = context.getSelection();
+    const selection = nodeSet.ownerDocument.defaultView.getSelection();
     if (selection && selection.anchorNode) {
         return;
     }
@@ -35,9 +34,7 @@ module.exports = function (nodeSet) {
     nodeSet.ownerDocument.body.appendChild(target);
 
     events.one(target, {
-        blur: () => {
-            removeNode(target);
-        },
+        blur: () => removeNode(target),
         keyup: () => {
             nodeSet.focus();
             removeNode(target);
