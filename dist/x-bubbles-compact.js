@@ -183,10 +183,9 @@ var XBubbles =
 
 	function optionsPrepare(options) {
 	    for (var name in OPTIONS) {
-	        var _OPTIONS$name = _slicedToArray(OPTIONS[name], 2);
-
-	        var type = _OPTIONS$name[0];
-	        var def = _OPTIONS$name[1];
+	        var _OPTIONS$name = _slicedToArray(OPTIONS[name], 2),
+	            type = _OPTIONS$name[0],
+	            def = _OPTIONS$name[1];
 
 	        options[name] = OPTIONS_PREPARE[type](options[name]);
 	        if (typeof options[name] === 'undefined') {
@@ -231,10 +230,8 @@ var XBubbles =
 	var native = __webpack_require__(3);
 	var mouse = __webpack_require__(17);
 
-	var _require = __webpack_require__(8);
-
-	var canUseDrag = _require.canUseDrag;
-
+	var _require = __webpack_require__(8),
+	    canUseDrag = _require.canUseDrag;
 
 	exports.init = function (nodeSet) {
 	    if (canUseDrag()) {
@@ -263,16 +260,13 @@ var XBubbles =
 	var bubbleset = __webpack_require__(7);
 	var events = __webpack_require__(12);
 
-	var _require = __webpack_require__(14);
+	var _require = __webpack_require__(14),
+	    CLS = _require.CLS;
 
-	var CLS = _require.CLS;
-
-	var _require2 = __webpack_require__(15);
-
-	var getDragImage = _require2.getDragImage;
-	var onDropSuccess = _require2.onDropSuccess;
-	var DRAG_IMG_WIDTH = _require2.DRAG_IMG_WIDTH;
-
+	var _require2 = __webpack_require__(15),
+	    getDragImage = _require2.getDragImage,
+	    onDropSuccess = _require2.onDropSuccess,
+	    DRAG_IMG_WIDTH = _require2.DRAG_IMG_WIDTH;
 
 	var EVENTS = {
 	    dragend: onDragend,
@@ -586,11 +580,9 @@ var XBubbles =
 	var context = __webpack_require__(1);
 	var text = __webpack_require__(6);
 
-	var _require = __webpack_require__(8);
-
-	var escape = _require.escape;
-	var canUseDrag = _require.canUseDrag;
-
+	var _require = __webpack_require__(8),
+	    escape = _require.escape,
+	    canUseDrag = _require.canUseDrag;
 
 	exports.isBubbleNode = isBubbleNode;
 	exports.bubbling = bubbling;
@@ -943,14 +935,12 @@ var XBubbles =
 	        return false;
 	    }
 
-	    var _selectionCorrect = selectionCorrect(selection);
-
-	    var startNode = _selectionCorrect.startNode;
-	    var endNode = _selectionCorrect.endNode;
-	    var startOffset = _selectionCorrect.startOffset;
-	    var endOffset = _selectionCorrect.endOffset;
-	    var revert = _selectionCorrect.revert;
-
+	    var _selectionCorrect = selectionCorrect(selection),
+	        startNode = _selectionCorrect.startNode,
+	        endNode = _selectionCorrect.endNode,
+	        startOffset = _selectionCorrect.startOffset,
+	        endOffset = _selectionCorrect.endOffset,
+	        revert = _selectionCorrect.revert;
 
 	    if (!selection.isCollapsed && !extend) {
 	        selection.collapse(startNode, startOffset);
@@ -1023,14 +1013,12 @@ var XBubbles =
 	        return false;
 	    }
 
-	    var _selectionCorrect2 = selectionCorrect(selection);
-
-	    var startNode = _selectionCorrect2.startNode;
-	    var endNode = _selectionCorrect2.endNode;
-	    var startOffset = _selectionCorrect2.startOffset;
-	    var endOffset = _selectionCorrect2.endOffset;
-	    var revert = _selectionCorrect2.revert;
-
+	    var _selectionCorrect2 = selectionCorrect(selection),
+	        startNode = _selectionCorrect2.startNode,
+	        endNode = _selectionCorrect2.endNode,
+	        startOffset = _selectionCorrect2.startOffset,
+	        endOffset = _selectionCorrect2.endOffset,
+	        revert = _selectionCorrect2.revert;
 
 	    if (!selection.isCollapsed && !extend) {
 	        selection.collapse(endNode, endOffset);
@@ -1978,17 +1966,14 @@ var XBubbles =
 	var bubbleset = __webpack_require__(7);
 	var Modernizr = __webpack_require__(18);
 
-	var _require = __webpack_require__(14);
+	var _require = __webpack_require__(14),
+	    CLS = _require.CLS,
+	    EV = _require.EV;
 
-	var CLS = _require.CLS;
-	var EV = _require.EV;
-
-	var _require2 = __webpack_require__(15);
-
-	var getDragImage = _require2.getDragImage;
-	var onDropSuccess = _require2.onDropSuccess;
-	var DRAG_IMG_WIDTH = _require2.DRAG_IMG_WIDTH;
-
+	var _require2 = __webpack_require__(15),
+	    getDragImage = _require2.getDragImage,
+	    onDropSuccess = _require2.onDropSuccess,
+	    DRAG_IMG_WIDTH = _require2.DRAG_IMG_WIDTH;
 
 	var currentDragSet = null;
 	var currentMoveSet = null;
@@ -2182,11 +2167,10 @@ var XBubbles =
 	var cursor = __webpack_require__(20);
 	var select = __webpack_require__(4);
 
-	var _require = __webpack_require__(14);
-
-	var KEY = _require.KEY;
-	var EV = _require.EV;
-	var PROPS = _require.PROPS;
+	var _require = __webpack_require__(14),
+	    KEY = _require.KEY,
+	    EV = _require.EV,
+	    PROPS = _require.PROPS;
 
 	var text = __webpack_require__(6);
 	var events = __webpack_require__(12);
@@ -2699,10 +2683,8 @@ var XBubbles =
 	var events = __webpack_require__(12);
 	var select = __webpack_require__(4);
 
-	var _require = __webpack_require__(14);
-
-	var PROPS = _require.PROPS;
-
+	var _require = __webpack_require__(14),
+	    PROPS = _require.PROPS;
 
 	module.exports = function (event) {
 	    var nodeEditor = event.currentTarget;
