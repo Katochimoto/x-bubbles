@@ -3406,6 +3406,9 @@ var XBubbles =
 	}
 
 	function setContent(data) {
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
+
 	    while (this.firstChild) {
 	        this.removeChild(this.firstChild);
 	    }
