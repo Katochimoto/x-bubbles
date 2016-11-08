@@ -834,39 +834,39 @@ var XBubbles =
 	exports.checkZws = checkZws;
 	exports.createZws = createZws;
 
-	function text2bubble(nodeSet, nodeBubble) {
+	function text2bubble(nodeEditor, nodeBubble) {
 	    var selection = context.getSelection();
 	    if (!selection) {
 	        return false;
 	    }
 
-	    var range = currentTextRange(selection);
+	    var range = currentTextRange(nodeEditor, selection);
 
 	    if (range) {
 	        selection.removeAllRanges();
 	        selection.addRange(range);
 	        replace(selection, nodeBubble);
 	    } else {
-	        nodeSet.appendChild(nodeBubble);
+	        nodeEditor.appendChild(nodeBubble);
 	    }
 
 	    return true;
 	}
 
-	function currentTextRange(selection) {
-	    selection = selection || context.getSelection();
+	function currentTextRange(nodeEditor, selection) {
+	    var doc = nodeEditor.ownerDocument;
 
+	    selection = selection || doc.defaultView.getSelection();
 	    if (!selection) {
 	        return;
 	    }
 
 	    var pointNode = selection.focusNode && selection.focusNode.nodeType === Node.TEXT_NODE ? selection.focusNode : selection.anchorNode && selection.anchorNode.nodeType === Node.TEXT_NODE ? selection.anchorNode : undefined;
 
-	    if (!pointNode) {
+	    if (!pointNode || !nodeEditor.contains(pointNode)) {
 	        return;
 	    }
 
-	    var range = context.document.createRange();
 	    var startNode = pointNode;
 	    var endNode = pointNode;
 	    var item = pointNode;
@@ -883,6 +883,7 @@ var XBubbles =
 	        item = item.nextSibling;
 	    }
 
+	    var range = doc.createRange();
 	    range.setStartBefore(startNode);
 	    range.setEndAfter(endNode);
 
@@ -3491,7 +3492,7 @@ var XBubbles =
 	 * @private
 	 */
 	function fireInput() {
-	    var textRange = text.currentTextRange();
+	    var textRange = text.currentTextRange(this);
 	    var editText = textRange && text.textClean(textRange.toString()) || '';
 
 	    if (this[PROPS.BUBBLE_VALUE] !== editText) {

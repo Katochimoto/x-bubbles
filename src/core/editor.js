@@ -474,7 +474,7 @@ function fireChange() {
  * @private
  */
 function fireInput() {
-    const textRange = text.currentTextRange();
+    const textRange = text.currentTextRange(this);
     const editText = textRange && text.textClean(textRange.toString()) || '';
 
     if (this[ PROPS.BUBBLE_VALUE ] !== editText) {

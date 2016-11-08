@@ -72,6 +72,7 @@
     <br/>
     <div class="bubbles" is="x-bubbles" tabindex="0"></div>
 </div>
+<button id="add-bubble">addBubble</button>
 <script>
 var set = document.getElementById('test');
 
@@ -91,8 +92,9 @@ set.addEventListener('blur', function(event) {
     console.log('blur');
 }, false);
 
-set.addEventListener('dblclick', function(event) {
-    // document.getElementById('test').addBubble('qwe')
+document.getElementById('add-bubble')
+.addEventListener('click', function(event) {
+    set.addBubble('qwe');
 }, false);
 </script>
 </body>

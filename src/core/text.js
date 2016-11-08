@@ -18,13 +18,13 @@ exports.textClean = textClean;
 exports.checkZws = checkZws;
 exports.createZws = createZws;
 
-function text2bubble(nodeSet, nodeBubble) {
+function text2bubble(nodeEditor, nodeBubble) {
     const selection = context.getSelection();
     if (!selection) {
         return false;
     }
 
-    const range = currentTextRange(selection);
+    const range = currentTextRange(nodeEditor, selection);
 
     if (range) {
         selection.removeAllRanges();
@@ -32,15 +32,16 @@ function text2bubble(nodeSet, nodeBubble) {
         replace(selection, nodeBubble);
 
     } else {
-        nodeSet.appendChild(nodeBubble);
+        nodeEditor.appendChild(nodeBubble);
     }
 
     return true;
 }
 
-function currentTextRange(selection) {
-    selection = selection || context.getSelection();
+function currentTextRange(nodeEditor, selection) {
+    const doc = nodeEditor.ownerDocument;
 
+    selection = selection || doc.defaultView.getSelection();
     if (!selection) {
         return;
     }
@@ -57,11 +58,10 @@ function currentTextRange(selection) {
         }
     };
 
-    if (!pointNode) {
+    if (!pointNode || !nodeEditor.contains(pointNode)) {
         return;
     }
 
-    const range = context.document.createRange();
     let startNode = pointNode;
     let endNode = pointNode;
     let item = pointNode;
@@ -78,6 +78,7 @@ function currentTextRange(selection) {
         item = item.nextSibling;
     }
 
+    const range = doc.createRange();
     range.setStartBefore(startNode);
     range.setEndAfter(endNode);
 

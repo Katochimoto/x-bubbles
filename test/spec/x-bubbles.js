@@ -108,8 +108,8 @@ describe('x-bubbles ->', function () {
                 return new Promise(resolve => {
                     this.buffer.addEventListener(EV.CHANGE, function _onChange(event) {
                         event.currentTarget.removeEventListener(EV.CHANGE, _onChange);
-                        expect(spyChange.callCount).to.be.eql(1);
-                        expect(spyInput.callCount).to.be.eql(1);
+                        expect(spyChange.callCount).to.be.eql(1, 'вызов CHANGE');
+                        expect(spyInput.callCount).to.be.eql(1, 'вызов BUBBLE_INPUT');
                         resolve();
                     });
 
