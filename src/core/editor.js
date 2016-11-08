@@ -14,7 +14,6 @@ const paste = require('./editor/paste');
 const EVENTS = {
     blur: onBlur,
     click: onClick,
-    dblclick: onDblclick,
     focus: onFocus,
     keydown: onKeydown,
     keypress: onKeypress,
@@ -310,16 +309,6 @@ function backSpace(event) {
     }
 }
 
-function onDblclick(event) {
-    const nodeSet = bubbleset.closestNodeSet(event.target);
-    const nodeBubble = bubbleset.closestNodeBubble(event.target);
-
-    if (nodeSet && nodeBubble) {
-        event.preventDefault();
-        bubble.edit(nodeSet, nodeBubble);
-    }
-}
-
 function onClick(event) {
     const nodeSet = bubbleset.closestNodeSet(event.target);
 
@@ -330,6 +319,11 @@ function onClick(event) {
     const nodeBubble = bubbleset.closestNodeBubble(event.target);
 
     if (nodeBubble) {
+        const clickTime = Date.now();
+        const isDblclick = nodeSet[ PROPS.CLICK_TIME ] && (clickTime - nodeSet[ PROPS.CLICK_TIME ]) < 200;
+
+        nodeSet[ PROPS.CLICK_TIME ] = clickTime;
+
         if (events.metaKey(event)) {
             select.add(nodeBubble);
 
@@ -340,6 +334,9 @@ function onClick(event) {
             } else {
                 select.range(nodeBubble);
             }
+
+        } else if (isDblclick) {
+            bubble.edit(nodeSet, nodeBubble);
 
         } else {
             select.toggleUniq(nodeBubble);

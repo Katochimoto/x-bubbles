@@ -1925,6 +1925,7 @@ var XBubbles =
 
 	exports.PROPS = {
 	    BUBBLE_VALUE: '_bubbleValue',
+	    CLICK_TIME: '_clickTime',
 	    LOCK_COPY: '_lockCopy'
 	};
 
@@ -2189,7 +2190,6 @@ var XBubbles =
 	var EVENTS = {
 	    blur: onBlur,
 	    click: onClick,
-	    dblclick: onDblclick,
 	    focus: onFocus,
 	    keydown: onKeydown,
 	    keypress: onKeypress,
@@ -2459,16 +2459,6 @@ var XBubbles =
 	    }
 	}
 
-	function onDblclick(event) {
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
-
-	    if (nodeSet && nodeBubble) {
-	        event.preventDefault();
-	        bubble.edit(nodeSet, nodeBubble);
-	    }
-	}
-
 	function onClick(event) {
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
 
@@ -2479,6 +2469,11 @@ var XBubbles =
 	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
 
 	    if (nodeBubble) {
+	        var clickTime = Date.now();
+	        var isDblclick = nodeSet[PROPS.CLICK_TIME] && clickTime - nodeSet[PROPS.CLICK_TIME] < 200;
+
+	        nodeSet[PROPS.CLICK_TIME] = clickTime;
+
 	        if (events.metaKey(event)) {
 	            select.add(nodeBubble);
 	        } else if (event.shiftKey) {
@@ -2487,6 +2482,8 @@ var XBubbles =
 	            } else {
 	                select.range(nodeBubble);
 	            }
+	        } else if (isDblclick) {
+	            bubble.edit(nodeSet, nodeBubble);
 	        } else {
 	            select.toggleUniq(nodeBubble);
 	        }

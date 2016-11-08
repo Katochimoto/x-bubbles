@@ -33,5 +33,6 @@ exports.EV = {
 
 exports.PROPS = {
     BUBBLE_VALUE: '_bubbleValue',
-    LOCK_COPY: '_lockCopy'
+    CLICK_TIME: '_clickTime',
+    LOCK_COPY: '_lockCopy',
 };

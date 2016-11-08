@@ -127,7 +127,9 @@ describe('editor ->', function () {
                                 resolve();
                             });
 
-                            that.click(bubble);
+                            setTimeout(() => {
+                                that.click(bubble);
+                            }, 300);
                         });
 
                         this.click(bubble);
