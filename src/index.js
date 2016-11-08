@@ -9,9 +9,10 @@ const OPTIONS = {
     bubbleCopy:         [ 'funk', function () {} ],
     bubbleDeformation:  [ 'funk', function () {} ],
     bubbleFormation:    [ 'funk', function () {} ],
+    checkBubblePaste:   [ 'funk', function () {} ],
     classBubble:        [ 'noop', 'bubble' ],
-    draggable:          [ 'bool', true ],
     disableControls:    [ 'bool', false ],
+    draggable:          [ 'bool', true ],
     ending:             [ 'noop', null ], // /\@ya\.ru/g;
     separator:          [ 'noop', /[,;]/ ],
 };
@@ -72,6 +73,12 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
     items: {
         get: function () {
             return bubbleset.getBubbles(this);
+        }
+    },
+
+    inputValue: {
+        get: function () {
+            return this.editor.inputValue();
         }
     },
 

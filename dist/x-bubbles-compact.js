@@ -64,9 +64,10 @@ var XBubbles =
 	    bubbleCopy: ['funk', function () {}],
 	    bubbleDeformation: ['funk', function () {}],
 	    bubbleFormation: ['funk', function () {}],
+	    checkBubblePaste: ['funk', function () {}],
 	    classBubble: ['noop', 'bubble'],
-	    draggable: ['bool', true],
 	    disableControls: ['bool', false],
+	    draggable: ['bool', true],
 	    ending: ['noop', null], // /\@ya\.ru/g;
 	    separator: ['noop', /[,;]/]
 	};
@@ -122,6 +123,12 @@ var XBubbles =
 	    items: {
 	        get: function get() {
 	            return bubbleset.getBubbles(this);
+	        }
+	    },
+
+	    inputValue: {
+	        get: function get() {
+	            return this.editor.inputValue();
 	        }
 	    },
 
@@ -2177,6 +2184,7 @@ var XBubbles =
 	var events = __webpack_require__(12);
 	var utils = __webpack_require__(8);
 	var copy = __webpack_require__(21);
+	var paste = __webpack_require__(22);
 
 	var EVENTS = {
 	    blur: onBlur,
@@ -2187,7 +2195,7 @@ var XBubbles =
 	    keypress: onKeypress,
 	    keyup: onKeyup,
 	    mscontrolselect: events.prevent,
-	    paste: onPaste,
+	    paste: paste,
 	    resize: events.prevent,
 	    resizestart: events.prevent
 	};
@@ -2206,6 +2214,7 @@ var XBubbles =
 	    return {
 	        addBubble: addBubble.bind(nodeEditor),
 	        editBubble: editBubble.bind(nodeEditor),
+	        inputValue: inputValue.bind(nodeEditor),
 	        removeBubble: removeBubble.bind(nodeEditor),
 	        setContent: setContent.bind(nodeEditor)
 	    };
@@ -2450,37 +2459,6 @@ var XBubbles =
 	    }
 	}
 
-	function onPaste(event) {
-	    event.preventDefault();
-	    var nodeSet = event.currentTarget;
-
-	    if (context.clipboardData && context.clipboardData.getData) {
-	        text.replaceString(context.clipboardData.getData('Text'));
-	        nodeSet.fireInput();
-	    } else if (event.clipboardData) {
-	        (function () {
-	            var contentType = 'text/plain';
-	            var clipboardData = event.clipboardData;
-	            var data = clipboardData.getData && clipboardData.getData(contentType);
-
-	            if (text.replaceString(data)) {
-	                nodeSet.fireInput();
-	            } else if (clipboardData.items) {
-	                Array.prototype.slice.call(clipboardData.items).filter(function (item) {
-	                    return item.kind === 'string' && item.type === contentType;
-	                }).some(function (item) {
-	                    item.getAsString(function (dataPaste) {
-	                        text.replaceString(dataPaste);
-	                        nodeSet.fireInput();
-	                    });
-
-	                    return true;
-	                });
-	            }
-	        })();
-	    }
-	}
-
 	function onDblclick(event) {
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
 	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
@@ -2572,6 +2550,11 @@ var XBubbles =
 	    return false;
 	}
 
+	function inputValue() {
+	    var textRange = text.currentTextRange(this);
+	    return textRange && text.textClean(textRange.toString()) || '';
+	}
+
 	/**
 	 * Генерация события редактирования бабла.
 	 * Выполняется в контексте узла-обертки.
@@ -2610,8 +2593,7 @@ var XBubbles =
 	 * @private
 	 */
 	function fireInput() {
-	    var textRange = text.currentTextRange(this);
-	    var editText = textRange && text.textClean(textRange.toString()) || '';
+	    var editText = inputValue.call(this);
 
 	    if (this[PROPS.BUBBLE_VALUE] !== editText) {
 	        this[PROPS.BUBBLE_VALUE] = editText;
@@ -2733,6 +2715,63 @@ var XBubbles =
 
 	function removeNode(node) {
 	    node.parentNode && node.parentNode.removeChild(node);
+	}
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(1);
+	var bubble = __webpack_require__(5);
+	var cursor = __webpack_require__(20);
+	var text = __webpack_require__(6);
+
+	module.exports = function (event) {
+	    event.preventDefault();
+	    var nodeEditor = event.currentTarget;
+
+	    if (context.clipboardData && context.clipboardData.getData) {
+	        onPasteSuccess(nodeEditor, context.clipboardData.getData('Text'));
+	    } else if (event.clipboardData) {
+	        (function () {
+	            var contentType = 'text/plain';
+	            var clipboardData = event.clipboardData;
+	            var data = clipboardData.getData && clipboardData.getData(contentType);
+
+	            if (!onPasteSuccess(nodeEditor, data) && clipboardData.items) {
+	                Array.prototype.slice.call(clipboardData.items).filter(function (item) {
+	                    return item.kind === 'string' && item.type === contentType;
+	                }).some(function (item) {
+	                    item.getAsString(function (dataText) {
+	                        onPasteSuccess(nodeEditor, dataText);
+	                    });
+
+	                    return true;
+	                });
+	            }
+	        })();
+	    }
+	};
+
+	function onPasteSuccess(nodeEditor, dataText) {
+	    var checkBubblePaste = nodeEditor.options('checkBubblePaste');
+	    var selection = context.getSelection();
+	    var isBubbling = dataText && selection.isCollapsed && !nodeEditor.inputValue ? checkBubblePaste(dataText) : false;
+
+	    if (text.replaceString(dataText, selection)) {
+	        if (isBubbling) {
+	            bubble.bubbling(nodeEditor);
+	            cursor.restore(nodeEditor);
+	        } else {
+	            nodeEditor.fireInput();
+	        }
+
+	        return true;
+	    }
+
+	    return false;
 	}
 
 /***/ }

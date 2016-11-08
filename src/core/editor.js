@@ -9,6 +9,7 @@ const text = require('./text');
 const events = require('./events');
 const utils = require('./utils');
 const copy = require('./editor/copy');
+const paste = require('./editor/paste');
 
 const EVENTS = {
     blur: onBlur,
@@ -19,7 +20,7 @@ const EVENTS = {
     keypress: onKeypress,
     keyup: onKeyup,
     mscontrolselect: events.prevent,
-    paste: onPaste,
+    paste: paste,
     resize: events.prevent,
     resizestart: events.prevent,
 };
@@ -38,6 +39,7 @@ exports.init = function (nodeWrap) {
     return {
         addBubble: addBubble.bind(nodeEditor),
         editBubble: editBubble.bind(nodeEditor),
+        inputValue: inputValue.bind(nodeEditor),
         removeBubble: removeBubble.bind(nodeEditor),
         setContent: setContent.bind(nodeEditor),
     };
@@ -308,37 +310,6 @@ function backSpace(event) {
     }
 }
 
-function onPaste(event) {
-    event.preventDefault();
-    const nodeSet = event.currentTarget;
-
-    if (context.clipboardData && context.clipboardData.getData) {
-        text.replaceString(context.clipboardData.getData('Text'));
-        nodeSet.fireInput();
-
-    } else if (event.clipboardData) {
-        const contentType = 'text/plain';
-        const clipboardData = event.clipboardData;
-        let data = clipboardData.getData && clipboardData.getData(contentType);
-
-        if (text.replaceString(data)) {
-            nodeSet.fireInput();
-
-        } else if (clipboardData.items) {
-            Array.prototype.slice.call(clipboardData.items)
-                .filter(item => item.kind === 'string' && item.type === contentType)
-                .some(function (item) {
-                    item.getAsString(function (dataPaste) {
-                        text.replaceString(dataPaste);
-                        nodeSet.fireInput();
-                    });
-
-                    return true;
-                });
-        }
-    }
-}
-
 function onDblclick(event) {
     const nodeSet = bubbleset.closestNodeSet(event.target);
     const nodeBubble = bubbleset.closestNodeBubble(event.target);
@@ -436,6 +407,11 @@ function editBubble(nodeBubble) {
     return false;
 }
 
+function inputValue() {
+    const textRange = text.currentTextRange(this);
+    return textRange && text.textClean(textRange.toString()) || '';
+}
+
 /**
  * Генерация события редактирования бабла.
  * Выполняется в контексте узла-обертки.
@@ -474,8 +450,7 @@ function fireChange() {
  * @private
  */
 function fireInput() {
-    const textRange = text.currentTextRange(this);
-    const editText = textRange && text.textClean(textRange.toString()) || '';
+    const editText = inputValue.call(this);
 
     if (this[ PROPS.BUBBLE_VALUE ] !== editText) {
         this[ PROPS.BUBBLE_VALUE ] = editText;
