@@ -58,7 +58,7 @@ function currentTextRange(nodeEditor, selection) {
         }
     };
 
-    if (!pointNode || !nodeEditor.contains(pointNode)) {
+    if (!pointNode || !(nodeEditor.compareDocumentPosition(pointNode) & Node.DOCUMENT_POSITION_CONTAINED_BY)) {
         return;
     }
 

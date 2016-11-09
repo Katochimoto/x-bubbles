@@ -870,7 +870,7 @@ var XBubbles =
 
 	    var pointNode = selection.focusNode && selection.focusNode.nodeType === Node.TEXT_NODE ? selection.focusNode : selection.anchorNode && selection.anchorNode.nodeType === Node.TEXT_NODE ? selection.anchorNode : undefined;
 
-	    if (!pointNode || !nodeEditor.contains(pointNode)) {
+	    if (!pointNode || !(nodeEditor.compareDocumentPosition(pointNode) & Node.DOCUMENT_POSITION_CONTAINED_BY)) {
 	        return;
 	    }
 
