@@ -41,13 +41,12 @@ module.exports = function (event, callback = function () {}) {
 
     doc.body.appendChild(target);
 
-    events.one(target, 'keyup', function () {
-        nodeEditor.focus();
-    });
-
-    events.one(nodeEditor, 'focusin', function () {
-        removeNode(target);
-        raf(callback);
+    events.one(target, {
+        keyup: () => nodeEditor.focus(),
+        blur: () => {
+            removeNode(target);
+            raf(callback);
+        }
     });
 
     target.select();

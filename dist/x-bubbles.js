@@ -3634,13 +3634,14 @@ var XBubbles =
 
 	    doc.body.appendChild(target);
 
-	    events.one(target, 'keyup', function () {
-	        nodeEditor.focus();
-	    });
-
-	    events.one(nodeEditor, 'focusin', function () {
-	        removeNode(target);
-	        raf(callback);
+	    events.one(target, {
+	        keyup: function keyup() {
+	            return nodeEditor.focus();
+	        },
+	        blur: function blur() {
+	            removeNode(target);
+	            raf(callback);
+	        }
 	    });
 
 	    target.select();
