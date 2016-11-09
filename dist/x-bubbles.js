@@ -3347,11 +3347,15 @@ var XBubbles =
 	    }
 	}
 
+	/**
+	 * Реакция на событие нажатия на кнопку Backspace.
+	 * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
+	 * @param {Event} event
+	 */
 	function backSpace(event) {
-	    var nodeSet = event.currentTarget;
-	    nodeSet.normalize();
-
+	    var nodeEditor = event.currentTarget;
 	    var selection = context.getSelection();
+
 	    if (!selection) {
 	        return;
 	    }
@@ -3359,12 +3363,12 @@ var XBubbles =
 	    if (selection.isCollapsed) {
 	        if (text.arrowLeft(selection, true)) {
 	            text.remove(selection);
-	            nodeSet.fireInput();
+	            nodeEditor.fireInput();
 	            return;
 	        }
 	    } else {
 	        text.remove(selection);
-	        nodeSet.fireInput();
+	        nodeEditor.fireInput();
 	        return;
 	    }
 
@@ -3374,14 +3378,18 @@ var XBubbles =
 	        return;
 	    }
 
-	    backSpaceBubbles(nodeSet);
+	    backSpaceBubbles(nodeEditor);
 	}
 
-	function deleteKeyboardEvent() {
-	    var nodeSet = event.currentTarget;
-	    nodeSet.normalize();
-
+	/**
+	 * Реакция на событие нажатия на кнопку Delete.
+	 * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
+	 * @param {Event} event
+	 */
+	function deleteKeyboardEvent(event) {
+	    var nodeEditor = event.currentTarget;
 	    var selection = context.getSelection();
+
 	    if (!selection) {
 	        return;
 	    }
@@ -3389,12 +3397,12 @@ var XBubbles =
 	    if (selection.isCollapsed) {
 	        if (text.arrowRight(selection, true)) {
 	            text.remove(selection);
-	            nodeSet.fireInput();
+	            nodeEditor.fireInput();
 	            return;
 	        }
 	    } else {
 	        text.remove(selection);
-	        nodeSet.fireInput();
+	        nodeEditor.fireInput();
 	        return;
 	    }
 
@@ -3404,7 +3412,7 @@ var XBubbles =
 	        return;
 	    }
 
-	    deleteBubbles(nodeSet);
+	    deleteBubbles(nodeEditor);
 	}
 
 	function backSpaceBubbles(nodeEditor) {
