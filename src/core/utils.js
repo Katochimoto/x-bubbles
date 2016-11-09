@@ -27,6 +27,14 @@ const REG_HAS_ESCAPED_HTML = RegExp(REG_ESCAPED_HTML.source);
 const REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
 const REG_IE = /Trident|Edge/;
 
+exports.getSelection = function (nodeEditor) {
+    const selection = context.getSelection();
+
+    if (selection && selection.anchorNode && (nodeEditor.compareDocumentPosition(selection.anchorNode) & Node.DOCUMENT_POSITION_CONTAINED_BY)) {
+        return selection;
+    }
+};
+
 exports.throttle = function (callback, runContext) {
     let throttle = 0;
     const animationCallback = function () {

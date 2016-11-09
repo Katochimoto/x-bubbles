@@ -1,23 +1,27 @@
+const raf = require('raf');
 const events = require('../events');
 const select = require('../select');
 const { PROPS } = require('../constant');
+const utils = require('../utils');
 
 module.exports = function (event, callback = function () {}) {
-    const nodeEditor = event.currentTarget;
-    const doc = nodeEditor.ownerDocument;
-    const selection = doc.defaultView.getSelection();
+    const nodeEditor = event.target;
+    const selection = utils.getSelection(nodeEditor);
 
-    if (selection && selection.anchorNode) {
+    if (selection) {
         return false;
     }
 
+    const doc = nodeEditor.ownerDocument;
     const list = select.get(nodeEditor);
+
     if (!list.length) {
         return false;
     }
 
     const bubbleCopy = nodeEditor.options('bubbleCopy');
     const value = bubbleCopy(list);
+
     if (!value) {
         return false;
     }
@@ -37,15 +41,13 @@ module.exports = function (event, callback = function () {}) {
 
     doc.body.appendChild(target);
 
-    events.one(target, {
-        blur: () => {
-            removeNode(target);
-            callback();
-        },
-        keyup: () => {
-            nodeEditor.focus();
-            removeNode(target);
-        }
+    events.one(target, 'keyup', function () {
+        nodeEditor.focus();
+    });
+
+    events.one(nodeEditor, 'focusin', function () {
+        removeNode(target);
+        raf(callback);
     });
 
     target.select();
@@ -53,5 +55,5 @@ module.exports = function (event, callback = function () {}) {
 };
 
 function removeNode(node) {
-    node.parentNode && node.parentNode.removeChild(node);
+    node && node.parentNode && node.parentNode.removeChild(node);
 }

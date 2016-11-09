@@ -55,6 +55,13 @@ function edit(nodeSet, nodeBubble) {
     return true;
 }
 
+/**
+ * У обертки нельзя делать tabindex=-1, иначе будет слетать фокус с поля ввода.
+ * @param   {[type]} nodeSet             [description]
+ * @param   {[type]} dataText            [description]
+ * @param   {Object} [dataAttributes={}] [description]
+ * @returns {[type]}                     [description]
+ */
 function create(nodeSet, dataText, dataAttributes = {}) {
     dataText = text.textClean(dataText);
 
@@ -88,7 +95,6 @@ function create(nodeSet, dataText, dataAttributes = {}) {
 
     wrap.setAttribute('bubble', '');
     wrap.setAttribute('contenteditable', 'false');
-    wrap.setAttribute('tabindex', '-1');
     draggable && wrap.setAttribute('draggable', 'true');
 
     return wrap;

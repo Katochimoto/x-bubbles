@@ -6,10 +6,10 @@ const bubbleset = require('./core/bubbleset');
 
 const OPTIONS = {
     begining:           [ 'noop', null ],
-    bubbleCopy:         [ 'funk', function () {} ],
+    bubbleCopy:         [ 'funk', bubbleCopyOption ],
     bubbleDeformation:  [ 'funk', function () {} ],
     bubbleFormation:    [ 'funk', function () {} ],
-    checkBubblePaste:   [ 'funk', function () {} ],
+    checkBubblePaste:   [ 'funk', checkBubblePasteOption ],
     classBubble:        [ 'noop', 'bubble' ],
     disableControls:    [ 'bool', false ],
     draggable:          [ 'bool', true ],
@@ -162,4 +162,12 @@ function destroyEditor(node) {
         editor.destroy(node);
         delete node.editor;
     }
+}
+
+function bubbleCopyOption(list) {
+    return list.map(item => item.innerHTML).join(', ');
+}
+
+function checkBubblePasteOption() {
+    return true;
 }

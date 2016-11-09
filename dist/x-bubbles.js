@@ -61,10 +61,10 @@ var XBubbles =
 
 	var OPTIONS = {
 	    begining: ['noop', null],
-	    bubbleCopy: ['funk', function () {}],
+	    bubbleCopy: ['funk', bubbleCopyOption],
 	    bubbleDeformation: ['funk', function () {}],
 	    bubbleFormation: ['funk', function () {}],
-	    checkBubblePaste: ['funk', function () {}],
+	    checkBubblePaste: ['funk', checkBubblePasteOption],
 	    classBubble: ['noop', 'bubble'],
 	    disableControls: ['bool', false],
 	    draggable: ['bool', true],
@@ -215,6 +215,16 @@ var XBubbles =
 	        editor.destroy(node);
 	        delete node.editor;
 	    }
+	}
+
+	function bubbleCopyOption(list) {
+	    return list.map(function (item) {
+	        return item.innerHTML;
+	    }).join(', ');
+	}
+
+	function checkBubblePasteOption() {
+	    return true;
 	}
 
 /***/ },
@@ -644,6 +654,13 @@ var XBubbles =
 	    return true;
 	}
 
+	/**
+	 * У обертки нельзя делать tabindex=-1, иначе будет слетать фокус с поля ввода.
+	 * @param   {[type]} nodeSet             [description]
+	 * @param   {[type]} dataText            [description]
+	 * @param   {Object} [dataAttributes={}] [description]
+	 * @returns {[type]}                     [description]
+	 */
 	function create(nodeSet, dataText) {
 	    var dataAttributes = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
@@ -679,7 +696,6 @@ var XBubbles =
 
 	    wrap.setAttribute('bubble', '');
 	    wrap.setAttribute('contenteditable', 'false');
-	    wrap.setAttribute('tabindex', '-1');
 	    draggable && wrap.setAttribute('draggable', 'true');
 
 	    return wrap;
@@ -1350,6 +1366,14 @@ var XBubbles =
 	var REG_HAS_ESCAPED_HTML = RegExp(REG_ESCAPED_HTML.source);
 	var REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
 	var REG_IE = /Trident|Edge/;
+
+	exports.getSelection = function (nodeEditor) {
+	    var selection = context.getSelection();
+
+	    if (selection && selection.anchorNode && nodeEditor.compareDocumentPosition(selection.anchorNode) & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+	        return selection;
+	    }
+	};
 
 	exports.throttle = function (callback, runContext) {
 	    var throttle = 0;
@@ -3101,8 +3125,11 @@ var XBubbles =
 	var text = __webpack_require__(6);
 	var events = __webpack_require__(12);
 	var utils = __webpack_require__(8);
-	var copy = __webpack_require__(21);
-	var paste = __webpack_require__(22);
+
+	var eventCopy = __webpack_require__(21);
+	var eventPaste = __webpack_require__(22);
+	var eventBackspace = __webpack_require__(23);
+	var eventDelete = __webpack_require__(24);
 
 	var EVENTS = {
 	    blur: onBlur,
@@ -3112,7 +3139,7 @@ var XBubbles =
 	    keypress: onKeypress,
 	    keyup: onKeyup,
 	    mscontrolselect: events.prevent,
-	    paste: paste,
+	    paste: eventPaste,
 	    resize: events.prevent,
 	    resizestart: events.prevent
 	};
@@ -3225,12 +3252,12 @@ var XBubbles =
 
 	        case KEY.Backspace:
 	            event.preventDefault();
-	            backSpace(event);
+	            eventBackspace(event);
 	            break;
 
 	        case KEY.Delete:
 	            event.preventDefault();
-	            deleteKeyboardEvent(event);
+	            eventDelete(event);
 	            break;
 
 	        case KEY.Left:
@@ -3273,14 +3300,14 @@ var XBubbles =
 
 	        case KEY.c:
 	            if (metaKey) {
-	                copy(event);
+	                eventCopy(event);
 	            }
 	            break;
 
 	        case KEY.x:
 	            if (metaKey) {
-	                copy(event, function () {
-	                    backSpaceBubbles(nodeEditor);
+	                eventCopy(event, function () {
+	                    return eventDelete(event);
 	                });
 	            }
 	            break;
@@ -3346,124 +3373,6 @@ var XBubbles =
 	    } else {
 	        cursor.restore(nodeSet);
 	    }
-	}
-
-	/**
-	 * Реакция на событие нажатия на кнопку Backspace.
-	 * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
-	 * @param {Event} event
-	 */
-	function backSpace(event) {
-	    var nodeEditor = event.currentTarget;
-	    var selection = context.getSelection();
-
-	    if (!selection) {
-	        return;
-	    }
-
-	    if (selection.isCollapsed) {
-	        if (text.arrowLeft(selection, true)) {
-	            text.remove(selection);
-	            nodeEditor.fireInput();
-	            return;
-	        }
-	    } else {
-	        text.remove(selection);
-	        nodeEditor.fireInput();
-	        return;
-	    }
-
-	    var node = bubbleset.findBubbleLeft(selection);
-	    if (node) {
-	        select.uniq(node);
-	        return;
-	    }
-
-	    backSpaceBubbles(nodeEditor);
-	}
-
-	/**
-	 * Реакция на событие нажатия на кнопку Delete.
-	 * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
-	 * @param {Event} event
-	 */
-	function deleteKeyboardEvent(event) {
-	    var nodeEditor = event.currentTarget;
-	    var selection = context.getSelection();
-
-	    if (!selection) {
-	        return;
-	    }
-
-	    if (selection.isCollapsed) {
-	        if (text.arrowRight(selection, true)) {
-	            text.remove(selection);
-	            nodeEditor.fireInput();
-	            return;
-	        }
-	    } else {
-	        text.remove(selection);
-	        nodeEditor.fireInput();
-	        return;
-	    }
-
-	    var node = bubbleset.findBubbleRight(selection);
-	    if (node) {
-	        select.uniq(node);
-	        return;
-	    }
-
-	    deleteBubbles(nodeEditor);
-	}
-
-	function backSpaceBubbles(nodeEditor) {
-	    var list = select.get(nodeEditor);
-	    if (!list.length) {
-	        return;
-	    }
-
-	    var prevBubble = list[0].previousSibling;
-	    var nextBubble = list[list.length - 1].nextSibling;
-
-	    list.forEach(function (item) {
-	        return item.parentNode.removeChild(item);
-	    });
-
-	    if (bubble.isBubbleNode(prevBubble)) {
-	        select.uniq(prevBubble);
-	    } else if (bubble.isBubbleNode(nextBubble)) {
-	        select.uniq(nextBubble);
-	    } else {
-	        nodeEditor.focus();
-	        cursor.restore(nodeEditor);
-	    }
-
-	    nodeEditor.fireChange();
-	}
-
-	function deleteBubbles(nodeEditor) {
-	    var list = select.get(nodeEditor);
-	    if (!list.length) {
-	        return;
-	    }
-
-	    var prevBubble = list[0].previousSibling;
-	    var nextBubble = list[list.length - 1].nextSibling;
-
-	    list.forEach(function (item) {
-	        return item.parentNode.removeChild(item);
-	    });
-
-	    if (bubble.isBubbleNode(nextBubble)) {
-	        select.uniq(nextBubble);
-	    } else if (bubble.isBubbleNode(prevBubble)) {
-	        select.uniq(prevBubble);
-	    } else {
-	        nodeEditor.focus();
-	        cursor.restore(nodeEditor);
-	    }
-
-	    nodeEditor.fireChange();
 	}
 
 	function onClick(event) {
@@ -3684,30 +3593,35 @@ var XBubbles =
 
 	'use strict';
 
+	var raf = __webpack_require__(9);
 	var events = __webpack_require__(12);
 	var select = __webpack_require__(4);
 
 	var _require = __webpack_require__(14),
 	    PROPS = _require.PROPS;
 
+	var utils = __webpack_require__(8);
+
 	module.exports = function (event) {
 	    var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
 
-	    var nodeEditor = event.currentTarget;
-	    var doc = nodeEditor.ownerDocument;
-	    var selection = doc.defaultView.getSelection();
+	    var nodeEditor = event.target;
+	    var selection = utils.getSelection(nodeEditor);
 
-	    if (selection && selection.anchorNode) {
+	    if (selection) {
 	        return false;
 	    }
 
+	    var doc = nodeEditor.ownerDocument;
 	    var list = select.get(nodeEditor);
+
 	    if (!list.length) {
 	        return false;
 	    }
 
 	    var bubbleCopy = nodeEditor.options('bubbleCopy');
 	    var value = bubbleCopy(list);
+
 	    if (!value) {
 	        return false;
 	    }
@@ -3720,15 +3634,13 @@ var XBubbles =
 
 	    doc.body.appendChild(target);
 
-	    events.one(target, {
-	        blur: function blur() {
-	            removeNode(target);
-	            callback();
-	        },
-	        keyup: function keyup() {
-	            nodeEditor.focus();
-	            removeNode(target);
-	        }
+	    events.one(target, 'keyup', function () {
+	        nodeEditor.focus();
+	    });
+
+	    events.one(nodeEditor, 'focusin', function () {
+	        removeNode(target);
+	        raf(callback);
 	    });
 
 	    target.select();
@@ -3736,7 +3648,7 @@ var XBubbles =
 	};
 
 	function removeNode(node) {
-	    node.parentNode && node.parentNode.removeChild(node);
+	    node && node.parentNode && node.parentNode.removeChild(node);
 	}
 
 /***/ },
@@ -3794,6 +3706,150 @@ var XBubbles =
 	    }
 
 	    return false;
+	}
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var raf = __webpack_require__(9);
+	var select = __webpack_require__(4);
+	var text = __webpack_require__(6);
+	var bubbleset = __webpack_require__(7);
+	var bubble = __webpack_require__(5);
+	var cursor = __webpack_require__(20);
+	var utils = __webpack_require__(8);
+
+	/**
+	 * Реакция на событие нажатия на кнопку Backspace.
+	 * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
+	 * @param {KeyboardEvent} event
+	 */
+	module.exports = function (event) {
+	    var nodeEditor = event.target;
+	    var selection = utils.getSelection(nodeEditor);
+
+	    if (selection) {
+	        if (!selection.isCollapsed) {
+	            text.remove(selection);
+	            nodeEditor.fireInput();
+	        } else if (text.arrowLeft(selection, true)) {
+	            text.remove(selection);
+	            nodeEditor.fireInput();
+	        } else {
+	            var node = bubbleset.findBubbleLeft(selection);
+	            node && select.uniq(node);
+	        }
+	    } else if (!removeBubbles(nodeEditor)) {
+	        nodeEditor.focus();
+	        // без задержки не восстанавливает курсор
+	        raf(function () {
+	            return cursor.restore(nodeEditor);
+	        });
+	    }
+	};
+
+	function removeBubbles(nodeEditor) {
+	    var list = select.get(nodeEditor);
+	    if (!list.length) {
+	        return false;
+	    }
+
+	    var prevBubble = list[0].previousSibling;
+	    var nextBubble = list[list.length - 1].nextSibling;
+
+	    list.forEach(function (item) {
+	        return item.parentNode.removeChild(item);
+	    });
+
+	    if (bubble.isBubbleNode(prevBubble)) {
+	        select.uniq(prevBubble);
+	    } else if (bubble.isBubbleNode(nextBubble)) {
+	        select.uniq(nextBubble);
+	    } else {
+	        nodeEditor.focus();
+	        // без задержки не восстанавливает курсор
+	        raf(function () {
+	            return cursor.restore(nodeEditor);
+	        });
+	    }
+
+	    nodeEditor.fireChange();
+	    return true;
+	}
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var raf = __webpack_require__(9);
+	var select = __webpack_require__(4);
+	var text = __webpack_require__(6);
+	var bubbleset = __webpack_require__(7);
+	var bubble = __webpack_require__(5);
+	var cursor = __webpack_require__(20);
+	var utils = __webpack_require__(8);
+
+	/**
+	 * Реакция на событие нажатия на кнопку Delete.
+	 * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
+	 * @param {KeyboardEvent} event
+	 */
+	module.exports = function (event) {
+	    var nodeEditor = event.target;
+	    var selection = utils.getSelection(nodeEditor);
+
+	    if (selection) {
+	        if (!selection.isCollapsed) {
+	            text.remove(selection);
+	            nodeEditor.fireInput();
+	        } else if (text.arrowRight(selection, true)) {
+	            text.remove(selection);
+	            nodeEditor.fireInput();
+	        } else {
+	            var node = bubbleset.findBubbleRight(selection);
+	            node && select.uniq(node);
+	        }
+	    } else if (!removeBubbles(nodeEditor)) {
+	        nodeEditor.focus();
+	        // без задержки не восстанавливает курсор
+	        raf(function () {
+	            return cursor.restore(nodeEditor);
+	        });
+	    }
+	};
+
+	function removeBubbles(nodeEditor) {
+	    var list = select.get(nodeEditor);
+	    if (!list.length) {
+	        return false;
+	    }
+
+	    var prevBubble = list[0].previousSibling;
+	    var nextBubble = list[list.length - 1].nextSibling;
+
+	    list.forEach(function (item) {
+	        return item.parentNode.removeChild(item);
+	    });
+
+	    if (bubble.isBubbleNode(nextBubble)) {
+	        select.uniq(nextBubble);
+	    } else if (bubble.isBubbleNode(prevBubble)) {
+	        select.uniq(prevBubble);
+	    } else {
+	        nodeEditor.focus();
+	        // без задержки не восстанавливает курсор
+	        raf(function () {
+	            return cursor.restore(nodeEditor);
+	        });
+	    }
+
+	    // nodeEditor.fireChange();
+	    return true;
 	}
 
 /***/ }

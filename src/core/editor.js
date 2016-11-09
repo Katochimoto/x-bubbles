@@ -8,8 +8,11 @@ const { KEY, EV, PROPS } = require('./constant');
 const text = require('./text');
 const events = require('./events');
 const utils = require('./utils');
-const copy = require('./editor/copy');
-const paste = require('./editor/paste');
+
+const eventCopy = require('./editor/copy');
+const eventPaste = require('./editor/paste');
+const eventBackspace = require('./editor/backspace');
+const eventDelete = require('./editor/delete');
 
 const EVENTS = {
     blur: onBlur,
@@ -19,7 +22,7 @@ const EVENTS = {
     keypress: onKeypress,
     keyup: onKeyup,
     mscontrolselect: events.prevent,
-    paste: paste,
+    paste: eventPaste,
     resize: events.prevent,
     resizestart: events.prevent,
 };
@@ -139,12 +142,12 @@ function onKeydown(event) {
 
     case KEY.Backspace:
         event.preventDefault();
-        backSpace(event);
+        eventBackspace(event);
         break;
 
     case KEY.Delete:
         event.preventDefault();
-        deleteKeyboardEvent(event);
+        eventDelete(event);
         break;
 
     case KEY.Left:
@@ -187,15 +190,13 @@ function onKeydown(event) {
 
     case KEY.c:
         if (metaKey) {
-            copy(event);
+            eventCopy(event);
         }
         break;
 
     case KEY.x:
         if (metaKey) {
-            copy(event, function () {
-                backSpaceBubbles(nodeEditor);
-            });
+            eventCopy(event, () => eventDelete(event));
         }
         break;
     }
@@ -278,126 +279,6 @@ function arrowRight(event) {
     } else {
         cursor.restore(nodeSet);
     }
-}
-
-/**
- * Реакция на событие нажатия на кнопку Backspace.
- * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
- * @param {Event} event
- */
-function backSpace(event) {
-    const nodeEditor = event.currentTarget;
-    const selection = context.getSelection();
-
-    if (!selection) {
-        return;
-    }
-
-    if (selection.isCollapsed) {
-        if (text.arrowLeft(selection, true)) {
-            text.remove(selection);
-            nodeEditor.fireInput();
-            return;
-        }
-
-    } else {
-        text.remove(selection);
-        nodeEditor.fireInput();
-        return;
-    }
-
-    let node = bubbleset.findBubbleLeft(selection);
-    if (node) {
-        select.uniq(node);
-        return;
-    }
-
-    backSpaceBubbles(nodeEditor);
-}
-
-/**
- * Реакция на событие нажатия на кнопку Delete.
- * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
- * @param {Event} event
- */
-function deleteKeyboardEvent(event) {
-    const nodeEditor = event.currentTarget;
-    const selection = context.getSelection();
-
-    if (!selection) {
-        return;
-    }
-
-    if (selection.isCollapsed) {
-        if (text.arrowRight(selection, true)) {
-            text.remove(selection);
-            nodeEditor.fireInput();
-            return;
-        }
-
-    } else {
-        text.remove(selection);
-        nodeEditor.fireInput();
-        return;
-    }
-
-    let node = bubbleset.findBubbleRight(selection);
-    if (node) {
-        select.uniq(node);
-        return;
-    }
-
-    deleteBubbles(nodeEditor);
-}
-
-function backSpaceBubbles(nodeEditor) {
-    const list = select.get(nodeEditor);
-    if (!list.length) {
-        return;
-    }
-
-    const prevBubble = list[ 0 ].previousSibling;
-    const nextBubble = list[ list.length - 1 ].nextSibling;
-
-    list.forEach(item => item.parentNode.removeChild(item));
-
-    if (bubble.isBubbleNode(prevBubble)) {
-        select.uniq(prevBubble);
-
-    } else if (bubble.isBubbleNode(nextBubble)) {
-        select.uniq(nextBubble);
-
-    } else {
-        nodeEditor.focus();
-        cursor.restore(nodeEditor);
-    }
-
-    nodeEditor.fireChange();
-}
-
-function deleteBubbles(nodeEditor) {
-    const list = select.get(nodeEditor);
-    if (!list.length) {
-        return;
-    }
-
-    const prevBubble = list[ 0 ].previousSibling;
-    const nextBubble = list[ list.length - 1 ].nextSibling;
-
-    list.forEach(item => item.parentNode.removeChild(item));
-
-    if (bubble.isBubbleNode(nextBubble)) {
-        select.uniq(nextBubble);
-
-    } else if (bubble.isBubbleNode(prevBubble)) {
-        select.uniq(prevBubble);
-
-    } else {
-        nodeEditor.focus();
-        cursor.restore(nodeEditor);
-    }
-
-    nodeEditor.fireChange();
 }
 
 function onClick(event) {
