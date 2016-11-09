@@ -679,6 +679,7 @@ var XBubbles =
 
 	    wrap.setAttribute('bubble', '');
 	    wrap.setAttribute('contenteditable', 'false');
+	    wrap.setAttribute('tabindex', '-1');
 	    draggable && wrap.setAttribute('draggable', 'true');
 
 	    return wrap;
