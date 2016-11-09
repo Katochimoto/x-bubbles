@@ -102,8 +102,16 @@ function onKeypress(event) {
     case KEY.Enter:
         event.preventDefault();
         if (!nodeEditor.options('disableControls')) {
-            bubble.bubbling(nodeEditor);
-            cursor.restore(nodeEditor);
+            if (!editBubbleKeyboardEvent(nodeEditor)) {
+                bubble.bubbling(nodeEditor);
+                cursor.restore(nodeEditor);
+            }
+        }
+        break;
+
+    case KEY.Space:
+        if (editBubbleKeyboardEvent(nodeEditor)) {
+            event.preventDefault();
         }
         break;
 
@@ -132,6 +140,11 @@ function onKeydown(event) {
     case KEY.Backspace:
         event.preventDefault();
         backSpace(event);
+        break;
+
+    case KEY.Delete:
+        event.preventDefault();
+        deleteKeyboardEvent(event);
         break;
 
     case KEY.Left:
@@ -175,6 +188,14 @@ function onKeydown(event) {
     case KEY.c:
         if (metaKey) {
             copy(event);
+        }
+        break;
+
+    case KEY.x:
+        if (metaKey) {
+            copy(event, function () {
+                backSpaceBubbles(nodeEditor);
+            });
         }
         break;
     }
@@ -287,26 +308,88 @@ function backSpace(event) {
         return;
     }
 
-    const list = select.get(nodeSet);
+    backSpaceBubbles(nodeSet);
+}
 
-    if (list.length) {
-        const prevBubble = list[ 0 ].previousSibling;
-        const nextBubble = list[ list.length - 1 ].nextSibling;
-        list.forEach(item => item.parentNode.removeChild(item));
+function deleteKeyboardEvent() {
+    const nodeSet = event.currentTarget;
+    nodeSet.normalize();
 
-        if (bubble.isBubbleNode(prevBubble)) {
-            select.uniq(prevBubble);
+    const selection = context.getSelection();
+    if (!selection) {
+        return;
+    }
 
-        } else if (bubble.isBubbleNode(nextBubble)) {
-            select.uniq(nextBubble);
-
-        } else {
-            nodeSet.focus();
-            cursor.restore(nodeSet);
+    if (selection.isCollapsed) {
+        if (text.arrowRight(selection, true)) {
+            text.remove(selection);
+            nodeSet.fireInput();
+            return;
         }
 
-        nodeSet.fireChange();
+    } else {
+        text.remove(selection);
+        nodeSet.fireInput();
+        return;
     }
+
+    let node = bubbleset.findBubbleRight(selection);
+    if (node) {
+        select.uniq(node);
+        return;
+    }
+
+    deleteBubbles(nodeSet);
+}
+
+function backSpaceBubbles(nodeEditor) {
+    const list = select.get(nodeEditor);
+    if (!list.length) {
+        return;
+    }
+
+    const prevBubble = list[ 0 ].previousSibling;
+    const nextBubble = list[ list.length - 1 ].nextSibling;
+
+    list.forEach(item => item.parentNode.removeChild(item));
+
+    if (bubble.isBubbleNode(prevBubble)) {
+        select.uniq(prevBubble);
+
+    } else if (bubble.isBubbleNode(nextBubble)) {
+        select.uniq(nextBubble);
+
+    } else {
+        nodeEditor.focus();
+        cursor.restore(nodeEditor);
+    }
+
+    nodeEditor.fireChange();
+}
+
+function deleteBubbles(nodeEditor) {
+    const list = select.get(nodeEditor);
+    if (!list.length) {
+        return;
+    }
+
+    const prevBubble = list[ 0 ].previousSibling;
+    const nextBubble = list[ list.length - 1 ].nextSibling;
+
+    list.forEach(item => item.parentNode.removeChild(item));
+
+    if (bubble.isBubbleNode(nextBubble)) {
+        select.uniq(nextBubble);
+
+    } else if (bubble.isBubbleNode(prevBubble)) {
+        select.uniq(prevBubble);
+
+    } else {
+        nodeEditor.focus();
+        cursor.restore(nodeEditor);
+    }
+
+    nodeEditor.fireChange();
 }
 
 function onClick(event) {
@@ -354,6 +437,20 @@ function onClick(event) {
             cursor.restore(nodeSet);
         }
     }
+}
+
+function editBubbleKeyboardEvent(nodeEditor) {
+    const selection = context.getSelection();
+
+    if (!selection || !selection.rangeCount) {
+        const list = select.get(nodeEditor);
+
+        if (list.length === 1) {
+            return bubble.edit(nodeEditor, list[0]);
+        }
+    }
+
+    return false;
 }
 
 function setContent(data) {

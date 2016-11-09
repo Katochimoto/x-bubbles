@@ -2,24 +2,24 @@ const events = require('../events');
 const select = require('../select');
 const { PROPS } = require('../constant');
 
-module.exports = function (event) {
+module.exports = function (event, callback = function () {}) {
     const nodeEditor = event.currentTarget;
     const doc = nodeEditor.ownerDocument;
     const selection = doc.defaultView.getSelection();
 
     if (selection && selection.anchorNode) {
-        return;
+        return false;
     }
 
     const list = select.get(nodeEditor);
     if (!list.length) {
-        return;
+        return false;
     }
 
     const bubbleCopy = nodeEditor.options('bubbleCopy');
     const value = bubbleCopy(list);
     if (!value) {
-        return;
+        return false;
     }
 
     nodeEditor[ PROPS.LOCK_COPY ] = true;
@@ -38,7 +38,10 @@ module.exports = function (event) {
     doc.body.appendChild(target);
 
     events.one(target, {
-        blur: () => removeNode(target),
+        blur: () => {
+            removeNode(target);
+            callback();
+        },
         keyup: () => {
             nodeEditor.focus();
             removeNode(target);
@@ -46,6 +49,7 @@ module.exports = function (event) {
     });
 
     target.select();
+    return true;
 };
 
 function removeNode(node) {
