@@ -113,7 +113,7 @@ describe('x-bubbles ->', function () {
                         resolve();
                     });
 
-                    expect(this.buffer.addBubble('bubble1')).to.be.eql(true);
+                    expect(this.buffer.addBubble('bubble1')).to.be.eql(true, 'true в случае успешного добавления');
                 });
             });
         });
