@@ -3849,7 +3849,7 @@ var XBubbles =
 	        });
 	    }
 
-	    // nodeEditor.fireChange();
+	    nodeEditor.fireChange();
 	    return true;
 	}
 

@@ -59,6 +59,6 @@ function removeBubbles(nodeEditor) {
         raf(() => cursor.restore(nodeEditor));
     }
 
-    // nodeEditor.fireChange();
+    nodeEditor.fireChange();
     return true;
 }
