@@ -25,8 +25,8 @@ module.exports = function (event) {
             nodeEditor.fireInput();
 
         } else {
-            const node = bubbleset.findBubbleRight(selection);
-            node && select.uniq(node);
+            const nodeBubble = bubbleset.findBubbleRight(selection);
+            nodeBubble && select.uniq(nodeBubble);
         }
 
     } else if (!removeBubbles(nodeEditor)) {
