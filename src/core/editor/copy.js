@@ -12,7 +12,6 @@ module.exports = function (event, callback = function () {}) {
         return false;
     }
 
-    const doc = nodeEditor.ownerDocument;
     const list = select.get(nodeEditor);
 
     if (!list.length) {
@@ -28,18 +27,18 @@ module.exports = function (event, callback = function () {}) {
 
     nodeEditor[ PROPS.LOCK_COPY ] = true;
 
-    const target = doc.createElement('input');
+    const target = nodeEditor.ownerDocument.createElement('input');
     target.value = value;
     target.style.cssText = `
         position: absolute;
-        top: -9999px;
+        left: -9999px;
         width: 1px;
         height: 1px;
         margin: 0;
         padding: 0;
         border: none;`;
 
-    doc.body.appendChild(target);
+    nodeEditor.parentNode.appendChild(target);
 
     events.one(target, {
         keyup: () => nodeEditor.focus(),

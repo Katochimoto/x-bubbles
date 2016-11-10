@@ -251,7 +251,7 @@ var XBubbles =
 	    canUseDrag = _require.canUseDrag;
 
 	exports.init = function (nodeSet) {
-	    if (canUseDrag()) {
+	    if (canUseDrag) {
 	        return native.init(nodeSet);
 	    }
 
@@ -259,7 +259,7 @@ var XBubbles =
 	};
 
 	exports.destroy = function (nodeSet) {
-	    if (canUseDrag()) {
+	    if (canUseDrag) {
 	        return native.destroy(nodeSet);
 	    }
 
@@ -672,7 +672,7 @@ var XBubbles =
 
 	    var bubbleFormation = nodeSet.options('bubbleFormation');
 	    var classBubble = nodeSet.options('classBubble');
-	    var draggable = canUseDrag() && nodeSet.options('draggable');
+	    var draggable = canUseDrag && nodeSet.options('draggable');
 	    var wrap = nodeSet.ownerDocument.createElement('span');
 
 	    wrap.innerText = dataText;
@@ -1414,7 +1414,11 @@ var XBubbles =
 
 	exports.canUseDrag = function () {
 	    return !REG_IE.test(context.navigator.userAgent);
-	};
+	}();
+
+	exports.isIE = function () {
+	    return REG_IE.test(context.navigator.userAgent);
+	}();
 
 	function unescapeHtmlChar(chr) {
 	    return HTML_UNESCAPES[chr];
@@ -2730,7 +2734,6 @@ var XBubbles =
 	        return false;
 	    }
 
-	    var doc = nodeEditor.ownerDocument;
 	    var list = select.get(nodeEditor);
 
 	    if (!list.length) {
@@ -2746,11 +2749,11 @@ var XBubbles =
 
 	    nodeEditor[PROPS.LOCK_COPY] = true;
 
-	    var target = doc.createElement('input');
+	    var target = nodeEditor.ownerDocument.createElement('input');
 	    target.value = value;
-	    target.style.cssText = '\n        position: absolute;\n        top: -9999px;\n        width: 1px;\n        height: 1px;\n        margin: 0;\n        padding: 0;\n        border: none;';
+	    target.style.cssText = '\n        position: absolute;\n        left: -9999px;\n        width: 1px;\n        height: 1px;\n        margin: 0;\n        padding: 0;\n        border: none;';
 
-	    doc.body.appendChild(target);
+	    nodeEditor.parentNode.appendChild(target);
 
 	    events.one(target, {
 	        keyup: function keyup() {
@@ -2776,10 +2779,14 @@ var XBubbles =
 
 	'use strict';
 
+	var raf = __webpack_require__(9);
 	var context = __webpack_require__(1);
 	var bubble = __webpack_require__(5);
 	var cursor = __webpack_require__(20);
 	var text = __webpack_require__(6);
+
+	var _require = __webpack_require__(8),
+	    isIE = _require.isIE;
 
 	module.exports = function (event) {
 	    event.preventDefault();
@@ -2815,8 +2822,13 @@ var XBubbles =
 
 	    if (text.replaceString(dataText, selection)) {
 	        if (isBubbling) {
-	            bubble.bubbling(nodeEditor);
-	            cursor.restore(nodeEditor);
+	            if (isIE) {
+	                raf(function () {
+	                    return onReplaceSuccess(nodeEditor);
+	                });
+	            } else {
+	                onReplaceSuccess(nodeEditor);
+	            }
 	        } else {
 	            nodeEditor.fireInput();
 	        }
@@ -2825,6 +2837,14 @@ var XBubbles =
 	    }
 
 	    return false;
+	}
+
+	function onReplaceSuccess(nodeEditor) {
+	    bubble.bubbling(nodeEditor);
+	    nodeEditor.focus();
+	    raf(function () {
+	        return cursor.restore(nodeEditor);
+	    });
 	}
 
 /***/ },

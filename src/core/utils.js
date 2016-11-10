@@ -62,7 +62,6 @@ exports.escape = function (data) {
     return data;
 };
 
-
 exports.unescape = function (data) {
     data = String(data);
 
@@ -73,9 +72,13 @@ exports.unescape = function (data) {
     return data;
 };
 
-exports.canUseDrag = function () {
+exports.canUseDrag = (function () {
     return !REG_IE.test(context.navigator.userAgent);
-};
+})();
+
+exports.isIE = (function () {
+    return REG_IE.test(context.navigator.userAgent);
+})();
 
 function unescapeHtmlChar(chr) {
     return HTML_UNESCAPES[ chr ];

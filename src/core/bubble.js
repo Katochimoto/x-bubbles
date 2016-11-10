@@ -71,7 +71,7 @@ function create(nodeSet, dataText, dataAttributes = {}) {
 
     const bubbleFormation = nodeSet.options('bubbleFormation');
     const classBubble = nodeSet.options('classBubble');
-    const draggable = canUseDrag() && nodeSet.options('draggable');
+    const draggable = canUseDrag && nodeSet.options('draggable');
     const wrap = nodeSet.ownerDocument.createElement('span');
 
     wrap.innerText = dataText;

@@ -1,7 +1,9 @@
+const raf = require('raf');
 const context = require('../../context');
 const bubble = require('../bubble');
 const cursor = require('../cursor');
 const text = require('../text');
+const { isIE } = require('../utils');
 
 module.exports = function (event) {
     event.preventDefault();
@@ -43,8 +45,12 @@ function onPasteSuccess(nodeEditor, dataText) {
 
     if (text.replaceString(dataText, selection)) {
         if (isBubbling) {
-            bubble.bubbling(nodeEditor);
-            cursor.restore(nodeEditor);
+            if (isIE) {
+                raf(() => onReplaceSuccess(nodeEditor));
+
+            } else {
+                onReplaceSuccess(nodeEditor);
+            }
 
         } else {
             nodeEditor.fireInput();
@@ -54,4 +60,10 @@ function onPasteSuccess(nodeEditor, dataText) {
     }
 
     return false;
+}
+
+function onReplaceSuccess(nodeEditor) {
+    bubble.bubbling(nodeEditor);
+    nodeEditor.focus();
+    raf(() => cursor.restore(nodeEditor));
 }

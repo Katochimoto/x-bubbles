@@ -3,7 +3,7 @@ const mouse = require('./drag/mouse');
 const { canUseDrag } = require('./utils');
 
 exports.init = function (nodeSet) {
-    if (canUseDrag()) {
+    if (canUseDrag) {
         return native.init(nodeSet);
     }
 
@@ -11,7 +11,7 @@ exports.init = function (nodeSet) {
 };
 
 exports.destroy = function (nodeSet) {
-    if (canUseDrag()) {
+    if (canUseDrag) {
         return native.destroy(nodeSet);
     }
 
