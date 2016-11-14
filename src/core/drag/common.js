@@ -1,8 +1,8 @@
-const DRAG_IMG_WIDTH = 16;
+const DRAG_IMG = { w: 16, h: 16 };
 
 let dragImage = null;
 
-exports.DRAG_IMG_WIDTH = DRAG_IMG_WIDTH;
+exports.DRAG_IMG = DRAG_IMG;
 
 exports.getDragImage = function () {
     if (!dragImage) {

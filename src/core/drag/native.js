@@ -3,7 +3,7 @@ const select = require('../select');
 const bubbleset = require('../bubbleset');
 const events = require('../events');
 const { CLS } = require('../constant');
-const { getDragImage, onDropSuccess, DRAG_IMG_WIDTH } = require('./common');
+const { getDragImage, onDropSuccess, DRAG_IMG } = require('./common');
 
 const EVENTS = {
     dragend: onDragend,
@@ -47,7 +47,7 @@ function onDragstart(event) {
 
     const list = select.get(currentDragSet);
     if (list.length > 1) {
-        event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG_WIDTH, DRAG_IMG_WIDTH);
+        event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG.w, DRAG_IMG.h);
     }
 }
 
