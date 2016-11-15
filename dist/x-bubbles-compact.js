@@ -51,8 +51,6 @@ var XBubbles =
 
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 	var context = __webpack_require__(1);
 	var drag = __webpack_require__(2);
 	var editor = __webpack_require__(19);
@@ -60,16 +58,16 @@ var XBubbles =
 	var bubbleset = __webpack_require__(7);
 
 	var OPTIONS = {
-	    begining: ['noop', null],
-	    bubbleCopy: ['funk', bubbleCopyOption],
-	    bubbleDeformation: ['funk', function () {}],
-	    bubbleFormation: ['funk', function () {}],
-	    checkBubblePaste: ['funk', checkBubblePasteOption],
-	    classBubble: ['noop', 'bubble'],
-	    disableControls: ['bool', false],
-	    draggable: ['bool', true],
-	    ending: ['noop', null], // /\@ya\.ru/g;
-	    separator: ['noop', /[,;]/]
+	    begining: ['noop', null, 'begining'],
+	    bubbleCopy: ['funk', bubbleCopyOption, 'bubble-copy'],
+	    bubbleDeformation: ['funk', function () {}, 'bubble-deformation'],
+	    bubbleFormation: ['funk', function () {}, 'bubble-formation'],
+	    checkBubblePaste: ['funk', checkBubblePasteOption, 'check-bubble-paste'],
+	    classBubble: ['noop', 'bubble', 'class-bubble'],
+	    disableControls: ['bool', false, 'disable-controls'],
+	    draggable: ['bool', true, 'draggable'],
+	    ending: ['noop', null, 'ending'], // /\@ya\.ru/g;
+	    separator: ['noop', /[,;]/, 'separator']
 	};
 
 	var XBubbles = Object.create(HTMLDivElement.prototype, {
@@ -103,10 +101,17 @@ var XBubbles =
 	    options: {
 	        value: function value(name, _value) {
 	            if (!this._options) {
-	                this._options = _extends({}, Object.keys(OPTIONS).reduce(function (result, item) {
+	                this._options = Object.keys(OPTIONS).reduce(function (result, item) {
 	                    result[item] = undefined;
 	                    return result;
-	                }, {}), this.dataset);
+	                }, {});
+
+	                for (var optionName in OPTIONS) {
+	                    var attrName = 'data-' + OPTIONS[optionName][2];
+	                    if (this.hasAttribute(attrName)) {
+	                        this._options[optionName] = this.getAttribute(attrName);
+	                    }
+	                }
 
 	                optionsPrepare(this._options);
 	            }

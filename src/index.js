@@ -5,16 +5,16 @@ const bubble = require('./core/bubble');
 const bubbleset = require('./core/bubbleset');
 
 const OPTIONS = {
-    begining:           [ 'noop', null ],
-    bubbleCopy:         [ 'funk', bubbleCopyOption ],
-    bubbleDeformation:  [ 'funk', function () {} ],
-    bubbleFormation:    [ 'funk', function () {} ],
-    checkBubblePaste:   [ 'funk', checkBubblePasteOption ],
-    classBubble:        [ 'noop', 'bubble' ],
-    disableControls:    [ 'bool', false ],
-    draggable:          [ 'bool', true ],
-    ending:             [ 'noop', null ], // /\@ya\.ru/g;
-    separator:          [ 'noop', /[,;]/ ],
+    begining:           [ 'noop', null, 'begining' ],
+    bubbleCopy:         [ 'funk', bubbleCopyOption, 'bubble-copy' ],
+    bubbleDeformation:  [ 'funk', function () {}, 'bubble-deformation' ],
+    bubbleFormation:    [ 'funk', function () {}, 'bubble-formation' ],
+    checkBubblePaste:   [ 'funk', checkBubblePasteOption, 'check-bubble-paste' ],
+    classBubble:        [ 'noop', 'bubble', 'class-bubble' ],
+    disableControls:    [ 'bool', false, 'disable-controls' ],
+    draggable:          [ 'bool', true, 'draggable' ],
+    ending:             [ 'noop', null, 'ending' ], // /\@ya\.ru/g;
+    separator:          [ 'noop', /[,;]/, 'separator' ],
 };
 
 const XBubbles = Object.create(HTMLDivElement.prototype, {
@@ -48,14 +48,17 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
     options: {
         value: function (name, value) {
             if (!this._options) {
-                this._options = {
-                    ...Object.keys(OPTIONS).reduce(function (result, item) {
-                        result[ item ] = undefined;
-                        return result;
-                    }, {}),
+                this._options = Object.keys(OPTIONS).reduce(function (result, item) {
+                    result[ item ] = undefined;
+                    return result;
+                }, {});
 
-                    ...this.dataset
-                };
+                for (const optionName in OPTIONS) {
+                    const attrName = `data-${OPTIONS[ optionName ][2]}`;
+                    if (this.hasAttribute(attrName)) {
+                        this._options[ optionName ] = this.getAttribute(attrName);
+                    }
+                }
 
                 optionsPrepare(this._options);
             }
