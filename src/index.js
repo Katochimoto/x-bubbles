@@ -48,12 +48,11 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
     options: {
         value: function (name, value) {
             if (!this._options) {
-                this._options = Object.keys(OPTIONS).reduce(function (result, item) {
-                    result[ item ] = undefined;
-                    return result;
-                }, {});
+                this._options = {};
 
                 for (const optionName in OPTIONS) {
+                    this._options[ optionName ] = undefined;
+
                     const attrName = `data-${OPTIONS[ optionName ][2]}`;
                     if (this.hasAttribute(attrName)) {
                         this._options[ optionName ] = this.getAttribute(attrName);

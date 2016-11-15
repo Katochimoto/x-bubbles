@@ -101,12 +101,11 @@ var XBubbles =
 	    options: {
 	        value: function value(name, _value) {
 	            if (!this._options) {
-	                this._options = Object.keys(OPTIONS).reduce(function (result, item) {
-	                    result[item] = undefined;
-	                    return result;
-	                }, {});
+	                this._options = {};
 
 	                for (var optionName in OPTIONS) {
+	                    this._options[optionName] = undefined;
+
 	                    var attrName = 'data-' + OPTIONS[optionName][2];
 	                    if (this.hasAttribute(attrName)) {
 	                        this._options[optionName] = this.getAttribute(attrName);
