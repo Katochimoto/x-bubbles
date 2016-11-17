@@ -120,7 +120,7 @@ function onKeypress(event) {
 
     case KEY.Comma:
     case KEY.Semicolon:
-        event.preventDefault();
+        // event.preventDefault();
         bubble.bubbling(nodeEditor);
         cursor.restore(nodeEditor);
         break;

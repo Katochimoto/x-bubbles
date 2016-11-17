@@ -65,8 +65,20 @@
     <script src="../dist/x-bubbles.js?1234"></script>
 </head>
 <body>
+<script>
+function tokenizer(dataText) {
+    var i = 0;
+    var len = dataText.length;
+
+    for (; i < len; i++) {
+
+    }
+
+    return [];
+}
+</script>
 <div style="margin-top: 0;">
-    <div class="bubbles" id="test" is="x-bubbles" tabindex="0">
+    <div class="bubbles" id="test" is="x-bubbles" tabindex="0" data-tokenizer="tokenizer">
         123,456,789
     </div>
     <br/>

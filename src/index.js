@@ -6,15 +6,16 @@ const bubbleset = require('./core/bubbleset');
 
 const OPTIONS = {
     begining:           [ 'noop', null, 'begining' ],
-    bubbleCopy:         [ 'funk', bubbleCopyOption, 'bubble-copy' ],
-    bubbleDeformation:  [ 'funk', function () {}, 'bubble-deformation' ],
-    bubbleFormation:    [ 'funk', function () {}, 'bubble-formation' ],
-    checkBubblePaste:   [ 'funk', checkBubblePasteOption, 'check-bubble-paste' ],
+    bubbleCopy:         [ 'func', bubbleCopyOption, 'bubble-copy' ],
+    bubbleDeformation:  [ 'func', function () {}, 'bubble-deformation' ],
+    bubbleFormation:    [ 'func', function () {}, 'bubble-formation' ],
+    checkBubblePaste:   [ 'func', checkBubblePasteOption, 'check-bubble-paste' ],
     classBubble:        [ 'noop', 'bubble', 'class-bubble' ],
     disableControls:    [ 'bool', false, 'disable-controls' ],
     draggable:          [ 'bool', true, 'draggable' ],
     ending:             [ 'noop', null, 'ending' ], // /\@ya\.ru/g;
     separator:          [ 'noop', /[,;]/, 'separator' ],
+    tokenizer:          [ 'func', null, 'tokenizer' ],
 };
 
 const XBubbles = Object.create(HTMLDivElement.prototype, {
@@ -115,7 +116,7 @@ module.exports = context.document.registerElement('x-bubbles', {
 });
 
 const OPTIONS_PREPARE = {
-    funk: function (value) {
+    func: function (value) {
         const type = typeof value;
         switch (type) {
         case 'string':

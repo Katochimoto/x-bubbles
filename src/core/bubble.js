@@ -101,9 +101,10 @@ function create(nodeSet, dataText, dataAttributes = {}) {
 }
 
 function bubbling(nodeSet) {
-    const separator = nodeSet.options('separator');
-    const ending = nodeSet.options('ending');
     const begining = nodeSet.options('begining');
+    const ending = nodeSet.options('ending');
+    const separator = nodeSet.options('separator');
+    const tokenizer = nodeSet.options('tokenizer');
     const ranges = getBubbleRanges(nodeSet);
     const nodes = [];
 
@@ -117,7 +118,10 @@ function bubbling(nodeSet) {
 
         let textParts = [ dataText ];
 
-        if (separator) {
+        if (tokenizer) {
+            textParts = tokenizer(dataText);
+
+        } else if (separator) {
             textParts = dataText
                 .split(separator)
                 .map(trimIterator)
@@ -137,8 +141,9 @@ function bubbling(nodeSet) {
                 .filter(nonEmptyIterator);
         }
 
-        if (!textParts.length) {
-            range.deleteContents();
+        if (!Array.isArray(textParts) || !textParts.length) {
+            // range.deleteContents();
+            return;
         }
 
         const fragment = context.document.createDocumentFragment();
