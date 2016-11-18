@@ -741,7 +741,7 @@ var XBubbles =
 	        }
 
 	        if (!Array.isArray(textParts) || !textParts.length) {
-	            // range.deleteContents();
+	            range.deleteContents();
 	            return;
 	        }
 
@@ -3250,8 +3250,8 @@ var XBubbles =
 	        case KEY.Comma:
 	        case KEY.Semicolon:
 	            // event.preventDefault();
-	            bubble.bubbling(nodeEditor);
-	            cursor.restore(nodeEditor);
+	            // bubble.bubbling(nodeEditor);
+	            // cursor.restore(nodeEditor);
 	            break;
 	    }
 	}

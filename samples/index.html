@@ -66,24 +66,125 @@
 </head>
 <body>
 <script>
+var REG_EMAIL = /^[^@\s,;]+@[^\.\s,;]+(\.[^\.]+)*\.[^@\.\s,;]{2,}$/;
+var REG_CONTCAT = /^(.*)<[^<>]*>$/;
+
 function tokenizer(dataText) {
-    var i = 0;
-    var len = dataText.length;
+    var loop = 999;
+    var tokens = [];
+    var direction = 1;
 
-    for (; i < len; i++) {
+    while (dataText && loop) {
+        if (direction > 0) {
+            dataText = tokenizerArrowRightContact(dataText, tokens);
+            direction = -1;
 
+        } else {
+            dataText = tokenizerArrowLeft(dataText, tokens);
+            direction = 1;
+        }
+
+        loop--;
     }
 
-    return [];
+    return tokens;
 }
+
+function tokenizerArrowLeft(dataText, tokens) {
+    var i = dataText.length - 1;
+
+    for (; i >= 0; i--) {
+        var char = dataText.charAt(i);
+
+        if (char === ',' || char === ';') {
+            var contact = dataText.substring(i + 1).trim();
+
+            if (contact) {
+                tokens.unshift(contact);
+            }
+
+            dataText = cut(dataText, i);
+            i = dataText.length;
+        }
+    }
+
+    if (dataText) {
+        tokens.unshift(dataText.trim());
+        dataText = '';
+    }
+
+    return dataText.trim();
+}
+
+function tokenizerArrowRightContact(dataText, tokens) {
+    var i = 0;
+
+    for (; i < dataText.length; i++) {
+        var char = dataText.charAt(i);
+
+        if (char === '>') {
+            var contact = dataText.substring(0, i + 1).trim();
+
+            if (contact && REG_CONTCAT.test(contact)) {
+                var contactTokens = [];
+                contact = tokenizerArrowRightEmail(contact, contactTokens);
+
+                if (contactTokens.length) {
+                    tokens.push.apply(tokens, contactTokens);
+                }
+
+                tokens.push(contact);
+                dataText = cut(dataText, 0, i + 1);
+                i = -1;
+            }
+        }
+    }
+
+    return dataText.trim();
+}
+
+function tokenizerArrowRightEmail(dataText, tokens) {
+    var i = 0;
+
+    for (; i < dataText.length; i++) {
+        var char = dataText.charAt(i);
+
+        if (char === ',' || char === ';') {
+            var contact = dataText.substring(0, i).trim();
+
+            if (!contact || REG_EMAIL.test(contact)) {
+                contact && tokens.push(contact);
+                dataText = cut(dataText, 0, i + 1);
+                i = -1;
+            }
+        }
+    }
+
+    return dataText.trim();
+}
+
+function cut(str, cutStart, cutEnd) {
+    return str.substr(0, cutStart) + (cutEnd > 0 ? str.substr(cutEnd) : '');
+}
+
+console.log('>>>0', JSON.stringify(',,,,,a,,,b,;;;c;;;;,d,,,'), JSON.stringify(tokenizer(',,,,,a,,,b,;;;c;;;;,d,,,')));
+console.log('>>>1', JSON.stringify('asd@ya.ru'), JSON.stringify(tokenizer('asd@ya.ru')));
+console.log('>>>2', JSON.stringify('asd@ya.ru, asdqwe'), JSON.stringify(tokenizer('asd@ya.ru, asdqwe')));
+console.log('>>>3', JSON.stringify('asd@ya.ru, , asdqwe, qwe@ya.ru'), JSON.stringify(tokenizer('asd@ya.ru, , asdqwe, qwe@ya.ru')));
+console.log('>>>4', JSON.stringify('test <test@ya.ru>'), JSON.stringify(tokenizer('test <test@ya.ru>')));
+console.log('>>>5', JSON.stringify('asd <asd@ya.ru>, ,,,, qwe <qwe@ya.ru>'), JSON.stringify(tokenizer('asd <asd@ya.ru>, ,,,, qwe <qwe@ya.ru>')));
+console.log('>>>6', JSON.stringify('test1, test2 <test@ya.ru>'), JSON.stringify(tokenizer('test1, test2 <test@ya.ru>')));
+console.log('>>>7', JSON.stringify('test1@ya.ru, test2 <test@ya.ru>'), JSON.stringify(tokenizer('test1@ya.ru, test2 <test@ya.ru>')));
+console.log('>>>8', JSON.stringify('test0, test1@ya.ru, test2 <test@ya.ru>'), JSON.stringify(tokenizer('test0, test1@ya.ru, test2 <test@ya.ru>')));
 </script>
 <div style="margin-top: 0;">
     <div class="bubbles" id="test" is="x-bubbles" tabindex="0" data-tokenizer="tokenizer">
         123,456,789
     </div>
     <br/>
-    <div class="bubbles" is="x-bubbles" tabindex="0"></div>
+    <div class="bubbles" is="x-bubbles" tabindex="0" data-tokenizer="tokenizer"></div>
 </div>
+<input id="add-bubble-text" value="qwe" style="width: 400px;" />
 <button id="add-bubble">addBubble</button>
 <script>
 var set = document.getElementById('test');
@@ -106,7 +207,7 @@ set.addEventListener('blur', function(event) {
 
 document.getElementById('add-bubble')
 .addEventListener('click', function(event) {
-    set.addBubble('qwe');
+    set.addBubble(document.getElementById('add-bubble-text').value);
 }, false);
 </script>
 </body>

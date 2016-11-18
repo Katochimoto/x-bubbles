@@ -142,7 +142,7 @@ function bubbling(nodeSet) {
         }
 
         if (!Array.isArray(textParts) || !textParts.length) {
-            // range.deleteContents();
+            range.deleteContents();
             return;
         }
 

@@ -121,8 +121,8 @@ function onKeypress(event) {
     case KEY.Comma:
     case KEY.Semicolon:
         // event.preventDefault();
-        bubble.bubbling(nodeEditor);
-        cursor.restore(nodeEditor);
+        // bubble.bubbling(nodeEditor);
+        // cursor.restore(nodeEditor);
         break;
     }
 }
