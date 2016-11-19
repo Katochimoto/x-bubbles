@@ -118,12 +118,13 @@ function onKeypress(event) {
         }
         break;
 
-    case KEY.Comma:
-    case KEY.Semicolon:
-        // event.preventDefault();
-        // bubble.bubbling(nodeEditor);
-        // cursor.restore(nodeEditor);
-        break;
+    default:
+        const separator = nodeEditor.options('separator');
+        if (separator && separator.test(String.fromCharCode(code))) {
+            event.preventDefault();
+            bubble.bubbling(nodeEditor);
+            cursor.restore(nodeEditor);
+        }
     }
 }
 

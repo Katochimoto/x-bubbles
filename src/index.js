@@ -5,16 +5,16 @@ const bubble = require('./core/bubble');
 const bubbleset = require('./core/bubbleset');
 
 const OPTIONS = {
-    begining:           [ 'noop', null, 'begining' ],
+    begining:           [ 'reg', null, 'begining' ],
     bubbleCopy:         [ 'func', bubbleCopyOption, 'bubble-copy' ],
     bubbleDeformation:  [ 'func', function () {}, 'bubble-deformation' ],
     bubbleFormation:    [ 'func', function () {}, 'bubble-formation' ],
     checkBubblePaste:   [ 'func', checkBubblePasteOption, 'check-bubble-paste' ],
-    classBubble:        [ 'noop', 'bubble', 'class-bubble' ],
+    classBubble:        [ 'str', 'bubble', 'class-bubble' ],
     disableControls:    [ 'bool', false, 'disable-controls' ],
     draggable:          [ 'bool', true, 'draggable' ],
-    ending:             [ 'noop', null, 'ending' ], // /\@ya\.ru/g;
-    separator:          [ 'noop', /[,;]/, 'separator' ],
+    ending:             [ 'reg', null, 'ending' ], // /\@ya\.ru/g;
+    separator:          [ 'reg', /[,;]/, 'separator' ],
     tokenizer:          [ 'func', null, 'tokenizer' ],
 };
 
@@ -138,6 +138,23 @@ const OPTIONS_PREPARE = {
     },
     noop: function (value) {
         return value;
+    },
+    reg: function (value) {
+        const type = typeof value;
+        switch (type) {
+        case 'string':
+            return value ? new RegExp(value) : null;
+
+        case 'object':
+            if (value instanceof context.RegExp) {
+                return value;
+            }
+        }
+    },
+    str: function (value) {
+        if (typeof value !== 'undefined') {
+            return value ? String(value) : '';
+        }
     },
 };
 

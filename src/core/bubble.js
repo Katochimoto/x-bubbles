@@ -121,24 +121,26 @@ function bubbling(nodeSet) {
         if (tokenizer) {
             textParts = tokenizer(dataText);
 
-        } else if (separator) {
-            textParts = dataText
-                .split(separator)
-                .map(trimIterator)
-                .filter(nonEmptyIterator);
-        }
+        } else {
+            if (separator) {
+                textParts = dataText
+                    .split(separator)
+                    .map(trimIterator)
+                    .filter(nonEmptyIterator);
+            }
 
-        if (ending) {
-            textParts = textParts
-                .reduce((parts, str) => parts.concat(parseFragmentByEnding(str, ending)), [])
-                .map(trimIterator)
-                .filter(nonEmptyIterator);
+            if (ending) {
+                textParts = textParts
+                    .reduce((parts, str) => parts.concat(parseFragmentByEnding(str, ending)), [])
+                    .map(trimIterator)
+                    .filter(nonEmptyIterator);
 
-        } else if (begining) {
-            textParts = textParts
-                .reduce((parts, str) => parts.concat(parseFragmentByBeginning(str, begining)), [])
-                .map(trimIterator)
-                .filter(nonEmptyIterator);
+            } else if (begining) {
+                textParts = textParts
+                    .reduce((parts, str) => parts.concat(parseFragmentByBeginning(str, begining)), [])
+                    .map(trimIterator)
+                    .filter(nonEmptyIterator);
+            }
         }
 
         if (!Array.isArray(textParts) || !textParts.length) {
