@@ -195,7 +195,14 @@ var XBubbles =
 	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
 	        switch (type) {
 	            case 'string':
-	                return value ? new RegExp(value) : null;
+	                if (value) {
+	                    var match = value.match(/\/(.+)\/([gimy]{0,3})/i);
+	                    if (match) {
+	                        return new RegExp(match[1], match[2]);
+	                    }
+	                }
+
+	                return null;
 
 	            case 'object':
 	                if (value instanceof context.RegExp) {
