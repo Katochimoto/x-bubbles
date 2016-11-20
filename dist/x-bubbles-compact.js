@@ -58,16 +58,17 @@ var XBubbles =
 	var bubbleset = __webpack_require__(7);
 
 	var OPTIONS = {
-	    begining: ['noop', null, 'begining'],
-	    bubbleCopy: ['funk', bubbleCopyOption, 'bubble-copy'],
-	    bubbleDeformation: ['funk', function () {}, 'bubble-deformation'],
-	    bubbleFormation: ['funk', function () {}, 'bubble-formation'],
-	    checkBubblePaste: ['funk', checkBubblePasteOption, 'check-bubble-paste'],
-	    classBubble: ['noop', 'bubble', 'class-bubble'],
+	    begining: ['reg', null, 'begining'],
+	    bubbleCopy: ['func', bubbleCopyOption, 'bubble-copy'],
+	    bubbleDeformation: ['func', function () {}, 'bubble-deformation'],
+	    bubbleFormation: ['func', function () {}, 'bubble-formation'],
+	    checkBubblePaste: ['func', checkBubblePasteOption, 'check-bubble-paste'],
+	    classBubble: ['str', 'bubble', 'class-bubble'],
 	    disableControls: ['bool', false, 'disable-controls'],
 	    draggable: ['bool', true, 'draggable'],
-	    ending: ['noop', null, 'ending'], // /\@ya\.ru/g;
-	    separator: ['noop', /[,;]/, 'separator']
+	    ending: ['reg', null, 'ending'], // /\@ya\.ru/g;
+	    separator: ['reg', /[,;]/, 'separator'],
+	    tokenizer: ['func', null, 'tokenizer']
 	};
 
 	var XBubbles = Object.create(HTMLDivElement.prototype, {
@@ -167,7 +168,7 @@ var XBubbles =
 	});
 
 	var OPTIONS_PREPARE = {
-	    funk: function funk(value) {
+	    func: function func(value) {
 	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
 	        switch (type) {
 	            case 'string':
@@ -189,6 +190,30 @@ var XBubbles =
 	    },
 	    noop: function noop(value) {
 	        return value;
+	    },
+	    reg: function reg(value) {
+	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+	        switch (type) {
+	            case 'string':
+	                if (value) {
+	                    var match = value.match(/\/(.+)\/([gimy]{0,3})/i);
+	                    if (match) {
+	                        return new RegExp(match[1], match[2]);
+	                    }
+	                }
+
+	                return null;
+
+	            case 'object':
+	                if (value instanceof context.RegExp) {
+	                    return value;
+	                }
+	        }
+	    },
+	    str: function str(value) {
+	        if (typeof value !== 'undefined') {
+	            return value ? String(value) : '';
+	        }
 	    }
 	};
 
@@ -706,9 +731,10 @@ var XBubbles =
 	}
 
 	function bubbling(nodeSet) {
-	    var separator = nodeSet.options('separator');
-	    var ending = nodeSet.options('ending');
 	    var begining = nodeSet.options('begining');
+	    var ending = nodeSet.options('ending');
+	    var separator = nodeSet.options('separator');
+	    var tokenizer = nodeSet.options('tokenizer');
 	    var ranges = getBubbleRanges(nodeSet);
 	    var nodes = [];
 
@@ -722,22 +748,27 @@ var XBubbles =
 
 	        var textParts = [dataText];
 
-	        if (separator) {
-	            textParts = dataText.split(separator).map(trimIterator).filter(nonEmptyIterator);
+	        if (tokenizer) {
+	            textParts = tokenizer(dataText);
+	        } else {
+	            if (separator) {
+	                textParts = dataText.split(separator).map(trimIterator).filter(nonEmptyIterator);
+	            }
+
+	            if (ending) {
+	                textParts = textParts.reduce(function (parts, str) {
+	                    return parts.concat(parseFragmentByEnding(str, ending));
+	                }, []).map(trimIterator).filter(nonEmptyIterator);
+	            } else if (begining) {
+	                textParts = textParts.reduce(function (parts, str) {
+	                    return parts.concat(parseFragmentByBeginning(str, begining));
+	                }, []).map(trimIterator).filter(nonEmptyIterator);
+	            }
 	        }
 
-	        if (ending) {
-	            textParts = textParts.reduce(function (parts, str) {
-	                return parts.concat(parseFragmentByEnding(str, ending));
-	            }, []).map(trimIterator).filter(nonEmptyIterator);
-	        } else if (begining) {
-	            textParts = textParts.reduce(function (parts, str) {
-	                return parts.concat(parseFragmentByBeginning(str, begining));
-	            }, []).map(trimIterator).filter(nonEmptyIterator);
-	        }
-
-	        if (!textParts.length) {
+	        if (!Array.isArray(textParts) || !textParts.length) {
 	            range.deleteContents();
+	            return;
 	        }
 
 	        var fragment = context.document.createDocumentFragment();
@@ -2360,12 +2391,13 @@ var XBubbles =
 	            }
 	            break;
 
-	        case KEY.Comma:
-	        case KEY.Semicolon:
-	            event.preventDefault();
-	            bubble.bubbling(nodeEditor);
-	            cursor.restore(nodeEditor);
-	            break;
+	        default:
+	            var separator = nodeEditor.options('separator');
+	            if (separator && separator.test(String.fromCharCode(code))) {
+	                event.preventDefault();
+	                bubble.bubbling(nodeEditor);
+	                cursor.restore(nodeEditor);
+	            }
 	    }
 	}
 

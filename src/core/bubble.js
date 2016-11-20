@@ -101,9 +101,10 @@ function create(nodeSet, dataText, dataAttributes = {}) {
 }
 
 function bubbling(nodeSet) {
-    const separator = nodeSet.options('separator');
-    const ending = nodeSet.options('ending');
     const begining = nodeSet.options('begining');
+    const ending = nodeSet.options('ending');
+    const separator = nodeSet.options('separator');
+    const tokenizer = nodeSet.options('tokenizer');
     const ranges = getBubbleRanges(nodeSet);
     const nodes = [];
 
@@ -117,28 +118,34 @@ function bubbling(nodeSet) {
 
         let textParts = [ dataText ];
 
-        if (separator) {
-            textParts = dataText
-                .split(separator)
-                .map(trimIterator)
-                .filter(nonEmptyIterator);
+        if (tokenizer) {
+            textParts = tokenizer(dataText);
+
+        } else {
+            if (separator) {
+                textParts = dataText
+                    .split(separator)
+                    .map(trimIterator)
+                    .filter(nonEmptyIterator);
+            }
+
+            if (ending) {
+                textParts = textParts
+                    .reduce((parts, str) => parts.concat(parseFragmentByEnding(str, ending)), [])
+                    .map(trimIterator)
+                    .filter(nonEmptyIterator);
+
+            } else if (begining) {
+                textParts = textParts
+                    .reduce((parts, str) => parts.concat(parseFragmentByBeginning(str, begining)), [])
+                    .map(trimIterator)
+                    .filter(nonEmptyIterator);
+            }
         }
 
-        if (ending) {
-            textParts = textParts
-                .reduce((parts, str) => parts.concat(parseFragmentByEnding(str, ending)), [])
-                .map(trimIterator)
-                .filter(nonEmptyIterator);
-
-        } else if (begining) {
-            textParts = textParts
-                .reduce((parts, str) => parts.concat(parseFragmentByBeginning(str, begining)), [])
-                .map(trimIterator)
-                .filter(nonEmptyIterator);
-        }
-
-        if (!textParts.length) {
+        if (!Array.isArray(textParts) || !textParts.length) {
             range.deleteContents();
+            return;
         }
 
         const fragment = context.document.createDocumentFragment();

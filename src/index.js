@@ -5,16 +5,17 @@ const bubble = require('./core/bubble');
 const bubbleset = require('./core/bubbleset');
 
 const OPTIONS = {
-    begining:           [ 'noop', null, 'begining' ],
-    bubbleCopy:         [ 'funk', bubbleCopyOption, 'bubble-copy' ],
-    bubbleDeformation:  [ 'funk', function () {}, 'bubble-deformation' ],
-    bubbleFormation:    [ 'funk', function () {}, 'bubble-formation' ],
-    checkBubblePaste:   [ 'funk', checkBubblePasteOption, 'check-bubble-paste' ],
-    classBubble:        [ 'noop', 'bubble', 'class-bubble' ],
+    begining:           [ 'reg', null, 'begining' ],
+    bubbleCopy:         [ 'func', bubbleCopyOption, 'bubble-copy' ],
+    bubbleDeformation:  [ 'func', function () {}, 'bubble-deformation' ],
+    bubbleFormation:    [ 'func', function () {}, 'bubble-formation' ],
+    checkBubblePaste:   [ 'func', checkBubblePasteOption, 'check-bubble-paste' ],
+    classBubble:        [ 'str', 'bubble', 'class-bubble' ],
     disableControls:    [ 'bool', false, 'disable-controls' ],
     draggable:          [ 'bool', true, 'draggable' ],
-    ending:             [ 'noop', null, 'ending' ], // /\@ya\.ru/g;
-    separator:          [ 'noop', /[,;]/, 'separator' ],
+    ending:             [ 'reg', null, 'ending' ], // /\@ya\.ru/g;
+    separator:          [ 'reg', /[,;]/, 'separator' ],
+    tokenizer:          [ 'func', null, 'tokenizer' ],
 };
 
 const XBubbles = Object.create(HTMLDivElement.prototype, {
@@ -115,7 +116,7 @@ module.exports = context.document.registerElement('x-bubbles', {
 });
 
 const OPTIONS_PREPARE = {
-    funk: function (value) {
+    func: function (value) {
         const type = typeof value;
         switch (type) {
         case 'string':
@@ -137,6 +138,30 @@ const OPTIONS_PREPARE = {
     },
     noop: function (value) {
         return value;
+    },
+    reg: function (value) {
+        const type = typeof value;
+        switch (type) {
+        case 'string':
+            if (value) {
+                const match = value.match(/\/(.+)\/([gimy]{0,3})/i);
+                if (match) {
+                    return new RegExp(match[1], match[2]);
+                }
+            }
+
+            return null;
+
+        case 'object':
+            if (value instanceof context.RegExp) {
+                return value;
+            }
+        }
+    },
+    str: function (value) {
+        if (typeof value !== 'undefined') {
+            return value ? String(value) : '';
+        }
     },
 };
 
