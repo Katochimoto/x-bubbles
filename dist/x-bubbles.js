@@ -205,7 +205,7 @@ var XBubbles =
 	                return null;
 
 	            case 'object':
-	                if (value instanceof context.RegExp) {
+	                if (value instanceof context.RegExp || value === null) {
 	                    return value;
 	                }
 	        }
