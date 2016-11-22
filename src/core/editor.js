@@ -1,28 +1,47 @@
-const raf = require('raf');
 const context = require('../context');
 const bubbleset = require('./bubbleset');
 const bubble = require('./bubble');
 const cursor = require('./cursor');
-const select = require('./select');
-const { KEY, EV, PROPS } = require('./constant');
+const { EV, PROPS } = require('./constant');
 const text = require('./text');
 const events = require('./events');
 const utils = require('./utils');
+const drag = require('./drag');
+const select = require('./select');
 
-const eventCopy = require('./editor/copy');
-const eventPaste = require('./editor/paste');
-const eventBackspace = require('./editor/backspace');
-const eventDelete = require('./editor/delete');
+const COMMON_EVENTS = {
+    blur: require('./common/blur'),
+    click: require('./common/click'),
+    focus: require('./common/focus'),
+    keydown: require('./common/keydown'),
+};
 
-const EVENTS = {
-    blur: onBlur,
-    click: onClick,
-    focus: onFocus,
-    keydown: onKeydown,
-    keypress: onKeypress,
-    keyup: onKeyup,
+const EDITOR_EVENTS = {
+    blur: require('./editor/blur'),
+    click: require('./editor/click'),
+    focus: require('./editor/focus'),
+    keydown: require('./editor/keydown'),
+    keypress: require('./editor/keypress'),
+    keyup: require('./editor/keyup'),
+    paste: require('./editor/paste'),
+};
+
+const SELECT_EVENTS = {
+    blur: require('./select/blur'),
+    click: require('./select/click'),
+    keydown: require('./select/keydown'),
+    keypress: require('./select/keypress'),
+};
+
+const PROXY_EVENTS = {
+    blur: events.proxyLocal,
+    click: events.proxyLocal,
+    focus: events.proxyLocal,
+    keydown: events.proxyLocal,
+    keypress: events.proxyLocal,
+    keyup: events.proxyLocal,
     mscontrolselect: events.prevent,
-    paste: eventPaste,
+    paste: events.proxyLocal,
     resize: events.prevent,
     resizestart: events.prevent,
 };
@@ -32,13 +51,23 @@ exports.init = function (nodeWrap) {
     nodeEditor.setAttribute('contenteditable', 'true');
     nodeEditor.setAttribute('spellcheck', 'false');
 
-    nodeEditor.fireChange = utils.throttle(fireChange, nodeWrap);
-    nodeEditor.fireEdit = utils.throttle(fireEdit, nodeWrap);
-    nodeEditor.fireInput = utils.throttle(fireInput, nodeWrap);
+    events.onLocal(nodeEditor, COMMON_EVENTS);
+    events.onLocal(nodeEditor, EDITOR_EVENTS);
 
-    events.on(nodeEditor, EVENTS);
+    if (nodeEditor.options('selection')) {
+        events.onLocal(nodeEditor, SELECT_EVENTS);
+        drag.init(nodeEditor);
+    }
+
+    events.on(nodeEditor, PROXY_EVENTS);
+
+    nodeEditor.fireChange = utils.throttle(fireChange, nodeEditor);
+    nodeEditor.fireEdit = utils.throttle(fireEdit, nodeEditor);
+    nodeEditor.fireInput = utils.throttle(fireInput, nodeEditor);
+    nodeEditor.fireBeforeRemove = fireBeforeRemove.bind(nodeEditor);
 
     return {
+        getItems: getItems.bind(nodeEditor),
         addBubble: addBubble.bind(nodeEditor),
         editBubble: editBubble.bind(nodeEditor),
         inputValue: inputValue.bind(nodeEditor),
@@ -47,305 +76,31 @@ exports.init = function (nodeWrap) {
     };
 };
 
-exports.destroy = function (nodeEditor) {
-    events.off(nodeEditor, EVENTS);
+exports.destroy = function (nodeWrap) {
+    const nodeEditor = nodeWrap;
+    events.off(nodeEditor, PROXY_EVENTS);
+    events.offLocal(nodeEditor, COMMON_EVENTS);
+    events.offLocal(nodeEditor, EDITOR_EVENTS);
+
+    if (nodeEditor.options('selection')) {
+        events.offLocal(nodeEditor, SELECT_EVENTS);
+        drag.destroy(nodeEditor);
+    }
 };
 
-function onBlur(event) {
-    const nodeEditor = event.currentTarget;
-    if (nodeEditor[ PROPS.LOCK_COPY ]) {
-        return events.prevent(event);
-    }
-
-    select.clear(nodeEditor);
-    bubble.bubbling(nodeEditor);
-}
-
-function onFocus(event) {
-    const nodeEditor = event.currentTarget;
-    if (nodeEditor[ PROPS.LOCK_COPY ]) {
-        events.prevent(event);
-        delete nodeEditor[ PROPS.LOCK_COPY ];
-
-        // Safary 10 не сбрасывает курсор без задержки
-        raf(() => {
-            const selection = context.getSelection();
-            selection && selection.removeAllRanges();
-        });
-
-        return false;
-    }
-
-    cursor.restore(nodeEditor);
-}
-
-function onKeyup(event) {
-    const nodeEditor = event.currentTarget;
-    const code = events.keyCode(event);
-    const isPrintableChar = do {
-        if (event.key) {
-            event.key.length === 1;
-
-        } else {
-            ((code > 47 || code === KEY.Space || code === KEY.Backspace) && code !== KEY.Cmd);
-        }
-    };
-
-    if (isPrintableChar) {
-        nodeEditor.fireInput();
-    }
-}
-
-function onKeypress(event) {
-    const code = events.keyCode(event);
-    const nodeEditor = event.currentTarget;
-
-    /* eslint no-case-declarations: 0 */
-    switch (code) {
-    case KEY.Enter:
-        event.preventDefault();
-        if (!nodeEditor.options('disableControls')) {
-            if (!editBubbleKeyboardEvent(nodeEditor)) {
-                bubble.bubbling(nodeEditor);
-                cursor.restore(nodeEditor);
-            }
-        }
-        break;
-
-    case KEY.Space:
-        if (editBubbleKeyboardEvent(nodeEditor)) {
-            event.preventDefault();
-        }
-        break;
-
-    default:
-        const separator = nodeEditor.options('separator');
-        if (separator && separator.test(String.fromCharCode(code))) {
-            event.preventDefault();
-            bubble.bubbling(nodeEditor);
-            cursor.restore(nodeEditor);
-        }
-    }
-}
-
-function onKeydown(event) {
-    const code = events.keyCode(event);
-    const metaKey = events.metaKey(event);
-    const nodeEditor = event.currentTarget;
-    const enable = !nodeEditor.options('disableControls');
-
-    switch (code) {
-    case KEY.Esc:
-        event.preventDefault();
-        bubble.bubbling(nodeEditor);
-        cursor.restore(nodeEditor);
-        break;
-
-    case KEY.Backspace:
-        event.preventDefault();
-        eventBackspace(event);
-        break;
-
-    case KEY.Delete:
-        event.preventDefault();
-        eventDelete(event);
-        break;
-
-    case KEY.Left:
-        event.preventDefault();
-        arrowLeft(event);
-        break;
-
-    // сдвигаем курсор в начало списка
-    case KEY.Top:
-        event.preventDefault();
-        if (enable) {
-            const headBubble = bubbleset.headBubble(nodeEditor);
-            headBubble && select.uniq(headBubble);
-        }
-        break;
-
-    case KEY.Right:
-        event.preventDefault();
-        arrowRight(event);
-        break;
-
-    // сдвигаем курсор в конец списка
-    // case KEY.Tab:
-    case KEY.Bottom:
-        event.preventDefault();
-        if (enable && select.has(nodeEditor)) {
-            cursor.restore(nodeEditor);
-        }
-        break;
-
-    case KEY.a:
-        if (metaKey) {
-            event.preventDefault();
-
-            if (!text.selectAll(null, event.currentTarget)) {
-                select.all(nodeEditor);
-            }
-        }
-        break;
-
-    case KEY.c:
-        if (metaKey) {
-            eventCopy(event);
-        }
-        break;
-
-    case KEY.x:
-        if (metaKey) {
-            eventCopy(event, () => eventDelete(event));
-        }
-        break;
-    }
-}
-
-function arrowLeft(event) {
-    const selection = context.getSelection();
-
-    if (text.arrowLeft(selection, event.shiftKey)) {
-        return;
-    }
-
-    if (selection.anchorNode && selection.anchorNode.nodeType === Node.TEXT_NODE) {
-        const nodeBubble = bubbleset.prevBubble(selection.anchorNode);
-        nodeBubble && select.uniq(nodeBubble);
-        return;
-    }
-
-    const nodeSet = event.currentTarget;
-    const list = select.get(nodeSet);
-    const begin = do {
-        if (list.length > 1 && list[ 0 ] === nodeSet.startRangeSelect) {
-            list[ list.length - 1 ];
-
-        } else {
-            list[ 0 ];
-        }
-    };
-
-    const node = bubbleset.prevBubble(begin);
-
-    if (node) {
-        if (event.shiftKey) {
-            select.range(node);
-
-        } else {
-            select.uniq(node);
-        }
-    }
-}
-
-function arrowRight(event) {
-    const selection = context.getSelection();
-
-    if (text.arrowRight(selection, event.shiftKey)) {
-        return;
-    }
-
-    if (selection.focusNode && selection.focusNode.nodeType === Node.TEXT_NODE) {
-        const nodeBubble = bubbleset.nextBubble(selection.focusNode);
-        nodeBubble && select.uniq(nodeBubble);
-        return;
-    }
-
-    const nodeSet = event.currentTarget;
-    const list = select.get(nodeSet);
-    const begin = do {
-        if (list.length > 1 && list[ list.length - 1 ] === nodeSet.startRangeSelect) {
-            list[ 0 ];
-
-        } else {
-            list[ list.length - 1 ];
-        }
-    };
-
-    const node = bubbleset.nextBubble(begin);
-
-    if (node) {
-        if (event.shiftKey) {
-            select.range(node);
-
-        } else {
-            select.uniq(node);
-        }
-
-    } else if (begin && begin.nextSibling && begin.nextSibling.nodeType === Node.TEXT_NODE) {
-        select.clear(nodeSet);
-        selection.collapse(begin.nextSibling, 0);
-
-    } else {
-        cursor.restore(nodeSet);
-    }
-}
-
-function onClick(event) {
-    const nodeSet = bubbleset.closestNodeSet(event.target);
-
-    if (!nodeSet) {
-        return;
-    }
-
-    const nodeBubble = bubbleset.closestNodeBubble(event.target);
-
-    if (nodeBubble) {
-        const clickTime = Date.now();
-        const isDblclick = nodeSet[ PROPS.CLICK_TIME ] && (clickTime - nodeSet[ PROPS.CLICK_TIME ]) < 200;
-
-        nodeSet[ PROPS.CLICK_TIME ] = clickTime;
-
-        if (events.metaKey(event)) {
-            select.add(nodeBubble);
-
-        } else if (event.shiftKey) {
-            if (!nodeSet.startRangeSelect) {
-                select.uniq(nodeBubble);
-
-            } else {
-                select.range(nodeBubble);
-            }
-
-        } else if (isDblclick) {
-            bubble.edit(nodeSet, nodeBubble);
-
-        } else {
-            select.toggleUniq(nodeBubble);
-        }
-
-    } else {
-        select.clear(nodeSet);
-
-        const selection = context.getSelection();
-
-        if (!selection ||
-            !selection.anchorNode ||
-            selection.anchorNode.nodeType !== Node.TEXT_NODE) {
-
-            cursor.restore(nodeSet);
-        }
-    }
-}
-
-function editBubbleKeyboardEvent(nodeEditor) {
-    const selection = context.getSelection();
-
-    if (!selection || !selection.rangeCount) {
-        const list = select.get(nodeEditor);
-
-        if (list.length === 1) {
-            return bubble.edit(nodeEditor, list[0]);
-        }
-    }
-
-    return false;
+function getItems() {
+    return bubbleset.getBubbles(this);
 }
 
 function setContent(data) {
     var selection = context.getSelection();
     selection && selection.removeAllRanges();
+
+    const list = select.get(this);
+    if (list.length) {
+        bubbleset.removeBubbles(this, list);
+        this.fireChange();
+    }
 
     while (this.firstChild) {
         this.removeChild(this.firstChild);
@@ -375,7 +130,7 @@ function addBubble(bubbleText, dataAttributes) {
 
 function removeBubble(nodeBubble) {
     if (this.contains(nodeBubble)) {
-        this.removeChild(nodeBubble);
+        bubbleset.removeBubbles(this, [ nodeBubble ]);
         this.fireChange();
         return true;
     }
@@ -445,4 +200,20 @@ function fireInput() {
             detail: { data: editText }
         });
     }
+}
+
+/**
+ * Генерация события удаления баблов перед выполнением удаления из DOM.
+ * Выполняется в контексте узла-обертки.
+ * @alias module:x-bubbles/editor.fireRemove
+ * @param {array} list список удаляемых узлов
+ * @this HTMLElement
+ * @private
+ */
+function fireBeforeRemove(list) {
+    events.dispatch(this, EV.BEFORE_REMOVE, {
+        bubbles: false,
+        cancelable: false,
+        detail: { data: list }
+    });
 }

@@ -11,6 +11,8 @@ exports.headBubble = headBubble;
 exports.lastBubble = lastBubble;
 exports.nextBubble = nextBubble;
 exports.prevBubble = prevBubble;
+exports.removeBubbles = removeBubbles;
+exports.moveBubbles = moveBubbles;
 
 function lastBubble(nodeSet) {
     return nodeSet.querySelector('[bubble]:last-child');
@@ -129,4 +131,14 @@ function isEditorNode(node) {
         node.nodeType === Node.ELEMENT_NODE &&
         node.getAttribute('is') === 'x-bubbles'
     );
+}
+
+function removeBubbles(nodeEditor, list) {
+    nodeEditor.fireBeforeRemove(list);
+    list.forEach(item => nodeEditor.removeChild(item));
+}
+
+function moveBubbles(nodeEditorFrom, nodeEditorTo, list) {
+    nodeEditorFrom.fireBeforeRemove(list);
+    list.forEach(item => nodeEditorTo.appendChild(item));
 }

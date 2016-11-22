@@ -57,22 +57,22 @@ function edit(nodeSet, nodeBubble) {
 
 /**
  * У обертки нельзя делать tabindex=-1, иначе будет слетать фокус с поля ввода.
- * @param   {[type]} nodeSet             [description]
- * @param   {[type]} dataText            [description]
- * @param   {Object} [dataAttributes={}] [description]
- * @returns {[type]}                     [description]
+ * @param {HTMLElement} nodeEditor
+ * @param {string} dataText
+ * @param {Object} [dataAttributes={}]
+ * @returns {?HTMLElement}
  */
-function create(nodeSet, dataText, dataAttributes = {}) {
+function create(nodeEditor, dataText, dataAttributes = {}) {
     dataText = text.textClean(dataText);
 
     if (!dataText) {
         return;
     }
 
-    const bubbleFormation = nodeSet.options('bubbleFormation');
-    const classBubble = nodeSet.options('classBubble');
-    const draggable = canUseDrag && nodeSet.options('draggable');
-    const wrap = nodeSet.ownerDocument.createElement('span');
+    const bubbleFormation = nodeEditor.options('bubbleFormation');
+    const classBubble = nodeEditor.options('classBubble');
+    const draggable = canUseDrag && nodeEditor.options('draggable') && nodeEditor.options('selection');
+    const wrap = nodeEditor.ownerDocument.createElement('span');
 
     wrap.innerText = dataText;
 

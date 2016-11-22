@@ -83,7 +83,7 @@ function onMouseup(dragSet, event) {
             const list = select.get(currentDragSet);
 
             if (list.length) {
-                list.forEach(item => nodeSet.appendChild(item));
+                bubbleset.moveBubbles(currentDragSet, nodeSet, list);
                 context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
             }
         }
