@@ -2115,11 +2115,12 @@ var XBubbles =
 	    nodeSet.focus();
 
 	    var drag = nodeSet.__drag__ = {
-	        onMouseup: onMouseup.bind(this, nodeSet),
-	        onMousemove: utils.throttle(onMousemove.bind(this, nodeSet)),
-	        onScroll: utils.throttle(onScroll.bind(this, nodeSet)),
+	        nodeBubble: nodeBubble,
 	        nodeOffsetX: event.offsetX,
 	        nodeOffsetY: event.offsetY,
+	        onMousemove: utils.throttle(onMousemove.bind(this, nodeSet)),
+	        onMouseup: onMouseup.bind(this, nodeSet),
+	        onScroll: utils.throttle(onScroll.bind(this, nodeSet)),
 	        x: 0,
 	        y: 0
 	    };
@@ -2181,7 +2182,7 @@ var XBubbles =
 	    }
 	}
 
-	function onMousemove(dragSet, event) {
+	function onMousemove(dragSet) {
 	    var drag = dragSet.__drag__;
 	    if (!drag) {
 	        return;
@@ -2193,15 +2194,12 @@ var XBubbles =
 
 	        currentDragSet = dragSet;
 	        currentDragSet.classList.add(CLS.DRAGSTART);
+	        select.add(drag.nodeBubble);
 
-	        var nodeBubble = bubbleset.closestNodeBubble(event.target);
 	        var moveElement = void 0;
 
-	        if (nodeBubble) {
-	            select.add(nodeBubble);
-	            if (select.get(currentDragSet).length === 1) {
-	                moveElement = nodeBubble.cloneNode(true);
-	            }
+	        if (select.get(currentDragSet).length === 1) {
+	            moveElement = drag.nodeBubble.cloneNode(true);
 	        }
 
 	        if (!moveElement) {
