@@ -51,10 +51,10 @@ var XBubbles =
 
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-	// const raf = require('raf');
 	var context = __webpack_require__(1);
 	var editor = __webpack_require__(2);
 	var bubble = __webpack_require__(4);
+	var utils = __webpack_require__(6);
 
 	var OPTIONS = {
 	    begining: ['reg', null, 'begining'],
@@ -143,6 +143,12 @@ var XBubbles =
 	    editBubble: {
 	        value: function value(nodeBubble) {
 	            return this.editor.editBubble(nodeBubble);
+	        }
+	    },
+
+	    ready: {
+	        value: function value(callback) {
+	            utils.ready(callback, this);
 	        }
 	    }
 	});
@@ -259,27 +265,6 @@ var XBubbles =
 	function checkBubblePasteOption() {
 	    return true;
 	}
-
-	/*
-	function bootstrap() {
-	    raf(function () {
-	        setTimeout(function () {
-	            console.log('>>');
-	        });
-	    });
-	}
-
-	if (context.document.readyState === 'complete') {
-	    bootstrap();
-
-	} else if (context.document.readyState === 'interactive' && !context.attachEvent && (!context.HTMLImports || context.HTMLImports.ready)) {
-	    bootstrap();
-
-	} else {
-	    const loadEvent = context.HTMLImports && !context.HTMLImports.ready ? 'HTMLImportsLoaded' : 'DOMContentLoaded';
-	    context.addEventListener(loadEvent, bootstrap);
-	}
-	*/
 
 /***/ },
 /* 1 */
@@ -1435,6 +1420,39 @@ var XBubbles =
 
 	exports.isIE = function () {
 	    return REG_IE.test(context.navigator.userAgent);
+	}();
+
+	exports.ready = function () {
+	    var callbacks = [];
+	    var ready = false;
+
+	    function onready() {
+	        raf(function () {
+	            context.setTimeout(function () {
+	                ready = true;
+	                callbacks.forEach(function (item) {
+	                    return item[0].call(item[1]);
+	                });
+	                callbacks = [];
+	            });
+	        });
+	    }
+
+	    if (context.document.readyState === 'complete') {
+	        onready();
+	    } else if (context.document.readyState === 'interactive' && !context.attachEvent && (!context.HTMLImports || context.HTMLImports.ready)) {
+	        onready();
+	    } else {
+	        context.addEventListener(context.HTMLImports && !context.HTMLImports.ready ? 'HTMLImportsLoaded' : 'DOMContentLoaded', onready);
+	    }
+
+	    return function (callback, callContext) {
+	        if (ready) {
+	            callback.call(callContext);
+	        } else {
+	            callbacks.push([callback, callContext]);
+	        }
+	    };
 	}();
 
 	function unescapeHtmlChar(chr) {

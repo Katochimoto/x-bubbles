@@ -106,6 +106,40 @@ exports.isIE = (function () {
     return REG_IE.test(context.navigator.userAgent);
 })();
 
+exports.ready = (function () {
+    let callbacks = [];
+    let ready = false;
+
+    function onready() {
+        raf(function () {
+            context.setTimeout(function () {
+                ready = true;
+                callbacks.forEach(item => item[0].call(item[1]));
+                callbacks = [];
+            });
+        });
+    }
+
+    if (context.document.readyState === 'complete') {
+        onready();
+
+    } else if (context.document.readyState === 'interactive' && !context.attachEvent && (!context.HTMLImports || context.HTMLImports.ready)) {
+        onready();
+
+    } else {
+        context.addEventListener(context.HTMLImports && !context.HTMLImports.ready ? 'HTMLImportsLoaded' : 'DOMContentLoaded', onready);
+    }
+
+    return function (callback, callContext) {
+        if (ready) {
+            callback.call(callContext);
+
+        } else {
+            callbacks.push([ callback, callContext ]);
+        }
+    };
+})();
+
 function unescapeHtmlChar(chr) {
     return HTML_UNESCAPES[ chr ];
 }

@@ -1,7 +1,7 @@
-// const raf = require('raf');
 const context = require('./context');
 const editor = require('./core/editor');
 const bubble = require('./core/bubble');
+const utils = require('./core/utils');
 
 const OPTIONS = {
     begining:           [ 'reg', null, 'begining' ],
@@ -92,7 +92,13 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
         value: function (nodeBubble) {
             return this.editor.editBubble(nodeBubble);
         }
-    }
+    },
+
+    ready: {
+        value: function (callback) {
+            utils.ready(callback, this);
+        }
+    },
 });
 
 module.exports = context.document.registerElement('x-bubbles', {
@@ -202,24 +208,3 @@ function bubbleCopyOption(list) {
 function checkBubblePasteOption() {
     return true;
 }
-
-/*
-function bootstrap() {
-    raf(function () {
-        setTimeout(function () {
-            console.log('>>');
-        });
-    });
-}
-
-if (context.document.readyState === 'complete') {
-    bootstrap();
-
-} else if (context.document.readyState === 'interactive' && !context.attachEvent && (!context.HTMLImports || context.HTMLImports.ready)) {
-    bootstrap();
-
-} else {
-    const loadEvent = context.HTMLImports && !context.HTMLImports.ready ? 'HTMLImportsLoaded' : 'DOMContentLoaded';
-    context.addEventListener(loadEvent, bootstrap);
-}
-*/
