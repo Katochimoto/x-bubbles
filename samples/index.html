@@ -166,7 +166,7 @@ function tokenizerArrowRightEmail(dataText, tokens) {
 function cut(str, cutStart, cutEnd) {
     return str.substr(0, cutStart) + (cutEnd > 0 ? str.substr(cutEnd) : '');
 }
-
+/*
 console.log('>>>0', JSON.stringify(',,,,,a,,,b,;;;c;;;;,d,,,'), JSON.stringify(tokenizer(',,,,,a,,,b,;;;c;;;;,d,,,')));
 console.log('>>>1', JSON.stringify('asd@ya.ru'), JSON.stringify(tokenizer('asd@ya.ru')));
 console.log('>>>2', JSON.stringify('asd@ya.ru, asdqwe'), JSON.stringify(tokenizer('asd@ya.ru, asdqwe')));
@@ -176,6 +176,7 @@ console.log('>>>5', JSON.stringify('asd <asd@ya.ru>, ,,,, qwe <qwe@ya.ru>'), JSO
 console.log('>>>6', JSON.stringify('test1, test2 <test@ya.ru>'), JSON.stringify(tokenizer('test1, test2 <test@ya.ru>')));
 console.log('>>>7', JSON.stringify('test1@ya.ru, test2 <test@ya.ru>'), JSON.stringify(tokenizer('test1@ya.ru, test2 <test@ya.ru>')));
 console.log('>>>8', JSON.stringify('test0, test1@ya.ru, test2 <test@ya.ru>'), JSON.stringify(tokenizer('test0, test1@ya.ru, test2 <test@ya.ru>')));
+*/
 </script>
 <div style="margin-top: 0;">
     <div class="bubbles"
@@ -183,7 +184,8 @@ console.log('>>>8', JSON.stringify('test0, test1@ya.ru, test2 <test@ya.ru>'), JS
         is="x-bubbles"
         tabindex="0"
         data-tokenizer="tokenizer"
-        data-separator="">
+        data-separator=""
+        data-selection="false">
 
         123,456,789
     </div>
@@ -196,7 +198,7 @@ console.log('>>>8', JSON.stringify('test0, test1@ya.ru, test2 <test@ya.ru>'), JS
 var set = document.getElementById('test');
 
 set.addEventListener('change', function(event) {
-    console.log('change');
+    // console.log('change');
 }, false);
 
 set.addEventListener('bubble-input', function(event) {
@@ -204,11 +206,11 @@ set.addEventListener('bubble-input', function(event) {
 }, false);
 
 set.addEventListener('focus', function(event) {
-    console.log('focus');
+    // console.log('focus');
 }, false);
 
 set.addEventListener('blur', function(event) {
-    console.log('blur');
+    // console.log('blur');
 }, false);
 
 document.getElementById('add-bubble')

@@ -1,8 +1,7 @@
 const context = require('./context');
-const drag = require('./core/drag');
 const editor = require('./core/editor');
 const bubble = require('./core/bubble');
-const bubbleset = require('./core/bubbleset');
+const utils = require('./core/utils');
 
 const OPTIONS = {
     begining:           [ 'reg', null, 'begining' ],
@@ -13,7 +12,8 @@ const OPTIONS = {
     classBubble:        [ 'str', 'bubble', 'class-bubble' ],
     disableControls:    [ 'bool', false, 'disable-controls' ],
     draggable:          [ 'bool', true, 'draggable' ],
-    ending:             [ 'reg', null, 'ending' ], // /\@ya\.ru/g;
+    ending:             [ 'reg', null, 'ending' ], // /\@ya\.ru/g
+    selection:          [ 'bool', true, 'selection' ],
     separator:          [ 'reg', /[,;]/, 'separator' ],
     tokenizer:          [ 'func', null, 'tokenizer' ],
 };
@@ -28,40 +28,25 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
     attachedCallback: {
         value: function () {
             initEditor(this);
-            drag.init(this);
             bubble.bubbling(this);
         }
     },
 
     detachedCallback: {
         value: function () {
-            drag.destroy(this);
             destroyEditor(this);
         }
     },
 
-    /*
     attributeChangedCallback: {
-        value: function (name, prevValue, value) {}
+        value: function (/* name, prevValue, value */) {
+            reinitOptions(this);
+        }
     },
-    */
 
     options: {
         value: function (name, value) {
-            if (!this._options) {
-                this._options = {};
-
-                for (const optionName in OPTIONS) {
-                    this._options[ optionName ] = undefined;
-
-                    const attrName = `data-${OPTIONS[ optionName ][2]}`;
-                    if (this.hasAttribute(attrName)) {
-                        this._options[ optionName ] = this.getAttribute(attrName);
-                    }
-                }
-
-                optionsPrepare(this._options);
-            }
+            initOptions(this);
 
             if (typeof value !== 'undefined') {
                 this._options[ name ] = value;
@@ -75,7 +60,7 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
 
     items: {
         get: function () {
-            return bubbleset.getBubbles(this);
+            return this.editor.getItems();
         }
     },
 
@@ -107,7 +92,13 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
         value: function (nodeBubble) {
             return this.editor.editBubble(nodeBubble);
         }
-    }
+    },
+
+    ready: {
+        value: function (callback) {
+            utils.ready(callback, this);
+        }
+    },
 });
 
 module.exports = context.document.registerElement('x-bubbles', {
@@ -189,6 +180,25 @@ function destroyEditor(node) {
         editor.destroy(node);
         delete node.editor;
     }
+}
+
+function initOptions(node) {
+    if (!node._options) {
+        reinitOptions(node);
+    }
+}
+
+function reinitOptions(node) {
+    const options = node._options = node._options || {};
+
+    for (const optionName in OPTIONS) {
+        const attrName = `data-${OPTIONS[ optionName ][2]}`;
+        if (node.hasAttribute(attrName)) {
+            options[ optionName ] = node.getAttribute(attrName);
+        }
+    }
+
+    optionsPrepare(options);
 }
 
 function bubbleCopyOption(list) {

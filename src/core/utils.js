@@ -35,6 +35,32 @@ exports.getSelection = function (nodeEditor) {
     }
 };
 
+exports.correctSelection = function (selection) {
+    let endNode = selection.focusNode;
+    let endOffset = selection.focusOffset;
+    let startNode = selection.anchorNode;
+    let startOffset = selection.anchorOffset;
+    let revert = false;
+
+    if (startNode === endNode) {
+        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
+        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
+        revert = selection.anchorOffset > selection.focusOffset;
+
+    } else {
+        const position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
+        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+            startNode = selection.focusNode;
+            startOffset = selection.focusOffset;
+            endNode = selection.anchorNode;
+            endOffset = selection.anchorOffset;
+            revert = true;
+        }
+    }
+
+    return { startNode, endNode, startOffset, endOffset, revert };
+};
+
 exports.throttle = function (callback, runContext) {
     let throttle = 0;
     const animationCallback = function () {
@@ -78,6 +104,40 @@ exports.canUseDrag = (function () {
 
 exports.isIE = (function () {
     return REG_IE.test(context.navigator.userAgent);
+})();
+
+exports.ready = (function () {
+    let callbacks = [];
+    let ready = false;
+
+    function onready() {
+        raf(function () {
+            context.setTimeout(function () {
+                ready = true;
+                callbacks.forEach(item => item[0].call(item[1]));
+                callbacks = [];
+            });
+        });
+    }
+
+    if (context.document.readyState === 'complete') {
+        onready();
+
+    } else if (context.document.readyState === 'interactive' && !context.attachEvent && (!context.HTMLImports || context.HTMLImports.ready)) {
+        onready();
+
+    } else {
+        context.addEventListener(context.HTMLImports && !context.HTMLImports.ready ? 'HTMLImportsLoaded' : 'DOMContentLoaded', onready);
+    }
+
+    return function (callback, callContext) {
+        if (ready) {
+            callback.call(callContext);
+
+        } else {
+            callbacks.push([ callback, callContext ]);
+        }
+    };
 })();
 
 function unescapeHtmlChar(chr) {
