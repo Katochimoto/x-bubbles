@@ -16,11 +16,14 @@ module.exports = function (event, sharedData) {
     const isDblclick = sharedData.isDblclick;
 
     if (nodeBubble) {
-        if (isDblclick &&
-            !event.shiftKey &&
-            !events.metaKey(event)) {
+        if (isDblclick) {
+            if (!event.shiftKey && !events.metaKey(event)) {
+                bubble.edit(nodeEditor, nodeBubble);
+            }
 
-            bubble.edit(nodeEditor, nodeBubble);
+        } else if (!nodeEditor.options('selection')) {
+            bubble.bubbling(nodeEditor);
+            cursor.restore(nodeEditor);
         }
 
     } else {

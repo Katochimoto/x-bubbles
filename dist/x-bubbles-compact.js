@@ -2798,9 +2798,13 @@ var XBubbles =
 	    var isDblclick = sharedData.isDblclick;
 
 	    if (nodeBubble) {
-	        if (isDblclick && !event.shiftKey && !events.metaKey(event)) {
-
-	            bubble.edit(nodeEditor, nodeBubble);
+	        if (isDblclick) {
+	            if (!event.shiftKey && !events.metaKey(event)) {
+	                bubble.edit(nodeEditor, nodeBubble);
+	            }
+	        } else if (!nodeEditor.options('selection')) {
+	            bubble.bubbling(nodeEditor);
+	            cursor.restore(nodeEditor);
 	        }
 	    } else {
 	        var selection = utils.getSelection(nodeEditor);
