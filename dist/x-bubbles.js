@@ -47,29 +47,10 @@ var XBubbles =
 
 	'use strict';
 
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 	var context = __webpack_require__(1);
 	var editor = __webpack_require__(2);
-	var bubble = __webpack_require__(4);
 	var utils = __webpack_require__(6);
-
-	var OPTIONS = {
-	    begining: ['reg', null, 'begining'],
-	    bubbleCopy: ['func', bubbleCopyOption, 'bubble-copy'],
-	    bubbleDeformation: ['func', function () {}, 'bubble-deformation'],
-	    bubbleFormation: ['func', function () {}, 'bubble-formation'],
-	    checkBubblePaste: ['func', checkBubblePasteOption, 'check-bubble-paste'],
-	    classBubble: ['str', 'bubble', 'class-bubble'],
-	    disableControls: ['bool', false, 'disable-controls'],
-	    draggable: ['bool', true, 'draggable'],
-	    ending: ['reg', null, 'ending'], // /\@ya\.ru/g
-	    selection: ['bool', true, 'selection'],
-	    separator: ['reg', /[,;]/, 'separator'],
-	    tokenizer: ['func', null, 'tokenizer']
-	};
+	var options = __webpack_require__(36);
 
 	var XBubbles = Object.create(HTMLDivElement.prototype, {
 	    createdCallback: {
@@ -81,7 +62,7 @@ var XBubbles =
 	    attachedCallback: {
 	        value: function value() {
 	            initEditor(this);
-	            bubble.bubbling(this);
+	            this.editor.bubbling();
 	        }
 	    },
 
@@ -93,20 +74,13 @@ var XBubbles =
 
 	    attributeChangedCallback: {
 	        value: function value() /* name, prevValue, value */{
-	            reinitOptions(this);
+	            options(this);
 	        }
 	    },
 
 	    options: {
 	        value: function value(name, _value) {
-	            initOptions(this);
-
-	            if (typeof _value !== 'undefined') {
-	                this._options[name] = _value;
-	                optionsPrepare(this._options);
-	            } else {
-	                return this._options[name];
-	            }
+	            return options(this, name, _value);
 	        }
 	    },
 
@@ -146,6 +120,12 @@ var XBubbles =
 	        }
 	    },
 
+	    bubbling: {
+	        value: function value() {
+	            return this.editor.bubbling();
+	        }
+	    },
+
 	    ready: {
 	        value: function value(callback) {
 	            utils.ready(callback, this);
@@ -157,69 +137,6 @@ var XBubbles =
 	    extends: 'div',
 	    prototype: XBubbles
 	});
-
-	var OPTIONS_PREPARE = {
-	    func: function func(value) {
-	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
-	        switch (type) {
-	            case 'string':
-	                return new Function('context', 'return context.' + value + ';')(context);
-
-	            case 'function':
-	                return value;
-	        }
-	    },
-	    bool: function bool(value) {
-	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
-	        switch (type) {
-	            case 'string':
-	                return value === 'true' || value === 'on';
-
-	            case 'boolean':
-	                return value;
-	        }
-	    },
-	    noop: function noop(value) {
-	        return value;
-	    },
-	    reg: function reg(value) {
-	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
-	        switch (type) {
-	            case 'string':
-	                if (value) {
-	                    var match = value.match(/\/(.+)\/([gimy]{0,3})/i);
-	                    if (match) {
-	                        return new RegExp(match[1], match[2]);
-	                    }
-	                }
-
-	                return null;
-
-	            case 'object':
-	                if (value instanceof context.RegExp || value === null) {
-	                    return value;
-	                }
-	        }
-	    },
-	    str: function str(value) {
-	        if (typeof value !== 'undefined') {
-	            return value ? String(value) : '';
-	        }
-	    }
-	};
-
-	function optionsPrepare(options) {
-	    for (var name in OPTIONS) {
-	        var _OPTIONS$name = _slicedToArray(OPTIONS[name], 2),
-	            type = _OPTIONS$name[0],
-	            def = _OPTIONS$name[1];
-
-	        options[name] = OPTIONS_PREPARE[type](options[name]);
-	        if (typeof options[name] === 'undefined') {
-	            options[name] = def;
-	        }
-	    }
-	}
 
 	function initEditor(node) {
 	    if (!node.editor) {
@@ -235,35 +152,6 @@ var XBubbles =
 	        editor.destroy(node);
 	        delete node.editor;
 	    }
-	}
-
-	function initOptions(node) {
-	    if (!node._options) {
-	        reinitOptions(node);
-	    }
-	}
-
-	function reinitOptions(node) {
-	    var options = node._options = node._options || {};
-
-	    for (var optionName in OPTIONS) {
-	        var attrName = 'data-' + OPTIONS[optionName][2];
-	        if (node.hasAttribute(attrName)) {
-	            options[optionName] = node.getAttribute(attrName);
-	        }
-	    }
-
-	    optionsPrepare(options);
-	}
-
-	function bubbleCopyOption(list) {
-	    return list.map(function (item) {
-	        return item.innerHTML;
-	    }).join(', ');
-	}
-
-	function checkBubblePasteOption() {
-	    return true;
 	}
 
 /***/ },
@@ -356,9 +244,10 @@ var XBubbles =
 	    nodeEditor.fireBeforeRemove = fireBeforeRemove.bind(nodeEditor);
 
 	    return {
-	        getItems: getItems.bind(nodeEditor),
 	        addBubble: addBubble.bind(nodeEditor),
+	        bubbling: bubbling.bind(nodeEditor),
 	        editBubble: editBubble.bind(nodeEditor),
+	        getItems: getItems.bind(nodeEditor),
 	        inputValue: inputValue.bind(nodeEditor),
 	        removeBubble: removeBubble.bind(nodeEditor),
 	        setContent: setContent.bind(nodeEditor)
@@ -438,6 +327,10 @@ var XBubbles =
 	function inputValue() {
 	    var textRange = text.currentTextRange(this);
 	    return textRange && text.textClean(textRange.toString()) || '';
+	}
+
+	function bubbling() {
+	    bubble.bubbling(this);
 	}
 
 	/**
@@ -2042,8 +1935,9 @@ var XBubbles =
 	exports.PROPS = {
 	    BUBBLE_VALUE: '__bubble_value__',
 	    CLICK_TIME: '__click_time__',
+	    LOCAL_EVENTS: '__events__',
 	    LOCK_COPY: '__lock_copy__',
-	    LOCAL_EVENTS: '__events__'
+	    OPTIONS: '__options__'
 	};
 
 /***/ },
@@ -4503,6 +4397,137 @@ var XBubbles =
 	    }
 
 	    return false;
+	}
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	var context = __webpack_require__(1);
+
+	var _require = __webpack_require__(12),
+	    PROPS = _require.PROPS;
+
+	var REG_STRREG = /\/(.+)\/([gimy]{0,3})/i;
+
+	var OPTIONS = {
+	    begining: ['reg', null, 'begining'],
+	    bubbleCopy: ['func', function (list) {
+	        return list.map(function (item) {
+	            return item.innerHTML;
+	        }).join(', ');
+	    }, 'bubble-copy'],
+	    bubbleDeformation: ['func', function () {}, 'bubble-deformation'],
+	    bubbleFormation: ['func', function () {}, 'bubble-formation'],
+	    checkBubblePaste: ['func', function () {
+	        return true;
+	    }, 'check-bubble-paste'],
+	    classBubble: ['str', 'bubble', 'class-bubble'],
+	    disableControls: ['bool', false, 'disable-controls'],
+	    draggable: ['bool', true, 'draggable'],
+	    ending: ['reg', null, 'ending'], // /\@ya\.ru/g
+	    selection: ['bool', true, 'selection'],
+	    separator: ['reg', /[,;]/, 'separator'],
+	    tokenizer: ['func', null, 'tokenizer']
+	};
+
+	var OPTIONS_PREPARE = {
+	    func: function func(value) {
+	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+	        switch (type) {
+	            case 'string':
+	                return new Function('context', 'return context.' + value + ';')(context);
+
+	            case 'function':
+	                return value;
+	        }
+	    },
+	    bool: function bool(value) {
+	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+	        switch (type) {
+	            case 'string':
+	                return value === 'true' || value === 'on';
+
+	            case 'boolean':
+	                return value;
+	        }
+	    },
+	    noop: function noop(value) {
+	        return value;
+	    },
+	    reg: function reg(value) {
+	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+	        switch (type) {
+	            case 'string':
+	                if (value) {
+	                    var match = value.match(REG_STRREG);
+	                    if (match) {
+	                        return new RegExp(match[1], match[2]);
+	                    }
+	                }
+
+	                return null;
+
+	            case 'object':
+	                if (value instanceof context.RegExp || value === null) {
+	                    return value;
+	                }
+	        }
+	    },
+	    str: function str(value) {
+	        if (typeof value !== 'undefined') {
+	            return value ? String(value) : '';
+	        }
+	    }
+	};
+
+	module.exports = function (node, name, value) {
+	    if (name) {
+	        if (!node[PROPS.OPTIONS]) {
+	            reinitOptions(node);
+	        }
+
+	        if (typeof value !== 'undefined') {
+	            node[PROPS.OPTIONS][name] = value;
+	            prepareOptions(node[PROPS.OPTIONS]);
+	        } else {
+	            return node[PROPS.OPTIONS][name];
+	        }
+	    } else {
+	        reinitOptions(node);
+	    }
+	};
+
+	function reinitOptions(node) {
+	    var options = node[PROPS.OPTIONS] = node[PROPS.OPTIONS] || {};
+
+	    for (var optionName in OPTIONS) {
+	        var attrName = 'data-' + OPTIONS[optionName][2];
+	        if (node.hasAttribute(attrName)) {
+	            options[optionName] = node.getAttribute(attrName);
+	        }
+	    }
+
+	    prepareOptions(options);
+	}
+
+	function prepareOptions(options) {
+	    for (var name in OPTIONS) {
+	        var _OPTIONS$name = _slicedToArray(OPTIONS[name], 2),
+	            type = _OPTIONS$name[0],
+	            def = _OPTIONS$name[1];
+
+	        options[name] = OPTIONS_PREPARE[type](options[name]);
+	        if (typeof options[name] === 'undefined') {
+	            options[name] = def;
+	        }
+	    }
 	}
 
 /***/ }

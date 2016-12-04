@@ -38,6 +38,7 @@ exports.EV = {
 exports.PROPS = {
     BUBBLE_VALUE: '__bubble_value__',
     CLICK_TIME: '__click_time__',
-    LOCK_COPY: '__lock_copy__',
     LOCAL_EVENTS: '__events__',
+    LOCK_COPY: '__lock_copy__',
+    OPTIONS: '__options__',
 };

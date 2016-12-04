@@ -67,9 +67,10 @@ exports.init = function (nodeWrap) {
     nodeEditor.fireBeforeRemove = fireBeforeRemove.bind(nodeEditor);
 
     return {
-        getItems: getItems.bind(nodeEditor),
         addBubble: addBubble.bind(nodeEditor),
+        bubbling: bubbling.bind(nodeEditor),
         editBubble: editBubble.bind(nodeEditor),
+        getItems: getItems.bind(nodeEditor),
         inputValue: inputValue.bind(nodeEditor),
         removeBubble: removeBubble.bind(nodeEditor),
         setContent: setContent.bind(nodeEditor),
@@ -149,6 +150,10 @@ function editBubble(nodeBubble) {
 function inputValue() {
     const textRange = text.currentTextRange(this);
     return textRange && text.textClean(textRange.toString()) || '';
+}
+
+function bubbling() {
+    bubble.bubbling(this);
 }
 
 /**
