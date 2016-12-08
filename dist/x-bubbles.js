@@ -56,6 +56,7 @@ var XBubbles =
 	    createdCallback: {
 	        value: function value() {
 	            initEditor(this);
+	            utils.ready(this);
 	        }
 	    },
 
@@ -124,12 +125,6 @@ var XBubbles =
 	        value: function value() {
 	            return this.editor.bubbling();
 	        }
-	    },
-
-	    ready: {
-	        value: function value(callback) {
-	            utils.ready(callback, this);
-	        }
 	    }
 	});
 
@@ -174,17 +169,17 @@ var XBubbles =
 	var context = __webpack_require__(1);
 	var bubbleset = __webpack_require__(3);
 	var bubble = __webpack_require__(4);
-	var cursor = __webpack_require__(10);
+	var cursor = __webpack_require__(13);
 
 	var _require = __webpack_require__(12),
 	    EV = _require.EV,
 	    PROPS = _require.PROPS;
 
 	var text = __webpack_require__(5);
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 	var utils = __webpack_require__(6);
 	var drag = __webpack_require__(15);
-	var select = __webpack_require__(11);
+	var select = __webpack_require__(14);
 
 	var COMMON_EVENTS = {
 	    blur: __webpack_require__(21),
@@ -1211,6 +1206,12 @@ var XBubbles =
 	var raf = __webpack_require__(7);
 	var context = __webpack_require__(1);
 
+	var _require = __webpack_require__(10),
+	    dispatch = _require.dispatch;
+
+	var _require2 = __webpack_require__(12),
+	    EV = _require2.EV;
+
 	/* eslint quotes: 0 */
 
 	var HTML_ESCAPES = {
@@ -1316,19 +1317,27 @@ var XBubbles =
 	}();
 
 	exports.ready = function () {
-	    var callbacks = [];
+	    var elements = [];
 	    var ready = false;
+	    var lock = false;
 
 	    function onready() {
 	        raf(function () {
 	            context.setTimeout(function () {
+	                elements.length && dispatch(context, EV.READY, { detail: { data: elements.splice(0) } });
 	                ready = true;
-	                callbacks.forEach(function (item) {
-	                    return item[0].call(item[1]);
-	                });
-	                callbacks = [];
 	            });
 	        });
+	    }
+
+	    function run() {
+	        if (ready && !lock) {
+	            lock = true;
+	            raf(function () {
+	                dispatch(context, EV.READY, { detail: { data: elements.splice(0) } });
+	                lock = false;
+	            });
+	        }
 	    }
 
 	    if (context.document.readyState === 'complete') {
@@ -1339,12 +1348,9 @@ var XBubbles =
 	        context.addEventListener(context.HTMLImports && !context.HTMLImports.ready ? 'HTMLImportsLoaded' : 'DOMContentLoaded', onready);
 	    }
 
-	    return function (callback, callContext) {
-	        if (ready) {
-	            callback.call(callContext);
-	        } else {
-	            callbacks.push([callback, callContext]);
-	        }
+	    return function (element) {
+	        elements.push(element);
+	        run();
 	    };
 	}();
 
@@ -1666,286 +1672,6 @@ var XBubbles =
 
 	'use strict';
 
-	/**
-	 * @module x-bubbles/cursor
-	 */
-
-	var context = __webpack_require__(1);
-	var text = __webpack_require__(5);
-	var select = __webpack_require__(11);
-
-	exports.restore = restore;
-	exports.restoreBasis = restoreBasis;
-
-	/**
-	 * Reset the cursor position to the end of the input field.
-	 * @alias module:x-bubbles/cursor.restore
-	 * @param {HTMLElement} nodeSet
-	 */
-	function restore(nodeSet) {
-	    select.clear(nodeSet);
-	    var basis = restoreBasis(nodeSet);
-	    var selection = context.getSelection();
-	    selection.removeAllRanges();
-	    selection.collapse(basis, 1);
-	}
-
-	/**
-	 * The creation of the fake text at the end childNodes
-	 * @alias module:x-bubbles/cursor.restoreBasis
-	 * @param {HTMLElement} nodeSet
-	 * @returns {HTMLTextElement} fake text node
-	 */
-	function restoreBasis(nodeSet) {
-	    var fakeText = text.createZws();
-
-	    if (nodeSet.hasChildNodes()) {
-	        var lastNode = nodeSet.childNodes[nodeSet.childNodes.length - 1];
-
-	        if (lastNode.isEqualNode(fakeText)) {
-	            fakeText = lastNode;
-	        } else {
-	            nodeSet.appendChild(fakeText);
-	        }
-	    } else {
-	        nodeSet.appendChild(fakeText);
-	    }
-
-	    return fakeText;
-	}
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var context = __webpack_require__(1);
-	var bubble = __webpack_require__(4);
-	var bubbleset = __webpack_require__(3);
-
-	var slice = Array.prototype.slice;
-	var PATH_SELECTED = '[bubble][selected]';
-	var PATH_NOT_SELECTED = '[bubble]:not([selected])';
-
-	exports.all = all;
-	exports.add = add;
-	exports.clear = clear;
-	exports.get = get;
-	exports.uniq = uniq;
-	exports.head = head;
-	exports.last = last;
-	exports.has = has;
-	exports.range = range;
-	exports.toggleUniq = toggleUniq;
-
-	function range(node) {
-	    if (!bubble.isBubbleNode(node)) {
-	        return;
-	    }
-
-	    var set = node.parentNode;
-	    var list = get(set);
-
-	    if (!list.length) {
-	        uniq(node);
-	        return;
-	    }
-
-	    clear(set);
-
-	    var headList = list[0];
-	    var lastList = list[list.length - 1];
-
-	    if (headList === lastList || !set.startRangeSelect) {
-	        set.startRangeSelect = headList;
-	    }
-
-	    var fromNode = void 0;
-	    var toNode = void 0;
-	    var position = node.compareDocumentPosition(set.startRangeSelect);
-
-	    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-	        fromNode = set.startRangeSelect;
-	        toNode = node;
-	    } else {
-	        fromNode = node;
-	        toNode = set.startRangeSelect;
-	    }
-
-	    if (fromNode && toNode) {
-	        var item = fromNode;
-
-	        while (item) {
-	            if (!setSelected(item)) {
-	                break;
-	            }
-
-	            if (item === toNode) {
-	                break;
-	            }
-
-	            item = item.nextSibling;
-	        }
-
-	        bubble.bubbling(set);
-	    }
-	}
-
-	function all(nodeSet) {
-	    slice.call(nodeSet.querySelectorAll(PATH_NOT_SELECTED)).forEach(function (item) {
-	        return setSelected(item);
-	    });
-	    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
-
-	    bubble.bubbling(nodeSet);
-
-	    var selection = context.getSelection();
-	    selection && selection.removeAllRanges();
-	}
-
-	function has(nodeSet) {
-	    return Boolean(nodeSet.querySelector(PATH_SELECTED));
-	}
-
-	function head(set) {
-	    return get(set)[0];
-	}
-
-	function last(set) {
-	    var list = get(set);
-	    return list[list.length - 1];
-	}
-
-	function get(nodeSet) {
-	    return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
-	}
-
-	function clear(nodeSet) {
-	    get(nodeSet).forEach(function (item) {
-	        return item.removeAttribute('selected');
-	    });
-	}
-
-	function add(node) {
-	    if (setSelected(node)) {
-	        var nodeSet = bubbleset.closestNodeSet(node);
-
-	        nodeSet.startRangeSelect = node;
-	        // ???
-	        bubble.bubbling(nodeSet);
-
-	        return true;
-	    }
-
-	    return false;
-	}
-
-	function uniq(node) {
-	    if (!bubble.isBubbleNode(node)) {
-	        return false;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(node);
-	    var selection = context.getSelection();
-
-	    selection && selection.removeAllRanges();
-	    clear(nodeSet);
-
-	    return add(node);
-	}
-
-	function toggleUniq(node) {
-	    if (isSelected(node)) {
-	        var nodeSet = bubbleset.closestNodeSet(node);
-
-	        if (get(nodeSet).length === 1) {
-	            return removeSelected(node);
-	        }
-	    }
-
-	    return uniq(node);
-	}
-
-	function isSelected(node) {
-	    return bubble.isBubbleNode(node) && node.hasAttribute('selected') || false;
-	}
-
-	function setSelected(node) {
-	    if (bubble.isBubbleNode(node)) {
-	        node.setAttribute('selected', '');
-	        return true;
-	    }
-
-	    return false;
-	}
-
-	function removeSelected(node) {
-	    if (bubble.isBubbleNode(node)) {
-	        node.removeAttribute('selected');
-	        return true;
-	    }
-
-	    return false;
-	}
-
-/***/ },
-/* 12 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	exports.KEY = {
-	    a: 65,
-	    Backspace: 8,
-	    Bottom: 40,
-	    c: 67,
-	    Cmd: 91,
-	    Comma: 44, // ,
-	    Delete: 46,
-	    Enter: 13, // Enter
-	    Esc: 27,
-	    Left: 37,
-	    Right: 39,
-	    Semicolon: 59, // ;
-	    Space: 32,
-	    Tab: 9,
-	    Top: 38,
-	    x: 88
-	};
-
-	exports.CLS = {
-	    DRAGSTART: 'drag',
-	    DROPZONE: 'dropzone'
-	};
-
-	exports.EV = {
-	    BEFORE_REMOVE: 'before-remove',
-	    BUBBLE_EDIT: 'bubble-edit',
-	    BUBBLE_INPUT: 'bubble-input',
-	    CHANGE: 'change',
-	    DRAGEND: 'dragend',
-	    DRAGENTER: 'dragenter',
-	    DRAGLEAVE: 'dragleave',
-	    DRAGSTART: 'dragstart',
-	    DROP: 'drop',
-	    READY: 'ready'
-	};
-
-	exports.PROPS = {
-	    BUBBLE_VALUE: '__bubble_value__',
-	    CLICK_TIME: '__click_time__',
-	    LOCAL_EVENTS: '__events__',
-	    LOCK_COPY: '__lock_copy__',
-	    OPTIONS: '__options__'
-	};
-
-/***/ },
-/* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	/**
@@ -1953,7 +1679,7 @@ var XBubbles =
 	 */
 
 	var context = __webpack_require__(1);
-	var CustomEventCommon = __webpack_require__(14);
+	var CustomEventCommon = __webpack_require__(11);
 
 	var _require = __webpack_require__(12),
 	    PROPS = _require.PROPS;
@@ -2145,7 +1871,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 14 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2226,6 +1952,286 @@ var XBubbles =
 	module.exports = CustomEventCommon;
 
 /***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.KEY = {
+	    a: 65,
+	    Backspace: 8,
+	    Bottom: 40,
+	    c: 67,
+	    Cmd: 91,
+	    Comma: 44, // ,
+	    Delete: 46,
+	    Enter: 13, // Enter
+	    Esc: 27,
+	    Left: 37,
+	    Right: 39,
+	    Semicolon: 59, // ;
+	    Space: 32,
+	    Tab: 9,
+	    Top: 38,
+	    x: 88
+	};
+
+	exports.CLS = {
+	    DRAGSTART: 'drag',
+	    DROPZONE: 'dropzone'
+	};
+
+	exports.EV = {
+	    BEFORE_REMOVE: 'before-remove',
+	    BUBBLE_EDIT: 'bubble-edit',
+	    BUBBLE_INPUT: 'bubble-input',
+	    CHANGE: 'change',
+	    DRAGEND: 'dragend',
+	    DRAGENTER: 'dragenter',
+	    DRAGLEAVE: 'dragleave',
+	    DRAGSTART: 'dragstart',
+	    DROP: 'drop',
+	    READY: 'x-bubbles-ready'
+	};
+
+	exports.PROPS = {
+	    BUBBLE_VALUE: '__bubble_value__',
+	    CLICK_TIME: '__click_time__',
+	    LOCAL_EVENTS: '__events__',
+	    LOCK_COPY: '__lock_copy__',
+	    OPTIONS: '__options__'
+	};
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	/**
+	 * @module x-bubbles/cursor
+	 */
+
+	var context = __webpack_require__(1);
+	var text = __webpack_require__(5);
+	var select = __webpack_require__(14);
+
+	exports.restore = restore;
+	exports.restoreBasis = restoreBasis;
+
+	/**
+	 * Reset the cursor position to the end of the input field.
+	 * @alias module:x-bubbles/cursor.restore
+	 * @param {HTMLElement} nodeSet
+	 */
+	function restore(nodeSet) {
+	    select.clear(nodeSet);
+	    var basis = restoreBasis(nodeSet);
+	    var selection = context.getSelection();
+	    selection.removeAllRanges();
+	    selection.collapse(basis, 1);
+	}
+
+	/**
+	 * The creation of the fake text at the end childNodes
+	 * @alias module:x-bubbles/cursor.restoreBasis
+	 * @param {HTMLElement} nodeSet
+	 * @returns {HTMLTextElement} fake text node
+	 */
+	function restoreBasis(nodeSet) {
+	    var fakeText = text.createZws();
+
+	    if (nodeSet.hasChildNodes()) {
+	        var lastNode = nodeSet.childNodes[nodeSet.childNodes.length - 1];
+
+	        if (lastNode.isEqualNode(fakeText)) {
+	            fakeText = lastNode;
+	        } else {
+	            nodeSet.appendChild(fakeText);
+	        }
+	    } else {
+	        nodeSet.appendChild(fakeText);
+	    }
+
+	    return fakeText;
+	}
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(1);
+	var bubble = __webpack_require__(4);
+	var bubbleset = __webpack_require__(3);
+
+	var slice = Array.prototype.slice;
+	var PATH_SELECTED = '[bubble][selected]';
+	var PATH_NOT_SELECTED = '[bubble]:not([selected])';
+
+	exports.all = all;
+	exports.add = add;
+	exports.clear = clear;
+	exports.get = get;
+	exports.uniq = uniq;
+	exports.head = head;
+	exports.last = last;
+	exports.has = has;
+	exports.range = range;
+	exports.toggleUniq = toggleUniq;
+
+	function range(node) {
+	    if (!bubble.isBubbleNode(node)) {
+	        return;
+	    }
+
+	    var set = node.parentNode;
+	    var list = get(set);
+
+	    if (!list.length) {
+	        uniq(node);
+	        return;
+	    }
+
+	    clear(set);
+
+	    var headList = list[0];
+	    var lastList = list[list.length - 1];
+
+	    if (headList === lastList || !set.startRangeSelect) {
+	        set.startRangeSelect = headList;
+	    }
+
+	    var fromNode = void 0;
+	    var toNode = void 0;
+	    var position = node.compareDocumentPosition(set.startRangeSelect);
+
+	    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+	        fromNode = set.startRangeSelect;
+	        toNode = node;
+	    } else {
+	        fromNode = node;
+	        toNode = set.startRangeSelect;
+	    }
+
+	    if (fromNode && toNode) {
+	        var item = fromNode;
+
+	        while (item) {
+	            if (!setSelected(item)) {
+	                break;
+	            }
+
+	            if (item === toNode) {
+	                break;
+	            }
+
+	            item = item.nextSibling;
+	        }
+
+	        bubble.bubbling(set);
+	    }
+	}
+
+	function all(nodeSet) {
+	    slice.call(nodeSet.querySelectorAll(PATH_NOT_SELECTED)).forEach(function (item) {
+	        return setSelected(item);
+	    });
+	    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
+
+	    bubble.bubbling(nodeSet);
+
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
+	}
+
+	function has(nodeSet) {
+	    return Boolean(nodeSet.querySelector(PATH_SELECTED));
+	}
+
+	function head(set) {
+	    return get(set)[0];
+	}
+
+	function last(set) {
+	    var list = get(set);
+	    return list[list.length - 1];
+	}
+
+	function get(nodeSet) {
+	    return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
+	}
+
+	function clear(nodeSet) {
+	    get(nodeSet).forEach(function (item) {
+	        return item.removeAttribute('selected');
+	    });
+	}
+
+	function add(node) {
+	    if (setSelected(node)) {
+	        var nodeSet = bubbleset.closestNodeSet(node);
+
+	        nodeSet.startRangeSelect = node;
+	        // ???
+	        bubble.bubbling(nodeSet);
+
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function uniq(node) {
+	    if (!bubble.isBubbleNode(node)) {
+	        return false;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(node);
+	    var selection = context.getSelection();
+
+	    selection && selection.removeAllRanges();
+	    clear(nodeSet);
+
+	    return add(node);
+	}
+
+	function toggleUniq(node) {
+	    if (isSelected(node)) {
+	        var nodeSet = bubbleset.closestNodeSet(node);
+
+	        if (get(nodeSet).length === 1) {
+	            return removeSelected(node);
+	        }
+	    }
+
+	    return uniq(node);
+	}
+
+	function isSelected(node) {
+	    return bubble.isBubbleNode(node) && node.hasAttribute('selected') || false;
+	}
+
+	function setSelected(node) {
+	    if (bubble.isBubbleNode(node)) {
+	        node.setAttribute('selected', '');
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function removeSelected(node) {
+	    if (bubble.isBubbleNode(node)) {
+	        node.removeAttribute('selected');
+	        return true;
+	    }
+
+	    return false;
+	}
+
+/***/ },
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -2260,9 +2266,9 @@ var XBubbles =
 	'use strict';
 
 	var context = __webpack_require__(1);
-	var select = __webpack_require__(11);
+	var select = __webpack_require__(14);
 	var bubbleset = __webpack_require__(3);
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 
 	var _require = __webpack_require__(12),
 	    CLS = _require.CLS;
@@ -2438,9 +2444,9 @@ var XBubbles =
 	'use strict';
 
 	var context = __webpack_require__(1);
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 	var utils = __webpack_require__(6);
-	var select = __webpack_require__(11);
+	var select = __webpack_require__(14);
 	var bubbleset = __webpack_require__(3);
 	var Modernizr = __webpack_require__(20);
 
@@ -3514,7 +3520,7 @@ var XBubbles =
 
 	'use strict';
 
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 
 	var _require = __webpack_require__(12),
 	    PROPS = _require.PROPS;
@@ -3537,7 +3543,7 @@ var XBubbles =
 
 	'use strict';
 
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 	var bubbleset = __webpack_require__(3);
 
 	var _require = __webpack_require__(12),
@@ -3579,7 +3585,7 @@ var XBubbles =
 
 	var raf = __webpack_require__(7);
 	var context = __webpack_require__(1);
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 
 	var _require = __webpack_require__(12),
 	    PROPS = _require.PROPS;
@@ -3613,7 +3619,7 @@ var XBubbles =
 	'use strict';
 
 	var utils = __webpack_require__(6);
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 
 	var _require = __webpack_require__(12),
 	    KEY = _require.KEY;
@@ -3662,9 +3668,9 @@ var XBubbles =
 
 	'use strict';
 
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 	var bubble = __webpack_require__(4);
-	var cursor = __webpack_require__(10);
+	var cursor = __webpack_require__(13);
 	var utils = __webpack_require__(6);
 
 	/**
@@ -3703,7 +3709,7 @@ var XBubbles =
 
 	'use strict';
 
-	var cursor = __webpack_require__(10);
+	var cursor = __webpack_require__(13);
 
 	/**
 	 * @param {Event} event
@@ -3718,9 +3724,9 @@ var XBubbles =
 
 	'use strict';
 
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 	var bubble = __webpack_require__(4);
-	var cursor = __webpack_require__(10);
+	var cursor = __webpack_require__(13);
 	var text = __webpack_require__(5);
 	var bubbleset = __webpack_require__(3);
 
@@ -3860,9 +3866,9 @@ var XBubbles =
 
 	'use strict';
 
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 	var bubble = __webpack_require__(4);
-	var cursor = __webpack_require__(10);
+	var cursor = __webpack_require__(13);
 
 	var _require = __webpack_require__(12),
 	    KEY = _require.KEY;
@@ -3898,7 +3904,7 @@ var XBubbles =
 
 	'use strict';
 
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 
 	var _require = __webpack_require__(12),
 	    KEY = _require.KEY;
@@ -3927,7 +3933,7 @@ var XBubbles =
 	var raf = __webpack_require__(7);
 	var context = __webpack_require__(1);
 	var bubble = __webpack_require__(4);
-	var cursor = __webpack_require__(10);
+	var cursor = __webpack_require__(13);
 	var text = __webpack_require__(5);
 
 	var _require = __webpack_require__(6),
@@ -3998,7 +4004,7 @@ var XBubbles =
 
 	'use strict';
 
-	var select = __webpack_require__(11);
+	var select = __webpack_require__(14);
 
 	/**
 	 * @param {Event} event
@@ -4013,8 +4019,8 @@ var XBubbles =
 
 	'use strict';
 
-	var events = __webpack_require__(13);
-	var select = __webpack_require__(11);
+	var events = __webpack_require__(10);
+	var select = __webpack_require__(14);
 
 	/**
 	 * @param {Event} event
@@ -4052,12 +4058,12 @@ var XBubbles =
 	'use strict';
 
 	var raf = __webpack_require__(7);
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 	var utils = __webpack_require__(6);
 	var bubble = __webpack_require__(4);
-	var select = __webpack_require__(11);
+	var select = __webpack_require__(14);
 	var bubbleset = __webpack_require__(3);
-	var cursor = __webpack_require__(10);
+	var cursor = __webpack_require__(13);
 
 	var _require = __webpack_require__(12),
 	    KEY = _require.KEY,
@@ -4360,10 +4366,10 @@ var XBubbles =
 
 	'use strict';
 
-	var events = __webpack_require__(13);
+	var events = __webpack_require__(10);
 	var utils = __webpack_require__(6);
 	var bubble = __webpack_require__(4);
-	var select = __webpack_require__(11);
+	var select = __webpack_require__(14);
 
 	var _require = __webpack_require__(12),
 	    KEY = _require.KEY;

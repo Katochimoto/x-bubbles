@@ -1,5 +1,7 @@
 const raf = require('raf');
 const context = require('../context');
+const { dispatch } = require('./events');
+const { EV } = require('./constant');
 
 /* eslint quotes: 0 */
 
@@ -107,17 +109,27 @@ exports.isIE = (function () {
 })();
 
 exports.ready = (function () {
-    let callbacks = [];
+    let elements = [];
     let ready = false;
+    let lock = false;
 
     function onready() {
         raf(function () {
             context.setTimeout(function () {
+                elements.length && dispatch(context, EV.READY, { detail: { data: elements.splice(0) } });
                 ready = true;
-                callbacks.forEach(item => item[0].call(item[1]));
-                callbacks = [];
             });
         });
+    }
+
+    function run() {
+        if (ready && !lock) {
+            lock = true;
+            raf(function () {
+                dispatch(context, EV.READY, { detail: { data: elements.splice(0) } });
+                lock = false;
+            });
+        }
     }
 
     if (context.document.readyState === 'complete') {
@@ -130,13 +142,9 @@ exports.ready = (function () {
         context.addEventListener(context.HTMLImports && !context.HTMLImports.ready ? 'HTMLImportsLoaded' : 'DOMContentLoaded', onready);
     }
 
-    return function (callback, callContext) {
-        if (ready) {
-            callback.call(callContext);
-
-        } else {
-            callbacks.push([ callback, callContext ]);
-        }
+    return function (element) {
+        elements.push(element);
+        run();
     };
 })();
 

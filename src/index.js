@@ -7,6 +7,7 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
     createdCallback: {
         value: function () {
             initEditor(this);
+            utils.ready(this);
         }
     },
 
@@ -74,12 +75,6 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
     bubbling: {
         value: function () {
             return this.editor.bubbling();
-        }
-    },
-
-    ready: {
-        value: function (callback) {
-            utils.ready(callback, this);
         }
     },
 });

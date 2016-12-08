@@ -177,6 +177,12 @@ console.log('>>>6', JSON.stringify('test1, test2 <test@ya.ru>'), JSON.stringify(
 console.log('>>>7', JSON.stringify('test1@ya.ru, test2 <test@ya.ru>'), JSON.stringify(tokenizer('test1@ya.ru, test2 <test@ya.ru>')));
 console.log('>>>8', JSON.stringify('test0, test1@ya.ru, test2 <test@ya.ru>'), JSON.stringify(tokenizer('test0, test1@ya.ru, test2 <test@ya.ru>')));
 */
+
+window.addEventListener('x-bubbles-ready', function(event) {
+    console.log('>><<', event);
+}, false);
+
+
 </script>
 <div style="margin-top: 0;">
     <div class="bubbles"

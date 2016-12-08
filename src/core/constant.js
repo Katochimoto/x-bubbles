@@ -32,7 +32,7 @@ exports.EV = {
     DRAGLEAVE: 'dragleave',
     DRAGSTART: 'dragstart',
     DROP: 'drop',
-    READY: 'ready',
+    READY: 'x-bubbles-ready',
 };
 
 exports.PROPS = {
