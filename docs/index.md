@@ -3,13 +3,13 @@
 Settings you can declare the function via `options()` or via data attributes.
 
 For example:
+
 ```
 &lt;script&gt;
 function bubbleDeformation(node) {
   return node.innerText;
 }
 &lt;/script&gt;
-
 &lt;div is="x-bubbles"
   data-separator="/[,]/"
   data-selection="off"
