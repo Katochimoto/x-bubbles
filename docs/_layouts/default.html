@@ -15,7 +15,7 @@
 .bubbles {
     line-height: 18px;
     border: 1px solid;
-    height: 100px;
+    min-height: 20px;
     padding: 2px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -97,7 +97,7 @@
 </code></pre></div>
 
       <p>This will create a set of elements</p>
-      <div class="bubbles" is="x-bubbles" tabindex="0">123,456,789</div>
+      <p><div class="bubbles" is="x-bubbles" tabindex="0">123,456,789</div></p>
 
       {{ content }}
 

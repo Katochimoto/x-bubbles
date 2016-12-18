@@ -1,23 +1,21 @@
 ### Options
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+- `begining` - Regular expression to determine the rules for the formation of a bubble since the beginning of the input text.
+- `bubbleCopy` - Conversion function list bablow in the text when copying.
+- `bubbleDeformation` - The transformation function of the bubble in the text for editing.
+- `bubbleFormation` - A function to convert text to bubble.
+- `checkBubblePaste` - Check function of the ability to insert text automatically converted to the bubble.
+- `classBubble` - Class of bubble.
+- `disableControls` - Disabling controls navigation bubble.
+- `draggable` - The ability to drag bubble.
+- `ending` - Regular expression to determine the rules for the formation of dough from the end of the input text.
+- `selection` - The ability to select bubble.
+- `separator` - Regular expression to declare delimiters of bubbles.
+- `separatorCond` - A function to check the conditions of formation of the bubble after you enter the delimiter.
+- `tokenizer` - The function of the formation bubbles. Ignores `begining`, `ending` and `separator`.
 
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```html
+asdasdas
 ```
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
