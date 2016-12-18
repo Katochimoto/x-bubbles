@@ -4,7 +4,7 @@ Settings you can declare the function via `options()` or via data attributes.
 
 For example:
 
-```js
+```html
 <script>
 function bubbleDeformation(node) {
   return node.innerText;
