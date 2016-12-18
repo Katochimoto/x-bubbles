@@ -1,9 +1,9 @@
 {
   "name": "x-bubbles",
-  "description": "Bubbles",
-  "version": "1.0.2",
-  "keywords": [],
-  "homepage": "https://github.com/Katochimoto/x-bubbles",
+  "description": "XBubbles provides a simple way to create set of editable elements.",
+  "version": "1.0.3",
+  "keywords": [ "set of elements" ],
+  "homepage": "https://katochimoto.github.io/x-bubbles/",
   "author": {
     "name": "Rikishi",
     "email": "rikishi@protonmail.ch",
