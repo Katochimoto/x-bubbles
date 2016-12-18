@@ -33,13 +33,24 @@ function bubbleDeformation(node) {
 - `separatorCond` - A function to check the conditions of formation of the bubble after you enter the delimiter.
 - `tokenizer` - The function of the formation bubbles. Ignores `begining`, `ending` and `separator`.
 
+### Events
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+- `before-remove` - Triggered before removing the bubble.
+- `bubble-edit` - Triggered after the start of the edit bubble.
+- `bubble-input` - Срабатывает в процессе ввода значения пузыря.
+- `change` - Change the list of bubbles.
+- `x-bubbles-ready` - Event readiness custom elements. Triggered on the window.
 
-### Jekyll Themes
+### Properties
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Katochimoto/x-bubbles/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+- `items` - The list of bubbles.
+- `inputValue` - Input value.
 
-### Support or Contact
+### Methods
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+- `options(string: name, [value]): *` - Changing and getting options.
+- `setContent(string: data): boolean` - Set contents of the bubbles.
+- `addBubble(string: bubbleText, [object: data]): boolean` - Add bubble.
+- `removeBubble(HTMLElement: nodeBubble): boolean` - Remove bubble.
+- `editBubble(HTMLElement: nodeBubble): boolean` - Edit bubble.
+- `bubbling()` - Starting formation bablow.
