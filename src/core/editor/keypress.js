@@ -20,9 +20,13 @@ module.exports = function (event) {
     } else {
         const separator = nodeEditor.options('separator');
         if (separator && separator.test(String.fromCharCode(code))) {
-            event.preventDefault();
-            bubble.bubbling(nodeEditor);
-            cursor.restore(nodeEditor);
+            const separatorCond = nodeEditor.options('separatorCond');
+
+            if (!separatorCond || separatorCond(nodeEditor.inputValue)) {
+                event.preventDefault();
+                bubble.bubbling(nodeEditor);
+                cursor.restore(nodeEditor);
+            }
         }
     }
 };

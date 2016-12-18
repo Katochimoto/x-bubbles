@@ -47,11 +47,20 @@ var XBubbles =
 
 	'use strict';
 
+	/**
+	 * XBubbles custom element.
+	 * @module x-bubbles
+	 */
+
 	var context = __webpack_require__(1);
 	var editor = __webpack_require__(2);
 	var utils = __webpack_require__(6);
 	var options = __webpack_require__(36);
 
+	/**
+	 * Prototype of XBubbles.
+	 * @type {Object}
+	 */
 	var XBubbles = Object.create(HTMLDivElement.prototype, {
 	    createdCallback: {
 	        value: function value() {
@@ -79,48 +88,109 @@ var XBubbles =
 	        }
 	    },
 
+	    /**
+	     * The receiving and recording settings.
+	     * @memberof XBubbles
+	     * @function
+	     * @param {string} name
+	     * @param {*} value
+	     * @returns {*}
+	     * @public
+	     */
 	    options: {
 	        value: function value(name, _value) {
 	            return options(this, name, _value);
 	        }
 	    },
 
+	    /**
+	     * List bablow.
+	     * @memberof XBubbles
+	     * @type {array}
+	     * @public
+	     */
 	    items: {
 	        get: function get() {
 	            return this.editor.getItems();
 	        }
 	    },
 
+	    /**
+	     * The value entered.
+	     * @memberof XBubbles
+	     * @type {string}
+	     * @public
+	     */
 	    inputValue: {
 	        get: function get() {
 	            return this.editor.inputValue();
 	        }
 	    },
 
+	    /**
+	     * Set contents of the set.
+	     * @function
+	     * @memberof XBubbles
+	     * @param {string} data
+	     * @returns {boolean}
+	     * @public
+	     */
 	    setContent: {
 	        value: function value(data) {
 	            return this.editor.setContent(data);
 	        }
 	    },
 
+	    /**
+	     * Add bubble.
+	     * @function
+	     * @memberof XBubbles
+	     * @param {string} bubbleText
+	     * @param {Object} [data]
+	     * @returns {boolean}
+	     * @public
+	     */
 	    addBubble: {
 	        value: function value(bubbleText, data) {
 	            return this.editor.addBubble(bubbleText, data);
 	        }
 	    },
 
+	    /**
+	     * Remove bubble.
+	     * @function
+	     * @memberof XBubbles
+	     * @param {HTMLElement} nodeBubble
+	     * @returns {boolean}
+	     * @public
+	     */
 	    removeBubble: {
 	        value: function value(nodeBubble) {
 	            return this.editor.removeBubble(nodeBubble);
 	        }
 	    },
 
+	    /**
+	     * Edit bubble.
+	     * @function
+	     * @memberof XBubbles
+	     * @param {HTMLElement} nodeBubble
+	     * @returns {boolean}
+	     * @public
+	     */
 	    editBubble: {
 	        value: function value(nodeBubble) {
 	            return this.editor.editBubble(nodeBubble);
 	        }
 	    },
 
+	    /**
+	     * Starting formation bablow.
+	     * @function
+	     * @memberof XBubbles
+	     * @returns {boolean}
+	     * @public
+	     */
 	    bubbling: {
 	        value: function value() {
 	            return this.editor.bubbling();
@@ -283,6 +353,8 @@ var XBubbles =
 	    this.appendChild(this.ownerDocument.createTextNode(data));
 	    bubble.bubbling(this);
 	    cursor.restore(this);
+
+	    return true;
 	}
 
 	function addBubble(bubbleText, dataAttributes) {
@@ -3891,9 +3963,13 @@ var XBubbles =
 	    } else {
 	        var separator = nodeEditor.options('separator');
 	        if (separator && separator.test(String.fromCharCode(code))) {
-	            event.preventDefault();
-	            bubble.bubbling(nodeEditor);
-	            cursor.restore(nodeEditor);
+	            var separatorCond = nodeEditor.options('separatorCond');
+
+	            if (!separatorCond || separatorCond(nodeEditor.inputValue)) {
+	                event.preventDefault();
+	                bubble.bubbling(nodeEditor);
+	                cursor.restore(nodeEditor);
+	            }
 	        }
 	    }
 	};
@@ -4444,6 +4520,7 @@ var XBubbles =
 	    ending: ['reg', null, 'ending'], // /\@ya\.ru/g
 	    selection: ['bool', true, 'selection'],
 	    separator: ['reg', /[,;]/, 'separator'],
+	    separatorCond: ['func', null, 'separator-cond'],
 	    tokenizer: ['func', null, 'tokenizer']
 	};
 

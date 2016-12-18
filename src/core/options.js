@@ -19,6 +19,7 @@ const OPTIONS = {
     ending:             [ 'reg', null, 'ending' ], // /\@ya\.ru/g
     selection:          [ 'bool', true, 'selection' ],
     separator:          [ 'reg', /[,;]/, 'separator' ],
+    separatorCond:      [ 'func', null, 'separator-cond' ],
     tokenizer:          [ 'func', null, 'tokenizer' ],
 };
 

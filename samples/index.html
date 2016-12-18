@@ -182,6 +182,9 @@ window.addEventListener('x-bubbles-ready', function(event) {
     console.log('>><<', event);
 }, false);
 
+function separatorCond(inputValue) {
+    return REG_EMAIL.test(inputValue);
+}
 
 </script>
 <div style="margin-top: 0;">
@@ -190,7 +193,8 @@ window.addEventListener('x-bubbles-ready', function(event) {
         is="x-bubbles"
         tabindex="0"
         data-tokenizer="tokenizer"
-        data-separator=""
+        data-separator="/[,;]/"
+        data-separator-cond="separatorCond"
         data-selection="false">
 
         123,456,789

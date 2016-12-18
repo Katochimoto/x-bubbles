@@ -111,6 +111,8 @@ function setContent(data) {
     this.appendChild(this.ownerDocument.createTextNode(data));
     bubble.bubbling(this);
     cursor.restore(this);
+
+    return true;
 }
 
 function addBubble(bubbleText, dataAttributes) {
