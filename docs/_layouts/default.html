@@ -86,11 +86,20 @@
       </header>
       <section>
 
-      {{ content }}
+      <h2>XBubbles custom element</h2>
 
+      <p>XBubbles provides a simple way to create set of editable elements.</p>
+
+      <p>All you need to do is create an element set and specify the necessary conditions.</p>
+
+<div class="language-markdown highlighter-rouge"><pre class="highlight"><code>
+&lt;div class="bubbles" is="x-bubbles" tabindex="0">123,456,789&lt;/div>
+</code></pre></div>
+
+      <p>This will create a set of elements</p>
       <div class="bubbles" is="x-bubbles" tabindex="0">123,456,789</div>
-      <br/>
-      <div class="bubbles" is="x-bubbles" tabindex="0">test</div>
+
+      {{ content }}
 
       </section>
       <footer>
