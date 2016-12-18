@@ -1,9 +1,9 @@
 ### Options
 
-Settings you can declare the function via `options` or via data attributes.
+Settings you can declare the function via `options()` or via data attributes.
 
 For example:
-```html
+```javascript
 &lt;script>
 function bubbleDeformation(node) {
   return node.innerText;
