@@ -67,7 +67,7 @@ function bubbleDeformation(node) {
 - `addBubble(string: bubbleText, [object: data]): boolean` - Add bubble.
 - `removeBubble(HTMLElement: nodeBubble): boolean` - Remove bubble.
 - `editBubble(HTMLElement: nodeBubble): boolean` - Edit bubble.
-- `bubbling()` - Starting formation bablow.
+- `bubbling()` - Starting formation bubbles.
 
 
 
