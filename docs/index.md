@@ -4,19 +4,19 @@ Settings you can declare the function via `options()` or via data attributes.
 
 For example:
 ```javascript
-&lt;script>
+&lt;script&gt;
 function bubbleDeformation(node) {
   return node.innerText;
 }
-&lt;/script>
+&lt;/script&gt;
 
 &lt;div is="x-bubbles"
   data-separator="/[,]/"
   data-selection="off"
   data-class-bubble="bubble"
-  data-bubble-deformation="bubbleDeformation">
+  data-bubble-deformation="bubbleDeformation"&gt;
   123,456,789
-&lt;/div>
+&lt;/div&gt;
 ```
 
 - `begining` - Regular expression to determine the rules for the formation of a bubble since the beginning of the input text.
