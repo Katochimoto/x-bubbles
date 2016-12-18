@@ -1,5 +1,24 @@
 ### Options
 
+Settings you can declare the function via `options` or via data attributes.
+
+For example:
+```html
+<script>
+function bubbleDeformation(node) {
+  return node.innerText;
+}
+</script>
+
+<div is="x-bubbles"
+  data-separator="/[,]/"
+  data-selection="off"
+  data-class-bubble="bubble"
+  data-bubble-deformation="bubbleDeformation">
+  123,456,789
+</div>
+```
+
 - `begining` - Regular expression to determine the rules for the formation of a bubble since the beginning of the input text.
 - `bubbleCopy` - Conversion function list bablow in the text when copying.
 - `bubbleDeformation` - The transformation function of the bubble in the text for editing.
@@ -14,9 +33,6 @@
 - `separatorCond` - A function to check the conditions of formation of the bubble after you enter the delimiter.
 - `tokenizer` - The function of the formation bubbles. Ignores `begining`, `ending` and `separator`.
 
-```html
-asdasdas
-```
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
