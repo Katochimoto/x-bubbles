@@ -1,179 +1,158 @@
+/**
+ * XBubbles custom element.
+ * @module x-bubbles
+ */
+
 const context = require('./context');
-const drag = require('./core/drag');
 const editor = require('./core/editor');
-const bubble = require('./core/bubble');
-const bubbleset = require('./core/bubbleset');
+const utils = require('./core/utils');
+const options = require('./core/options');
 
-const OPTIONS = {
-    begining:           [ 'reg', null, 'begining' ],
-    bubbleCopy:         [ 'func', bubbleCopyOption, 'bubble-copy' ],
-    bubbleDeformation:  [ 'func', function () {}, 'bubble-deformation' ],
-    bubbleFormation:    [ 'func', function () {}, 'bubble-formation' ],
-    checkBubblePaste:   [ 'func', checkBubblePasteOption, 'check-bubble-paste' ],
-    classBubble:        [ 'str', 'bubble', 'class-bubble' ],
-    disableControls:    [ 'bool', false, 'disable-controls' ],
-    draggable:          [ 'bool', true, 'draggable' ],
-    ending:             [ 'reg', null, 'ending' ], // /\@ya\.ru/g;
-    separator:          [ 'reg', /[,;]/, 'separator' ],
-    tokenizer:          [ 'func', null, 'tokenizer' ],
-};
-
+/**
+ * Prototype of XBubbles.
+ * @type {Object}
+ */
 const XBubbles = Object.create(HTMLDivElement.prototype, {
     createdCallback: {
         value: function () {
             initEditor(this);
+            utils.ready(this);
         }
     },
 
     attachedCallback: {
         value: function () {
             initEditor(this);
-            drag.init(this);
-            bubble.bubbling(this);
+            this.editor.bubbling();
         }
     },
 
     detachedCallback: {
         value: function () {
-            drag.destroy(this);
             destroyEditor(this);
         }
     },
 
-    /*
     attributeChangedCallback: {
-        value: function (name, prevValue, value) {}
+        value: function (/* name, prevValue, value */) {
+            options(this);
+        }
     },
-    */
 
+    /**
+     * The receiving and recording settings.
+     * @memberof XBubbles
+     * @function
+     * @param {string} name
+     * @param {*} value
+     * @returns {*}
+     * @public
+     */
     options: {
         value: function (name, value) {
-            if (!this._options) {
-                this._options = {};
-
-                for (const optionName in OPTIONS) {
-                    this._options[ optionName ] = undefined;
-
-                    const attrName = `data-${OPTIONS[ optionName ][2]}`;
-                    if (this.hasAttribute(attrName)) {
-                        this._options[ optionName ] = this.getAttribute(attrName);
-                    }
-                }
-
-                optionsPrepare(this._options);
-            }
-
-            if (typeof value !== 'undefined') {
-                this._options[ name ] = value;
-                optionsPrepare(this._options);
-
-            } else {
-                return this._options[ name ];
-            }
+            return options(this, name, value);
         }
     },
 
+    /**
+     * List bablow.
+     * @memberof XBubbles
+     * @type {array}
+     * @public
+     */
     items: {
         get: function () {
-            return bubbleset.getBubbles(this);
+            return this.editor.getItems();
         }
     },
 
+    /**
+     * The value entered.
+     * @memberof XBubbles
+     * @type {string}
+     * @public
+     */
     inputValue: {
         get: function () {
             return this.editor.inputValue();
         }
     },
 
+    /**
+     * Set contents of the set.
+     * @function
+     * @memberof XBubbles
+     * @param {string} data
+     * @returns {boolean}
+     * @public
+     */
     setContent: {
         value: function (data) {
             return this.editor.setContent(data);
         }
     },
 
+    /**
+     * Add bubble.
+     * @function
+     * @memberof XBubbles
+     * @param {string} bubbleText
+     * @param {Object} [data]
+     * @returns {boolean}
+     * @public
+     */
     addBubble: {
         value: function (bubbleText, data) {
             return this.editor.addBubble(bubbleText, data);
         }
     },
 
+    /**
+     * Remove bubble.
+     * @function
+     * @memberof XBubbles
+     * @param {HTMLElement} nodeBubble
+     * @returns {boolean}
+     * @public
+     */
     removeBubble: {
         value: function (nodeBubble) {
             return this.editor.removeBubble(nodeBubble);
         }
     },
 
+    /**
+     * Edit bubble.
+     * @function
+     * @memberof XBubbles
+     * @param {HTMLElement} nodeBubble
+     * @returns {boolean}
+     * @public
+     */
     editBubble: {
         value: function (nodeBubble) {
             return this.editor.editBubble(nodeBubble);
         }
-    }
+    },
+
+    /**
+     * Starting formation bablow.
+     * @function
+     * @memberof XBubbles
+     * @returns {boolean}
+     * @public
+     */
+    bubbling: {
+        value: function () {
+            return this.editor.bubbling();
+        }
+    },
 });
 
 module.exports = context.document.registerElement('x-bubbles', {
     extends: 'div',
     prototype: XBubbles
 });
-
-const OPTIONS_PREPARE = {
-    func: function (value) {
-        const type = typeof value;
-        switch (type) {
-        case 'string':
-            return new Function('context', `return context.${value};`)(context);
-
-        case 'function':
-            return value;
-        }
-    },
-    bool: function (value) {
-        const type = typeof value;
-        switch (type) {
-        case 'string':
-            return (value === 'true' || value === 'on');
-
-        case 'boolean':
-            return value;
-        }
-    },
-    noop: function (value) {
-        return value;
-    },
-    reg: function (value) {
-        const type = typeof value;
-        switch (type) {
-        case 'string':
-            if (value) {
-                const match = value.match(/\/(.+)\/([gimy]{0,3})/i);
-                if (match) {
-                    return new RegExp(match[1], match[2]);
-                }
-            }
-
-            return null;
-
-        case 'object':
-            if (value instanceof context.RegExp || value === null) {
-                return value;
-            }
-        }
-    },
-    str: function (value) {
-        if (typeof value !== 'undefined') {
-            return value ? String(value) : '';
-        }
-    },
-};
-
-function optionsPrepare(options) {
-    for (let name in OPTIONS) {
-        const [ type, def ] = OPTIONS[ name ];
-        options[ name ] = OPTIONS_PREPARE[ type ](options[ name ]);
-        if (typeof options[ name ] === 'undefined') {
-            options[ name ] = def;
-        }
-    }
-}
 
 function initEditor(node) {
     if (!node.editor) {
@@ -189,12 +168,4 @@ function destroyEditor(node) {
         editor.destroy(node);
         delete node.editor;
     }
-}
-
-function bubbleCopyOption(list) {
-    return list.map(item => item.innerHTML).join(', ');
-}
-
-function checkBubblePasteOption() {
-    return true;
 }

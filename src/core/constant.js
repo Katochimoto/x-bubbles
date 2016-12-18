@@ -23,6 +23,7 @@ exports.CLS = {
 };
 
 exports.EV = {
+    BEFORE_REMOVE: 'before-remove',
     BUBBLE_EDIT: 'bubble-edit',
     BUBBLE_INPUT: 'bubble-input',
     CHANGE: 'change',
@@ -31,10 +32,13 @@ exports.EV = {
     DRAGLEAVE: 'dragleave',
     DRAGSTART: 'dragstart',
     DROP: 'drop',
+    READY: 'x-bubbles-ready',
 };
 
 exports.PROPS = {
-    BUBBLE_VALUE: '_bubbleValue',
-    CLICK_TIME: '_clickTime',
-    LOCK_COPY: '_lockCopy',
+    BUBBLE_VALUE: '__bubble_value__',
+    CLICK_TIME: '__click_time__',
+    LOCAL_EVENTS: '__events__',
+    LOCK_COPY: '__lock_copy__',
+    OPTIONS: '__options__',
 };

@@ -1,9 +1,10 @@
 /**
- * @module x-bubbles/event
+ * @module x-bubbles/events
  */
 
 const context = require('../context');
 const CustomEventCommon = require('../polyfills/CustomEventCommon');
+const { PROPS } = require('./constant');
 
 exports.scrollX = scrollX;
 exports.scrollY = scrollY;
@@ -30,24 +31,27 @@ exports.pageY = function (event) {
 };
 
 exports.one = function (target, eventName, callback) {
-    const events = callback ? { [ eventName ]: callback } : eventName;
-    for (const name in events) {
-        target.addEventListener(name, oneCallback(target, name, events[ name ]));
-    }
+    toggleEvent(target, eventName, callback, true, false, true);
 };
 
 exports.on = function (target, eventName, callback) {
-    const events = callback ? { [ eventName ]: callback } : eventName;
-    for (const name in events) {
-        target.addEventListener(name, events[ name ]);
-    }
+    toggleEvent(target, eventName, callback);
 };
 
 exports.off = function (target, eventName, callback) {
-    const events = callback ? { [ eventName ]: callback } : eventName;
-    for (const name in events) {
-        target.removeEventListener(name, events[ name ]);
-    }
+    toggleEvent(target, eventName, callback, false);
+};
+
+exports.oneLocal = function (target, eventName, callback) {
+    toggleEvent(target, eventName, callback, true, true, true);
+};
+
+exports.onLocal = function (target, eventName, callback) {
+    toggleEvent(target, eventName, callback, true, true);
+};
+
+exports.offLocal = function (target, eventName, callback) {
+    toggleEvent(target, eventName, callback, false, true);
 };
 
 exports.prevent = function (event) {
@@ -57,6 +61,10 @@ exports.prevent = function (event) {
     event.stopPropagation();
     event.preventDefault();
     return false;
+};
+
+exports.proxyLocal = function (event) {
+    dispatchLocalEvent(event.currentTarget, event);
 };
 
 function scrollX() {
@@ -117,9 +125,68 @@ function dispatch(element, name, params = {}) {
     element.dispatchEvent(new Custom(name, params));
 }
 
-function oneCallback(target, eventName, callback) {
+function dispatchLocalEvent(element, event) {
+    const callbacks = element[ PROPS.LOCAL_EVENTS ] && element[ PROPS.LOCAL_EVENTS ][ event.type ] || [];
+    const sharedData = {};
+
+    for (let i = 0; i < callbacks.length; i++) {
+        if (event.immediatePropagationStopped) {
+            break;
+        }
+
+        callbacks[ i ](event, sharedData);
+    }
+}
+
+function oneCallback(element, eventName, callback) {
     return function _callback(event) {
-        target.removeEventListener(eventName, _callback);
+        element.removeEventListener(eventName, _callback);
         callback(event);
     };
+}
+
+const EV_ACTIONS = {
+    addLocalEventListener: function (element, eventName, callback) {
+        if (!element[ PROPS.LOCAL_EVENTS ]) {
+            element[ PROPS.LOCAL_EVENTS ] = {};
+        }
+
+        if (!element[ PROPS.LOCAL_EVENTS ][ eventName ]) {
+            element[ PROPS.LOCAL_EVENTS ][ eventName ] = [];
+        }
+
+        element[ PROPS.LOCAL_EVENTS ][ eventName ].push(callback);
+    },
+
+    removeLocalEventListener: function (element, eventName, callback) {
+        const callbacks = element[ PROPS.LOCAL_EVENTS ] && element[ PROPS.LOCAL_EVENTS ][ eventName ] || [];
+        let i = 0;
+
+        while (i < callbacks.length) {
+            if (callbacks[ i ] === callback) {
+                callbacks.splice(i, 1);
+
+            } else {
+                i++;
+            }
+        }
+    },
+
+    addEventListener: function (element, eventName, callback) {
+        element.addEventListener(eventName, callback);
+    },
+
+    removeEventListener: function (element, eventName, callback) {
+        element.removeEventListener(eventName, callback);
+    },
+};
+
+function toggleEvent(element, eventName, userCallback, isSet = true, isLocal = false, isOne = false) {
+    const events = userCallback ? { [ eventName ]: userCallback } : eventName;
+    const action = `${isSet ? 'add' : 'remove'}${isLocal ? 'Local' : ''}EventListener`;
+
+    for (const name in events) {
+        const callback = isOne ? oneCallback(element, name, events[ name ]) : events[ name ];
+        EV_ACTIONS[ action ](element, name, callback);
+    }
 }

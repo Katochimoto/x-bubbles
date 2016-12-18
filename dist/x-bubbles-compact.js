@@ -47,117 +47,153 @@ var XBubbles =
 
 	'use strict';
 
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+	/**
+	 * XBubbles custom element.
+	 * @module x-bubbles
+	 */
 
 	var context = __webpack_require__(1);
-	var drag = __webpack_require__(2);
-	var editor = __webpack_require__(19);
-	var bubble = __webpack_require__(5);
-	var bubbleset = __webpack_require__(7);
+	var editor = __webpack_require__(2);
+	var utils = __webpack_require__(6);
+	var options = __webpack_require__(36);
 
-	var OPTIONS = {
-	    begining: ['reg', null, 'begining'],
-	    bubbleCopy: ['func', bubbleCopyOption, 'bubble-copy'],
-	    bubbleDeformation: ['func', function () {}, 'bubble-deformation'],
-	    bubbleFormation: ['func', function () {}, 'bubble-formation'],
-	    checkBubblePaste: ['func', checkBubblePasteOption, 'check-bubble-paste'],
-	    classBubble: ['str', 'bubble', 'class-bubble'],
-	    disableControls: ['bool', false, 'disable-controls'],
-	    draggable: ['bool', true, 'draggable'],
-	    ending: ['reg', null, 'ending'], // /\@ya\.ru/g;
-	    separator: ['reg', /[,;]/, 'separator'],
-	    tokenizer: ['func', null, 'tokenizer']
-	};
-
+	/**
+	 * Prototype of XBubbles.
+	 * @type {Object}
+	 */
 	var XBubbles = Object.create(HTMLDivElement.prototype, {
 	    createdCallback: {
 	        value: function value() {
 	            initEditor(this);
+	            utils.ready(this);
 	        }
 	    },
 
 	    attachedCallback: {
 	        value: function value() {
 	            initEditor(this);
-	            drag.init(this);
-	            bubble.bubbling(this);
+	            this.editor.bubbling();
 	        }
 	    },
 
 	    detachedCallback: {
 	        value: function value() {
-	            drag.destroy(this);
 	            destroyEditor(this);
 	        }
 	    },
 
-	    /*
 	    attributeChangedCallback: {
-	        value: function (name, prevValue, value) {}
+	        value: function value() /* name, prevValue, value */{
+	            options(this);
+	        }
 	    },
-	    */
 
+	    /**
+	     * The receiving and recording settings.
+	     * @memberof XBubbles
+	     * @function
+	     * @param {string} name
+	     * @param {*} value
+	     * @returns {*}
+	     * @public
+	     */
 	    options: {
 	        value: function value(name, _value) {
-	            if (!this._options) {
-	                this._options = {};
-
-	                for (var optionName in OPTIONS) {
-	                    this._options[optionName] = undefined;
-
-	                    var attrName = 'data-' + OPTIONS[optionName][2];
-	                    if (this.hasAttribute(attrName)) {
-	                        this._options[optionName] = this.getAttribute(attrName);
-	                    }
-	                }
-
-	                optionsPrepare(this._options);
-	            }
-
-	            if (typeof _value !== 'undefined') {
-	                this._options[name] = _value;
-	                optionsPrepare(this._options);
-	            } else {
-	                return this._options[name];
-	            }
+	            return options(this, name, _value);
 	        }
 	    },
 
+	    /**
+	     * List bablow.
+	     * @memberof XBubbles
+	     * @type {array}
+	     * @public
+	     */
 	    items: {
 	        get: function get() {
-	            return bubbleset.getBubbles(this);
+	            return this.editor.getItems();
 	        }
 	    },
 
+	    /**
+	     * The value entered.
+	     * @memberof XBubbles
+	     * @type {string}
+	     * @public
+	     */
 	    inputValue: {
 	        get: function get() {
 	            return this.editor.inputValue();
 	        }
 	    },
 
+	    /**
+	     * Set contents of the set.
+	     * @function
+	     * @memberof XBubbles
+	     * @param {string} data
+	     * @returns {boolean}
+	     * @public
+	     */
 	    setContent: {
 	        value: function value(data) {
 	            return this.editor.setContent(data);
 	        }
 	    },
 
+	    /**
+	     * Add bubble.
+	     * @function
+	     * @memberof XBubbles
+	     * @param {string} bubbleText
+	     * @param {Object} [data]
+	     * @returns {boolean}
+	     * @public
+	     */
 	    addBubble: {
 	        value: function value(bubbleText, data) {
 	            return this.editor.addBubble(bubbleText, data);
 	        }
 	    },
 
+	    /**
+	     * Remove bubble.
+	     * @function
+	     * @memberof XBubbles
+	     * @param {HTMLElement} nodeBubble
+	     * @returns {boolean}
+	     * @public
+	     */
 	    removeBubble: {
 	        value: function value(nodeBubble) {
 	            return this.editor.removeBubble(nodeBubble);
 	        }
 	    },
 
+	    /**
+	     * Edit bubble.
+	     * @function
+	     * @memberof XBubbles
+	     * @param {HTMLElement} nodeBubble
+	     * @returns {boolean}
+	     * @public
+	     */
 	    editBubble: {
 	        value: function value(nodeBubble) {
 	            return this.editor.editBubble(nodeBubble);
+	        }
+	    },
+
+	    /**
+	     * Starting formation bablow.
+	     * @function
+	     * @memberof XBubbles
+	     * @returns {boolean}
+	     * @public
+	     */
+	    bubbling: {
+	        value: function value() {
+	            return this.editor.bubbling();
 	        }
 	    }
 	});
@@ -166,69 +202,6 @@ var XBubbles =
 	    extends: 'div',
 	    prototype: XBubbles
 	});
-
-	var OPTIONS_PREPARE = {
-	    func: function func(value) {
-	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
-	        switch (type) {
-	            case 'string':
-	                return new Function('context', 'return context.' + value + ';')(context);
-
-	            case 'function':
-	                return value;
-	        }
-	    },
-	    bool: function bool(value) {
-	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
-	        switch (type) {
-	            case 'string':
-	                return value === 'true' || value === 'on';
-
-	            case 'boolean':
-	                return value;
-	        }
-	    },
-	    noop: function noop(value) {
-	        return value;
-	    },
-	    reg: function reg(value) {
-	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
-	        switch (type) {
-	            case 'string':
-	                if (value) {
-	                    var match = value.match(/\/(.+)\/([gimy]{0,3})/i);
-	                    if (match) {
-	                        return new RegExp(match[1], match[2]);
-	                    }
-	                }
-
-	                return null;
-
-	            case 'object':
-	                if (value instanceof context.RegExp || value === null) {
-	                    return value;
-	                }
-	        }
-	    },
-	    str: function str(value) {
-	        if (typeof value !== 'undefined') {
-	            return value ? String(value) : '';
-	        }
-	    }
-	};
-
-	function optionsPrepare(options) {
-	    for (var name in OPTIONS) {
-	        var _OPTIONS$name = _slicedToArray(OPTIONS[name], 2),
-	            type = _OPTIONS$name[0],
-	            def = _OPTIONS$name[1];
-
-	        options[name] = OPTIONS_PREPARE[type](options[name]);
-	        if (typeof options[name] === 'undefined') {
-	            options[name] = def;
-	        }
-	    }
-	}
 
 	function initEditor(node) {
 	    if (!node.editor) {
@@ -244,16 +217,6 @@ var XBubbles =
 	        editor.destroy(node);
 	        delete node.editor;
 	    }
-	}
-
-	function bubbleCopyOption(list) {
-	    return list.map(function (item) {
-	        return item.innerHTML;
-	    }).join(', ');
-	}
-
-	function checkBubblePasteOption() {
-	    return true;
 	}
 
 /***/ },
@@ -273,27 +236,236 @@ var XBubbles =
 
 	'use strict';
 
-	var native = __webpack_require__(3);
-	var mouse = __webpack_require__(17);
+	var context = __webpack_require__(1);
+	var bubbleset = __webpack_require__(3);
+	var bubble = __webpack_require__(4);
+	var cursor = __webpack_require__(13);
 
-	var _require = __webpack_require__(8),
-	    canUseDrag = _require.canUseDrag;
+	var _require = __webpack_require__(12),
+	    EV = _require.EV,
+	    PROPS = _require.PROPS;
 
-	exports.init = function (nodeSet) {
-	    if (canUseDrag) {
-	        return native.init(nodeSet);
-	    }
+	var text = __webpack_require__(5);
+	var events = __webpack_require__(10);
+	var utils = __webpack_require__(6);
+	var drag = __webpack_require__(15);
+	var select = __webpack_require__(14);
 
-	    return mouse.init(nodeSet);
+	var COMMON_EVENTS = {
+	    blur: __webpack_require__(21),
+	    click: __webpack_require__(22),
+	    focus: __webpack_require__(23),
+	    keydown: __webpack_require__(24)
 	};
 
-	exports.destroy = function (nodeSet) {
-	    if (canUseDrag) {
-	        return native.destroy(nodeSet);
+	var EDITOR_EVENTS = {
+	    blur: __webpack_require__(25),
+	    click: __webpack_require__(26),
+	    focus: __webpack_require__(27),
+	    keydown: __webpack_require__(28),
+	    keypress: __webpack_require__(29),
+	    keyup: __webpack_require__(30),
+	    paste: __webpack_require__(31)
+	};
+
+	var SELECT_EVENTS = {
+	    blur: __webpack_require__(32),
+	    click: __webpack_require__(33),
+	    keydown: __webpack_require__(34),
+	    keypress: __webpack_require__(35)
+	};
+
+	var PROXY_EVENTS = {
+	    blur: events.proxyLocal,
+	    click: events.proxyLocal,
+	    focus: events.proxyLocal,
+	    keydown: events.proxyLocal,
+	    keypress: events.proxyLocal,
+	    keyup: events.proxyLocal,
+	    mscontrolselect: events.prevent,
+	    paste: events.proxyLocal,
+	    resize: events.prevent,
+	    resizestart: events.prevent
+	};
+
+	exports.init = function (nodeWrap) {
+	    var nodeEditor = nodeWrap;
+	    nodeEditor.setAttribute('contenteditable', 'true');
+	    nodeEditor.setAttribute('spellcheck', 'false');
+
+	    events.onLocal(nodeEditor, COMMON_EVENTS);
+	    events.onLocal(nodeEditor, EDITOR_EVENTS);
+
+	    if (nodeEditor.options('selection')) {
+	        events.onLocal(nodeEditor, SELECT_EVENTS);
+	        drag.init(nodeEditor);
 	    }
 
-	    return mouse.destroy(nodeSet);
+	    events.on(nodeEditor, PROXY_EVENTS);
+
+	    nodeEditor.fireChange = utils.throttle(fireChange, nodeEditor);
+	    nodeEditor.fireEdit = utils.throttle(fireEdit, nodeEditor);
+	    nodeEditor.fireInput = utils.throttle(fireInput, nodeEditor);
+	    nodeEditor.fireBeforeRemove = fireBeforeRemove.bind(nodeEditor);
+
+	    return {
+	        addBubble: addBubble.bind(nodeEditor),
+	        bubbling: bubbling.bind(nodeEditor),
+	        editBubble: editBubble.bind(nodeEditor),
+	        getItems: getItems.bind(nodeEditor),
+	        inputValue: inputValue.bind(nodeEditor),
+	        removeBubble: removeBubble.bind(nodeEditor),
+	        setContent: setContent.bind(nodeEditor)
+	    };
 	};
+
+	exports.destroy = function (nodeWrap) {
+	    var nodeEditor = nodeWrap;
+	    events.off(nodeEditor, PROXY_EVENTS);
+	    events.offLocal(nodeEditor, COMMON_EVENTS);
+	    events.offLocal(nodeEditor, EDITOR_EVENTS);
+
+	    if (nodeEditor.options('selection')) {
+	        events.offLocal(nodeEditor, SELECT_EVENTS);
+	        drag.destroy(nodeEditor);
+	    }
+	};
+
+	function getItems() {
+	    return bubbleset.getBubbles(this);
+	}
+
+	function setContent(data) {
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
+
+	    var list = select.get(this);
+	    if (list.length) {
+	        bubbleset.removeBubbles(this, list);
+	        this.fireChange();
+	    }
+
+	    while (this.firstChild) {
+	        this.removeChild(this.firstChild);
+	    }
+
+	    data = text.html2text(data);
+	    this.appendChild(this.ownerDocument.createTextNode(data));
+	    bubble.bubbling(this);
+	    cursor.restore(this);
+
+	    return true;
+	}
+
+	function addBubble(bubbleText, dataAttributes) {
+	    var nodeBubble = bubble.create(this, bubbleText, dataAttributes);
+	    if (!nodeBubble) {
+	        return false;
+	    }
+
+	    if (text.text2bubble(this, nodeBubble)) {
+	        this.fireInput();
+	        this.fireChange();
+	        cursor.restore(this);
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function removeBubble(nodeBubble) {
+	    if (this.contains(nodeBubble)) {
+	        bubbleset.removeBubbles(this, [nodeBubble]);
+	        this.fireChange();
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function editBubble(nodeBubble) {
+	    if (this.contains(nodeBubble)) {
+	        return bubble.edit(this, nodeBubble);
+	    }
+
+	    return false;
+	}
+
+	function inputValue() {
+	    var textRange = text.currentTextRange(this);
+	    return textRange && text.textClean(textRange.toString()) || '';
+	}
+
+	function bubbling() {
+	    bubble.bubbling(this);
+	}
+
+	/**
+	 * Генерация события редактирования бабла.
+	 * Выполняется в контексте узла-обертки.
+	 * @alias module:x-bubbles/editor.fireEdit
+	 * @param {HTMLElement} nodeBubble нода бабл
+	 * @this HTMLElement
+	 * @private
+	 */
+	function fireEdit(nodeBubble) {
+	    events.dispatch(this, EV.BUBBLE_EDIT, {
+	        bubbles: false,
+	        cancelable: false,
+	        detail: { data: nodeBubble }
+	    });
+	}
+
+	/**
+	 * Генерация события изменения набора баблов.
+	 * Выполняется в контексте узла-обертки.
+	 * @alias module:x-bubbles/editor.fireChange
+	 * @this HTMLElement
+	 * @private
+	 */
+	function fireChange() {
+	    events.dispatch(this, EV.CHANGE, {
+	        bubbles: false,
+	        cancelable: false
+	    });
+	}
+
+	/**
+	 * Генерация события ввода текста.
+	 * Выполняется в контексте узла-обертки.
+	 * @alias module:x-bubbles/editor.fireInput
+	 * @this HTMLElement
+	 * @private
+	 */
+	function fireInput() {
+	    var editText = inputValue.call(this);
+
+	    if (this[PROPS.BUBBLE_VALUE] !== editText) {
+	        this[PROPS.BUBBLE_VALUE] = editText;
+
+	        events.dispatch(this, EV.BUBBLE_INPUT, {
+	            bubbles: false,
+	            cancelable: false,
+	            detail: { data: editText }
+	        });
+	    }
+	}
+
+	/**
+	 * Генерация события удаления баблов перед выполнением удаления из DOM.
+	 * Выполняется в контексте узла-обертки.
+	 * @alias module:x-bubbles/editor.fireRemove
+	 * @param {array} list список удаляемых узлов
+	 * @this HTMLElement
+	 * @private
+	 */
+	function fireBeforeRemove(list) {
+	    events.dispatch(this, EV.BEFORE_REMOVE, {
+	        bubbles: false,
+	        cancelable: false,
+	        detail: { data: list }
+	    });
+	}
 
 /***/ },
 /* 3 */
@@ -301,145 +473,148 @@ var XBubbles =
 
 	'use strict';
 
-	var context = __webpack_require__(1);
-	var select = __webpack_require__(4);
-	var bubbleset = __webpack_require__(7);
-	var events = __webpack_require__(12);
+	var bubble = __webpack_require__(4);
+	var text = __webpack_require__(5);
 
-	var _require = __webpack_require__(14),
-	    CLS = _require.CLS;
+	exports.closestNodeBubble = closestNodeBubble;
+	exports.closestNodeSet = closestNodeSet;
+	exports.findBubbleLeft = findBubbleLeft;
+	exports.findBubbleRight = findBubbleRight;
+	exports.getBubbles = getBubbles;
+	exports.hasBubbles = hasBubbles;
+	exports.headBubble = headBubble;
+	exports.lastBubble = lastBubble;
+	exports.nextBubble = nextBubble;
+	exports.prevBubble = prevBubble;
+	exports.removeBubbles = removeBubbles;
+	exports.moveBubbles = moveBubbles;
 
-	var _require2 = __webpack_require__(15),
-	    getDragImage = _require2.getDragImage,
-	    onDropSuccess = _require2.onDropSuccess,
-	    DRAG_IMG = _require2.DRAG_IMG;
+	function lastBubble(nodeSet) {
+	    return nodeSet.querySelector('[bubble]:last-child');
+	}
 
-	var EVENTS = {
-	    dragend: onDragend,
-	    dragenter: onDragenter,
-	    dragleave: onDragleave,
-	    dragover: onDragover,
-	    dragstart: onDragstart,
-	    drop: onDrop
-	};
+	function headBubble(nodeSet) {
+	    return nodeSet.querySelector('[bubble]:first-child');
+	}
 
-	var currentDragSet = null;
+	function getBubbles(nodeSet) {
+	    return Array.prototype.slice.call(nodeSet.querySelectorAll('[bubble]'));
+	}
 
-	exports.init = function (nodeSet) {
-	    events.on(nodeSet, EVENTS);
-	};
+	function hasBubbles(nodeSet) {
+	    return Boolean(nodeSet.querySelector('[bubble]'));
+	}
 
-	exports.destroy = function (nodeSet) {
-	    events.off(nodeSet, EVENTS);
-	};
-
-	function onDragstart(event) {
-	    event.stopPropagation();
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
-
-	    if (!nodeSet || !nodeBubble) {
-	        event.preventDefault();
+	function findBubbleLeft(selection) {
+	    if (!selection.focusNode || !selection.anchorNode) {
 	        return;
 	    }
 
-	    var selection = context.getSelection();
-	    selection && selection.removeAllRanges();
+	    var node = selection.focusNode.previousSibling;
 
-	    currentDragSet = nodeSet;
-	    nodeSet.classList.add(CLS.DRAGSTART);
-	    select.add(nodeBubble);
+	    if (selection.anchorNode !== selection.focusNode && selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING) {
+	        node = selection.anchorNode.previousSibling;
+	    }
 
-	    event.dataTransfer.effectAllowed = 'move';
-	    event.dataTransfer.setData('text/plain', '');
+	    while (node) {
+	        if (bubble.isBubbleNode(node)) {
+	            return node;
+	        }
 
-	    var list = select.get(currentDragSet);
-	    if (list.length > 1) {
-	        event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG.w, DRAG_IMG.h);
+	        if (node.nodeType === Node.TEXT_NODE && text.textClean(node.nodeValue)) {
+	            return;
+	        }
+
+	        node = node.previousSibling;
 	    }
 	}
 
-	function onDrop(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
+	function findBubbleRight(selection) {
+	    if (!selection.focusNode || !selection.anchorNode) {
 	        return;
 	    }
 
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    var node = selection.focusNode.nextSibling;
 
-	    if (!nodeSet || nodeSet === currentDragSet) {
-	        return;
+	    if (selection.anchorNode !== selection.focusNode && selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING) {
+	        node = selection.anchorNode.nextSibling;
 	    }
 
-	    var list = select.get(currentDragSet);
+	    while (node) {
+	        if (bubble.isBubbleNode(node)) {
+	            return node;
+	        }
 
-	    if (list.length) {
-	        list.forEach(function (item) {
-	            return nodeSet.appendChild(item);
-	        });
-	        context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
+	        if (node.nodeType === Node.TEXT_NODE && text.textClean(node.nodeValue)) {
+	            return;
+	        }
+
+	        node = node.nextSibling;
 	    }
 	}
 
-	function onDragover(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
+	function closestNodeSet(node) {
+	    while (node) {
+	        if (isEditorNode(node)) {
+	            return node;
+	        }
 
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    event.dataTransfer.dropEffect = 'move';
-	}
-
-	function onDragenter(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
-
-	    if (!currentDragSet) {
-	        return;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-	    if (nodeSet && nodeSet !== currentDragSet) {
-	        nodeSet.classList.add(CLS.DROPZONE);
+	        node = node.parentNode;
 	    }
 	}
 
-	function onDragleave(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
+	function closestNodeBubble(node) {
+	    while (node) {
+	        if (bubble.isBubbleNode(node)) {
+	            return node;
+	        }
 
-	    if (!currentDragSet) {
-	        return;
-	    }
+	        if (isEditorNode(node)) {
+	            return;
+	        }
 
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-	    if (nodeSet && nodeSet !== currentDragSet) {
-	        nodeSet.classList.remove(CLS.DROPZONE);
+	        node = node.parentNode;
 	    }
 	}
 
-	function onDragend(event) {
-	    event.stopPropagation();
-	    event.preventDefault();
+	function prevBubble(target) {
+	    var node = target && target.previousSibling;
+	    while (node) {
+	        if (bubble.isBubbleNode(node)) {
+	            return node;
+	        }
 
-	    if (!currentDragSet) {
-	        return;
+	        node = node.previousSibling;
 	    }
+	}
 
-	    currentDragSet.classList.remove(CLS.DRAGSTART);
+	function nextBubble(target) {
+	    var node = target && target.nextSibling;
+	    while (node) {
+	        if (bubble.isBubbleNode(node)) {
+	            return node;
+	        }
 
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (nodeSet && nodeSet !== currentDragSet) {
-	        nodeSet.classList.remove(CLS.DROPZONE);
+	        node = node.nextSibling;
 	    }
+	}
 
-	    currentDragSet = null;
+	function isEditorNode(node) {
+	    return node.nodeType === Node.ELEMENT_NODE && node.getAttribute('is') === 'x-bubbles';
+	}
+
+	function removeBubbles(nodeEditor, list) {
+	    nodeEditor.fireBeforeRemove(list);
+	    list.forEach(function (item) {
+	        return nodeEditor.removeChild(item);
+	    });
+	}
+
+	function moveBubbles(nodeEditorFrom, nodeEditorTo, list) {
+	    nodeEditorFrom.fireBeforeRemove(list);
+	    list.forEach(function (item) {
+	        return nodeEditorTo.appendChild(item);
+	    });
 	}
 
 /***/ },
@@ -449,184 +624,9 @@ var XBubbles =
 	'use strict';
 
 	var context = __webpack_require__(1);
-	var bubble = __webpack_require__(5);
-	var bubbleset = __webpack_require__(7);
+	var text = __webpack_require__(5);
 
-	var slice = Array.prototype.slice;
-	var PATH_SELECTED = '[bubble][selected]';
-	var PATH_NOT_SELECTED = '[bubble]:not([selected])';
-
-	exports.all = all;
-	exports.add = add;
-	exports.clear = clear;
-	exports.get = get;
-	exports.uniq = uniq;
-	exports.head = head;
-	exports.last = last;
-	exports.has = has;
-	exports.range = range;
-	exports.toggleUniq = toggleUniq;
-
-	function range(node) {
-	    if (!bubble.isBubbleNode(node)) {
-	        return;
-	    }
-
-	    var set = node.parentNode;
-	    var list = get(set);
-
-	    if (!list.length) {
-	        uniq(node);
-	        return;
-	    }
-
-	    clear(set);
-
-	    var headList = list[0];
-	    var lastList = list[list.length - 1];
-
-	    if (headList === lastList || !set.startRangeSelect) {
-	        set.startRangeSelect = headList;
-	    }
-
-	    var fromNode = void 0;
-	    var toNode = void 0;
-	    var position = node.compareDocumentPosition(set.startRangeSelect);
-
-	    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-	        fromNode = set.startRangeSelect;
-	        toNode = node;
-	    } else {
-	        fromNode = node;
-	        toNode = set.startRangeSelect;
-	    }
-
-	    if (fromNode && toNode) {
-	        var item = fromNode;
-
-	        while (item) {
-	            if (!setSelected(item)) {
-	                break;
-	            }
-
-	            if (item === toNode) {
-	                break;
-	            }
-
-	            item = item.nextSibling;
-	        }
-
-	        bubble.bubbling(set);
-	    }
-	}
-
-	function all(nodeSet) {
-	    slice.call(nodeSet.querySelectorAll(PATH_NOT_SELECTED)).forEach(function (item) {
-	        return setSelected(item);
-	    });
-	    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
-
-	    bubble.bubbling(nodeSet);
-
-	    var selection = context.getSelection();
-	    selection && selection.removeAllRanges();
-	}
-
-	function has(nodeSet) {
-	    return Boolean(nodeSet.querySelector(PATH_SELECTED));
-	}
-
-	function head(set) {
-	    return get(set)[0];
-	}
-
-	function last(set) {
-	    var list = get(set);
-	    return list[list.length - 1];
-	}
-
-	function get(nodeSet) {
-	    return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
-	}
-
-	function clear(nodeSet) {
-	    get(nodeSet).forEach(function (item) {
-	        return item.removeAttribute('selected');
-	    });
-	}
-
-	function add(node) {
-	    if (setSelected(node)) {
-	        var nodeSet = bubbleset.closestNodeSet(node);
-
-	        nodeSet.startRangeSelect = node;
-	        // ???
-	        bubble.bubbling(nodeSet);
-
-	        return true;
-	    }
-
-	    return false;
-	}
-
-	function uniq(node) {
-	    if (!bubble.isBubbleNode(node)) {
-	        return false;
-	    }
-
-	    var nodeSet = bubbleset.closestNodeSet(node);
-	    var selection = context.getSelection();
-
-	    selection && selection.removeAllRanges();
-	    clear(nodeSet);
-
-	    return add(node);
-	}
-
-	function toggleUniq(node) {
-	    if (isSelected(node)) {
-	        var nodeSet = bubbleset.closestNodeSet(node);
-
-	        if (get(nodeSet).length === 1) {
-	            return removeSelected(node);
-	        }
-	    }
-
-	    return uniq(node);
-	}
-
-	function isSelected(node) {
-	    return bubble.isBubbleNode(node) && node.hasAttribute('selected') || false;
-	}
-
-	function setSelected(node) {
-	    if (bubble.isBubbleNode(node)) {
-	        node.setAttribute('selected', '');
-	        return true;
-	    }
-
-	    return false;
-	}
-
-	function removeSelected(node) {
-	    if (bubble.isBubbleNode(node)) {
-	        node.removeAttribute('selected');
-	        return true;
-	    }
-
-	    return false;
-	}
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var context = __webpack_require__(1);
-	var text = __webpack_require__(6);
-
-	var _require = __webpack_require__(8),
+	var _require = __webpack_require__(6),
 	    escape = _require.escape,
 	    canUseDrag = _require.canUseDrag;
 
@@ -685,12 +685,12 @@ var XBubbles =
 
 	/**
 	 * У обертки нельзя делать tabindex=-1, иначе будет слетать фокус с поля ввода.
-	 * @param   {[type]} nodeSet             [description]
-	 * @param   {[type]} dataText            [description]
-	 * @param   {Object} [dataAttributes={}] [description]
-	 * @returns {[type]}                     [description]
+	 * @param {HTMLElement} nodeEditor
+	 * @param {string} dataText
+	 * @param {Object} [dataAttributes={}]
+	 * @returns {?HTMLElement}
 	 */
-	function create(nodeSet, dataText) {
+	function create(nodeEditor, dataText) {
 	    var dataAttributes = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 	    dataText = text.textClean(dataText);
@@ -699,10 +699,10 @@ var XBubbles =
 	        return;
 	    }
 
-	    var bubbleFormation = nodeSet.options('bubbleFormation');
-	    var classBubble = nodeSet.options('classBubble');
-	    var draggable = canUseDrag && nodeSet.options('draggable');
-	    var wrap = nodeSet.ownerDocument.createElement('span');
+	    var bubbleFormation = nodeEditor.options('bubbleFormation');
+	    var classBubble = nodeEditor.options('classBubble');
+	    var draggable = canUseDrag && nodeEditor.options('draggable') && nodeEditor.options('selection');
+	    var wrap = nodeEditor.ownerDocument.createElement('span');
 
 	    wrap.innerText = dataText;
 
@@ -868,16 +868,17 @@ var XBubbles =
 	}
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var context = __webpack_require__(1);
-	var bubbleset = __webpack_require__(7);
+	var bubbleset = __webpack_require__(3);
 
-	var _require = __webpack_require__(8),
-	    getSelection = _require.getSelection;
+	var _require = __webpack_require__(6),
+	    getSelection = _require.getSelection,
+	    correctSelection = _require.correctSelection;
 
 	/* eslint-disable max-len */
 
@@ -886,6 +887,8 @@ var XBubbles =
 	var REG_ZWS = /\u200B/;
 	var TEXT_ZWS = '\u200B';
 
+	exports.isEmptyLeft = isEmptyLeft;
+	exports.isEmptyRight = isEmptyRight;
 	exports.arrowRight = arrowRight;
 	exports.arrowLeft = arrowLeft;
 	exports.remove = remove;
@@ -897,6 +900,58 @@ var XBubbles =
 	exports.textClean = textClean;
 	exports.checkZws = checkZws;
 	exports.createZws = createZws;
+
+	function isEmptyLeft(selection) {
+	    var _correctSelection = correctSelection(selection),
+	        startNode = _correctSelection.startNode,
+	        startOffset = _correctSelection.startOffset;
+
+	    var isEmpty = true;
+	    var node = startNode;
+
+	    while (node) {
+	        if (node.nodeType === Node.TEXT_NODE) {
+	            var value = startOffset > 0 ? node.nodeValue.substring(0, startOffset) : node.nodeValue;
+
+	            if (textClean(value)) {
+	                isEmpty = false;
+	                break;
+	            }
+	        } else {
+	            break;
+	        }
+
+	        startOffset = 0;
+	        node = node.previousSibling;
+	    }
+
+	    return isEmpty;
+	}
+
+	function isEmptyRight(selection) {
+	    var _correctSelection2 = correctSelection(selection),
+	        endNode = _correctSelection2.endNode,
+	        endOffset = _correctSelection2.endOffset;
+
+	    var node = endNode;
+
+	    while (node) {
+	        if (node.nodeType === Node.TEXT_NODE) {
+	            var value = endOffset > -1 && endOffset < node.nodeValue.length ? node.nodeValue.substring(endOffset) : node.nodeValue;
+
+	            if (textClean(value)) {
+	                return false;
+	            }
+	        } else {
+	            return false;
+	        }
+
+	        endOffset = -1;
+	        node = node.nextSibling;
+	    }
+
+	    return true;
+	}
 
 	function text2bubble(nodeEditor, nodeBubble) {
 	    var selection = getSelection(nodeEditor);
@@ -1001,12 +1056,12 @@ var XBubbles =
 	        return false;
 	    }
 
-	    var _selectionCorrect = selectionCorrect(selection),
-	        startNode = _selectionCorrect.startNode,
-	        endNode = _selectionCorrect.endNode,
-	        startOffset = _selectionCorrect.startOffset,
-	        endOffset = _selectionCorrect.endOffset,
-	        revert = _selectionCorrect.revert;
+	    var _correctSelection3 = correctSelection(selection),
+	        startNode = _correctSelection3.startNode,
+	        endNode = _correctSelection3.endNode,
+	        startOffset = _correctSelection3.startOffset,
+	        endOffset = _correctSelection3.endOffset,
+	        revert = _correctSelection3.revert;
 
 	    if (!selection.isCollapsed && !extend) {
 	        selection.collapse(startNode, startOffset);
@@ -1079,12 +1134,12 @@ var XBubbles =
 	        return false;
 	    }
 
-	    var _selectionCorrect2 = selectionCorrect(selection),
-	        startNode = _selectionCorrect2.startNode,
-	        endNode = _selectionCorrect2.endNode,
-	        startOffset = _selectionCorrect2.startOffset,
-	        endOffset = _selectionCorrect2.endOffset,
-	        revert = _selectionCorrect2.revert;
+	    var _correctSelection4 = correctSelection(selection),
+	        startNode = _correctSelection4.startNode,
+	        endNode = _correctSelection4.endNode,
+	        startOffset = _correctSelection4.startOffset,
+	        endOffset = _correctSelection4.endOffset,
+	        revert = _correctSelection4.revert;
 
 	    if (!selection.isCollapsed && !extend) {
 	        selection.collapse(endNode, endOffset);
@@ -1214,173 +1269,20 @@ var XBubbles =
 	    return String(value || '').trim().replace(REG_REPLACE_NON_PRINTABLE, '');
 	}
 
-	function selectionCorrect(selection) {
-	    var startNode = selection.anchorNode;
-	    var endNode = selection.focusNode;
-	    var startOffset = selection.anchorOffset;
-	    var endOffset = selection.focusOffset;
-	    var revert = false;
-
-	    if (startNode === endNode) {
-	        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
-	        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
-	        revert = selection.anchorOffset > selection.focusOffset;
-	    } else {
-	        var position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
-	        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-	            startNode = selection.focusNode;
-	            startOffset = selection.focusOffset;
-	            endNode = selection.anchorNode;
-	            endOffset = selection.anchorOffset;
-	            revert = true;
-	        }
-	    }
-
-	    return { startNode: startNode, endNode: endNode, startOffset: startOffset, endOffset: endOffset, revert: revert };
-	}
-
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var bubble = __webpack_require__(5);
-	var text = __webpack_require__(6);
-
-	exports.closestNodeBubble = closestNodeBubble;
-	exports.closestNodeSet = closestNodeSet;
-	exports.findBubbleLeft = findBubbleLeft;
-	exports.findBubbleRight = findBubbleRight;
-	exports.getBubbles = getBubbles;
-	exports.hasBubbles = hasBubbles;
-	exports.headBubble = headBubble;
-	exports.lastBubble = lastBubble;
-	exports.nextBubble = nextBubble;
-	exports.prevBubble = prevBubble;
-
-	function lastBubble(nodeSet) {
-	    return nodeSet.querySelector('[bubble]:last-child');
-	}
-
-	function headBubble(nodeSet) {
-	    return nodeSet.querySelector('[bubble]:first-child');
-	}
-
-	function getBubbles(nodeSet) {
-	    return Array.prototype.slice.call(nodeSet.querySelectorAll('[bubble]'));
-	}
-
-	function hasBubbles(nodeSet) {
-	    return Boolean(nodeSet.querySelector('[bubble]'));
-	}
-
-	function findBubbleLeft(selection) {
-	    if (!selection.focusNode || !selection.anchorNode) {
-	        return;
-	    }
-
-	    var node = selection.focusNode.previousSibling;
-
-	    if (selection.anchorNode !== selection.focusNode && selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING) {
-	        node = selection.anchorNode.previousSibling;
-	    }
-
-	    while (node) {
-	        if (bubble.isBubbleNode(node)) {
-	            return node;
-	        }
-
-	        if (node.nodeType === Node.TEXT_NODE && text.textClean(node.nodeValue)) {
-	            return;
-	        }
-
-	        node = node.previousSibling;
-	    }
-	}
-
-	function findBubbleRight(selection) {
-	    if (!selection.focusNode || !selection.anchorNode) {
-	        return;
-	    }
-
-	    var node = selection.focusNode.nextSibling;
-
-	    if (selection.anchorNode !== selection.focusNode && selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING) {
-	        node = selection.anchorNode.nextSibling;
-	    }
-
-	    while (node) {
-	        if (bubble.isBubbleNode(node)) {
-	            return node;
-	        }
-
-	        if (node.nodeType === Node.TEXT_NODE && text.textClean(node.nodeValue)) {
-	            return;
-	        }
-
-	        node = node.nextSibling;
-	    }
-	}
-
-	function closestNodeSet(node) {
-	    while (node) {
-	        if (isEditorNode(node)) {
-	            return node;
-	        }
-
-	        node = node.parentNode;
-	    }
-	}
-
-	function closestNodeBubble(node) {
-	    while (node) {
-	        if (bubble.isBubbleNode(node)) {
-	            return node;
-	        }
-
-	        if (isEditorNode(node)) {
-	            return;
-	        }
-
-	        node = node.parentNode;
-	    }
-	}
-
-	function prevBubble(target) {
-	    var node = target && target.previousSibling;
-	    while (node) {
-	        if (bubble.isBubbleNode(node)) {
-	            return node;
-	        }
-
-	        node = node.previousSibling;
-	    }
-	}
-
-	function nextBubble(target) {
-	    var node = target && target.nextSibling;
-	    while (node) {
-	        if (bubble.isBubbleNode(node)) {
-	            return node;
-	        }
-
-	        node = node.nextSibling;
-	    }
-	}
-
-	function isEditorNode(node) {
-	    return node.nodeType === Node.ELEMENT_NODE && node.getAttribute('is') === 'x-bubbles';
-	}
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var raf = __webpack_require__(9);
+	var raf = __webpack_require__(7);
 	var context = __webpack_require__(1);
+
+	var _require = __webpack_require__(10),
+	    dispatch = _require.dispatch;
+
+	var _require2 = __webpack_require__(12),
+	    EV = _require2.EV;
 
 	/* eslint quotes: 0 */
 
@@ -1414,6 +1316,31 @@ var XBubbles =
 	    if (selection && selection.anchorNode && nodeEditor.compareDocumentPosition(selection.anchorNode) & Node.DOCUMENT_POSITION_CONTAINED_BY) {
 	        return selection;
 	    }
+	};
+
+	exports.correctSelection = function (selection) {
+	    var endNode = selection.focusNode;
+	    var endOffset = selection.focusOffset;
+	    var startNode = selection.anchorNode;
+	    var startOffset = selection.anchorOffset;
+	    var revert = false;
+
+	    if (startNode === endNode) {
+	        startOffset = Math.min(selection.anchorOffset, selection.focusOffset);
+	        endOffset = Math.max(selection.anchorOffset, selection.focusOffset);
+	        revert = selection.anchorOffset > selection.focusOffset;
+	    } else {
+	        var position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
+	        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+	            startNode = selection.focusNode;
+	            startOffset = selection.focusOffset;
+	            endNode = selection.anchorNode;
+	            endOffset = selection.anchorOffset;
+	            revert = true;
+	        }
+	    }
+
+	    return { startNode: startNode, endNode: endNode, startOffset: startOffset, endOffset: endOffset, revert: revert };
 	};
 
 	exports.throttle = function (callback, runContext) {
@@ -1461,6 +1388,44 @@ var XBubbles =
 	    return REG_IE.test(context.navigator.userAgent);
 	}();
 
+	exports.ready = function () {
+	    var elements = [];
+	    var ready = false;
+	    var lock = false;
+
+	    function onready() {
+	        raf(function () {
+	            context.setTimeout(function () {
+	                elements.length && dispatch(context, EV.READY, { detail: { data: elements.splice(0) } });
+	                ready = true;
+	            });
+	        });
+	    }
+
+	    function run() {
+	        if (ready && !lock) {
+	            lock = true;
+	            raf(function () {
+	                dispatch(context, EV.READY, { detail: { data: elements.splice(0) } });
+	                lock = false;
+	            });
+	        }
+	    }
+
+	    if (context.document.readyState === 'complete') {
+	        onready();
+	    } else if (context.document.readyState === 'interactive' && !context.attachEvent && (!context.HTMLImports || context.HTMLImports.ready)) {
+	        onready();
+	    } else {
+	        context.addEventListener(context.HTMLImports && !context.HTMLImports.ready ? 'HTMLImportsLoaded' : 'DOMContentLoaded', onready);
+	    }
+
+	    return function (element) {
+	        elements.push(element);
+	        run();
+	    };
+	}();
+
 	function unescapeHtmlChar(chr) {
 	    return HTML_UNESCAPES[chr];
 	}
@@ -1470,10 +1435,10 @@ var XBubbles =
 	}
 
 /***/ },
-/* 9 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(10)
+	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(8)
 	  , root = typeof window === 'undefined' ? global : window
 	  , vendors = ['moz', 'webkit']
 	  , suffix = 'AnimationFrame'
@@ -1549,7 +1514,7 @@ var XBubbles =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 10 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.7.1
@@ -1585,10 +1550,10 @@ var XBubbles =
 
 	}).call(this);
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(11)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
 
 /***/ },
-/* 11 */
+/* 9 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -1774,7 +1739,7 @@ var XBubbles =
 
 
 /***/ },
-/* 12 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1782,11 +1747,14 @@ var XBubbles =
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	/**
-	 * @module x-bubbles/event
+	 * @module x-bubbles/events
 	 */
 
 	var context = __webpack_require__(1);
-	var CustomEventCommon = __webpack_require__(13);
+	var CustomEventCommon = __webpack_require__(11);
+
+	var _require = __webpack_require__(12),
+	    PROPS = _require.PROPS;
 
 	exports.scrollX = scrollX;
 	exports.scrollY = scrollY;
@@ -1809,24 +1777,27 @@ var XBubbles =
 	};
 
 	exports.one = function (target, eventName, callback) {
-	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
-	    for (var name in events) {
-	        target.addEventListener(name, oneCallback(target, name, events[name]));
-	    }
+	    toggleEvent(target, eventName, callback, true, false, true);
 	};
 
 	exports.on = function (target, eventName, callback) {
-	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
-	    for (var name in events) {
-	        target.addEventListener(name, events[name]);
-	    }
+	    toggleEvent(target, eventName, callback);
 	};
 
 	exports.off = function (target, eventName, callback) {
-	    var events = callback ? _defineProperty({}, eventName, callback) : eventName;
-	    for (var name in events) {
-	        target.removeEventListener(name, events[name]);
-	    }
+	    toggleEvent(target, eventName, callback, false);
+	};
+
+	exports.oneLocal = function (target, eventName, callback) {
+	    toggleEvent(target, eventName, callback, true, true, true);
+	};
+
+	exports.onLocal = function (target, eventName, callback) {
+	    toggleEvent(target, eventName, callback, true, true);
+	};
+
+	exports.offLocal = function (target, eventName, callback) {
+	    toggleEvent(target, eventName, callback, false, true);
 	};
 
 	exports.prevent = function (event) {
@@ -1836,6 +1807,10 @@ var XBubbles =
 	    event.stopPropagation();
 	    event.preventDefault();
 	    return false;
+	};
+
+	exports.proxyLocal = function (event) {
+	    dispatchLocalEvent(event.currentTarget, event);
 	};
 
 	function scrollX() {
@@ -1898,15 +1873,77 @@ var XBubbles =
 	    element.dispatchEvent(new Custom(name, params));
 	}
 
-	function oneCallback(target, eventName, callback) {
+	function dispatchLocalEvent(element, event) {
+	    var callbacks = element[PROPS.LOCAL_EVENTS] && element[PROPS.LOCAL_EVENTS][event.type] || [];
+	    var sharedData = {};
+
+	    for (var i = 0; i < callbacks.length; i++) {
+	        if (event.immediatePropagationStopped) {
+	            break;
+	        }
+
+	        callbacks[i](event, sharedData);
+	    }
+	}
+
+	function oneCallback(element, eventName, callback) {
 	    return function _callback(event) {
-	        target.removeEventListener(eventName, _callback);
+	        element.removeEventListener(eventName, _callback);
 	        callback(event);
 	    };
 	}
 
+	var EV_ACTIONS = {
+	    addLocalEventListener: function addLocalEventListener(element, eventName, callback) {
+	        if (!element[PROPS.LOCAL_EVENTS]) {
+	            element[PROPS.LOCAL_EVENTS] = {};
+	        }
+
+	        if (!element[PROPS.LOCAL_EVENTS][eventName]) {
+	            element[PROPS.LOCAL_EVENTS][eventName] = [];
+	        }
+
+	        element[PROPS.LOCAL_EVENTS][eventName].push(callback);
+	    },
+
+	    removeLocalEventListener: function removeLocalEventListener(element, eventName, callback) {
+	        var callbacks = element[PROPS.LOCAL_EVENTS] && element[PROPS.LOCAL_EVENTS][eventName] || [];
+	        var i = 0;
+
+	        while (i < callbacks.length) {
+	            if (callbacks[i] === callback) {
+	                callbacks.splice(i, 1);
+	            } else {
+	                i++;
+	            }
+	        }
+	    },
+
+	    addEventListener: function addEventListener(element, eventName, callback) {
+	        element.addEventListener(eventName, callback);
+	    },
+
+	    removeEventListener: function removeEventListener(element, eventName, callback) {
+	        element.removeEventListener(eventName, callback);
+	    }
+	};
+
+	function toggleEvent(element, eventName, userCallback) {
+	    var isSet = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
+	    var isLocal = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
+	    var isOne = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
+
+	    var events = userCallback ? _defineProperty({}, eventName, userCallback) : eventName;
+	    var action = '' + (isSet ? 'add' : 'remove') + (isLocal ? 'Local' : '') + 'EventListener';
+
+	    for (var name in events) {
+	        var callback = isOne ? oneCallback(element, name, events[name]) : events[name];
+	        EV_ACTIONS[action](element, name, callback);
+	    }
+	}
+
 /***/ },
-/* 13 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1987,7 +2024,7 @@ var XBubbles =
 	module.exports = CustomEventCommon;
 
 /***/ },
-/* 14 */
+/* 12 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2017,6 +2054,7 @@ var XBubbles =
 	};
 
 	exports.EV = {
+	    BEFORE_REMOVE: 'before-remove',
 	    BUBBLE_EDIT: 'bubble-edit',
 	    BUBBLE_INPUT: 'bubble-input',
 	    CHANGE: 'change',
@@ -2024,17 +2062,422 @@ var XBubbles =
 	    DRAGENTER: 'dragenter',
 	    DRAGLEAVE: 'dragleave',
 	    DRAGSTART: 'dragstart',
-	    DROP: 'drop'
+	    DROP: 'drop',
+	    READY: 'x-bubbles-ready'
 	};
 
 	exports.PROPS = {
-	    BUBBLE_VALUE: '_bubbleValue',
-	    CLICK_TIME: '_clickTime',
-	    LOCK_COPY: '_lockCopy'
+	    BUBBLE_VALUE: '__bubble_value__',
+	    CLICK_TIME: '__click_time__',
+	    LOCAL_EVENTS: '__events__',
+	    LOCK_COPY: '__lock_copy__',
+	    OPTIONS: '__options__'
 	};
 
 /***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	/**
+	 * @module x-bubbles/cursor
+	 */
+
+	var context = __webpack_require__(1);
+	var text = __webpack_require__(5);
+	var select = __webpack_require__(14);
+
+	exports.restore = restore;
+	exports.restoreBasis = restoreBasis;
+
+	/**
+	 * Reset the cursor position to the end of the input field.
+	 * @alias module:x-bubbles/cursor.restore
+	 * @param {HTMLElement} nodeSet
+	 */
+	function restore(nodeSet) {
+	    select.clear(nodeSet);
+	    var basis = restoreBasis(nodeSet);
+	    var selection = context.getSelection();
+	    selection.removeAllRanges();
+	    selection.collapse(basis, 1);
+	}
+
+	/**
+	 * The creation of the fake text at the end childNodes
+	 * @alias module:x-bubbles/cursor.restoreBasis
+	 * @param {HTMLElement} nodeSet
+	 * @returns {HTMLTextElement} fake text node
+	 */
+	function restoreBasis(nodeSet) {
+	    var fakeText = text.createZws();
+
+	    if (nodeSet.hasChildNodes()) {
+	        var lastNode = nodeSet.childNodes[nodeSet.childNodes.length - 1];
+
+	        if (lastNode.isEqualNode(fakeText)) {
+	            fakeText = lastNode;
+	        } else {
+	            nodeSet.appendChild(fakeText);
+	        }
+	    } else {
+	        nodeSet.appendChild(fakeText);
+	    }
+
+	    return fakeText;
+	}
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(1);
+	var bubble = __webpack_require__(4);
+	var bubbleset = __webpack_require__(3);
+
+	var slice = Array.prototype.slice;
+	var PATH_SELECTED = '[bubble][selected]';
+	var PATH_NOT_SELECTED = '[bubble]:not([selected])';
+
+	exports.all = all;
+	exports.add = add;
+	exports.clear = clear;
+	exports.get = get;
+	exports.uniq = uniq;
+	exports.head = head;
+	exports.last = last;
+	exports.has = has;
+	exports.range = range;
+	exports.toggleUniq = toggleUniq;
+
+	function range(node) {
+	    if (!bubble.isBubbleNode(node)) {
+	        return;
+	    }
+
+	    var set = node.parentNode;
+	    var list = get(set);
+
+	    if (!list.length) {
+	        uniq(node);
+	        return;
+	    }
+
+	    clear(set);
+
+	    var headList = list[0];
+	    var lastList = list[list.length - 1];
+
+	    if (headList === lastList || !set.startRangeSelect) {
+	        set.startRangeSelect = headList;
+	    }
+
+	    var fromNode = void 0;
+	    var toNode = void 0;
+	    var position = node.compareDocumentPosition(set.startRangeSelect);
+
+	    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+	        fromNode = set.startRangeSelect;
+	        toNode = node;
+	    } else {
+	        fromNode = node;
+	        toNode = set.startRangeSelect;
+	    }
+
+	    if (fromNode && toNode) {
+	        var item = fromNode;
+
+	        while (item) {
+	            if (!setSelected(item)) {
+	                break;
+	            }
+
+	            if (item === toNode) {
+	                break;
+	            }
+
+	            item = item.nextSibling;
+	        }
+
+	        bubble.bubbling(set);
+	    }
+	}
+
+	function all(nodeSet) {
+	    slice.call(nodeSet.querySelectorAll(PATH_NOT_SELECTED)).forEach(function (item) {
+	        return setSelected(item);
+	    });
+	    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
+
+	    bubble.bubbling(nodeSet);
+
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
+	}
+
+	function has(nodeSet) {
+	    return Boolean(nodeSet.querySelector(PATH_SELECTED));
+	}
+
+	function head(set) {
+	    return get(set)[0];
+	}
+
+	function last(set) {
+	    var list = get(set);
+	    return list[list.length - 1];
+	}
+
+	function get(nodeSet) {
+	    return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
+	}
+
+	function clear(nodeSet) {
+	    get(nodeSet).forEach(function (item) {
+	        return item.removeAttribute('selected');
+	    });
+	}
+
+	function add(node) {
+	    if (setSelected(node)) {
+	        var nodeSet = bubbleset.closestNodeSet(node);
+
+	        nodeSet.startRangeSelect = node;
+	        // ???
+	        bubble.bubbling(nodeSet);
+
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function uniq(node) {
+	    if (!bubble.isBubbleNode(node)) {
+	        return false;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(node);
+	    var selection = context.getSelection();
+
+	    selection && selection.removeAllRanges();
+	    clear(nodeSet);
+
+	    return add(node);
+	}
+
+	function toggleUniq(node) {
+	    if (isSelected(node)) {
+	        var nodeSet = bubbleset.closestNodeSet(node);
+
+	        if (get(nodeSet).length === 1) {
+	            return removeSelected(node);
+	        }
+	    }
+
+	    return uniq(node);
+	}
+
+	function isSelected(node) {
+	    return bubble.isBubbleNode(node) && node.hasAttribute('selected') || false;
+	}
+
+	function setSelected(node) {
+	    if (bubble.isBubbleNode(node)) {
+	        node.setAttribute('selected', '');
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function removeSelected(node) {
+	    if (bubble.isBubbleNode(node)) {
+	        node.removeAttribute('selected');
+	        return true;
+	    }
+
+	    return false;
+	}
+
+/***/ },
 /* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var native = __webpack_require__(16);
+	var mouse = __webpack_require__(19);
+
+	var _require = __webpack_require__(6),
+	    canUseDrag = _require.canUseDrag;
+
+	exports.init = function (nodeSet) {
+	    if (canUseDrag) {
+	        return native.init(nodeSet);
+	    }
+
+	    return mouse.init(nodeSet);
+	};
+
+	exports.destroy = function (nodeSet) {
+	    if (canUseDrag) {
+	        return native.destroy(nodeSet);
+	    }
+
+	    return mouse.destroy(nodeSet);
+	};
+
+/***/ },
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var context = __webpack_require__(1);
+	var select = __webpack_require__(14);
+	var bubbleset = __webpack_require__(3);
+	var events = __webpack_require__(10);
+
+	var _require = __webpack_require__(12),
+	    CLS = _require.CLS;
+
+	var _require2 = __webpack_require__(17),
+	    getDragImage = _require2.getDragImage,
+	    onDropSuccess = _require2.onDropSuccess,
+	    DRAG_IMG = _require2.DRAG_IMG;
+
+	var EVENTS = {
+	    dragend: onDragend,
+	    dragenter: onDragenter,
+	    dragleave: onDragleave,
+	    dragover: onDragover,
+	    dragstart: onDragstart,
+	    drop: onDrop
+	};
+
+	var currentDragSet = null;
+
+	exports.init = function (nodeSet) {
+	    events.on(nodeSet, EVENTS);
+	};
+
+	exports.destroy = function (nodeSet) {
+	    events.off(nodeSet, EVENTS);
+	};
+
+	function onDragstart(event) {
+	    event.stopPropagation();
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
+
+	    if (!nodeSet || !nodeBubble) {
+	        event.preventDefault();
+	        return;
+	    }
+
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
+
+	    currentDragSet = nodeSet;
+	    nodeSet.classList.add(CLS.DRAGSTART);
+	    select.add(nodeBubble);
+
+	    event.dataTransfer.effectAllowed = 'move';
+	    event.dataTransfer.setData('text/plain', '');
+
+	    var list = select.get(currentDragSet);
+	    if (list.length > 1) {
+	        event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG.w, DRAG_IMG.h);
+	    }
+	}
+
+	function onDrop(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	    if (!nodeSet || nodeSet === currentDragSet) {
+	        return;
+	    }
+
+	    var list = select.get(currentDragSet);
+
+	    if (list.length) {
+	        bubbleset.moveBubbles(currentDragSet, nodeSet, list);
+	        context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
+	    }
+	}
+
+	function onDragover(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    event.dataTransfer.dropEffect = 'move';
+	}
+
+	function onDragenter(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    if (nodeSet && nodeSet !== currentDragSet) {
+	        nodeSet.classList.add(CLS.DROPZONE);
+	    }
+	}
+
+	function onDragleave(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+	    if (nodeSet && nodeSet !== currentDragSet) {
+	        nodeSet.classList.remove(CLS.DROPZONE);
+	    }
+	}
+
+	function onDragend(event) {
+	    event.stopPropagation();
+	    event.preventDefault();
+
+	    if (!currentDragSet) {
+	        return;
+	    }
+
+	    currentDragSet.classList.remove(CLS.DRAGSTART);
+
+	    var nodeSet = bubbleset.closestNodeSet(event.target);
+
+	    if (nodeSet && nodeSet !== currentDragSet) {
+	        nodeSet.classList.remove(CLS.DROPZONE);
+	    }
+
+	    currentDragSet = null;
+	}
+
+/***/ },
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2048,7 +2491,7 @@ var XBubbles =
 	exports.getDragImage = function () {
 	    if (!dragImage) {
 	        dragImage = new Image();
-	        dragImage.src = __webpack_require__(16);
+	        dragImage.src = __webpack_require__(18);
 	    }
 
 	    return dragImage;
@@ -2061,29 +2504,29 @@ var XBubbles =
 	};
 
 /***/ },
-/* 16 */
+/* 18 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAE8AAAAVCAMAAAAw/0MlAAABblBMVEUAAABOXIZJWIKCkbeNnMKMmsJNW4VNW4VWZY57ibFHV4KVpMxRYImCkLh9jbpgcJ1fcJ1JWoaZqdNUZpaHmMaVpdJIWolTZJKHmMZEV4iXqNdkdqhjdal2iLx2ib2Knc6PodNJXpJJXpNOYpdpfLKCk8JPYpdofLNugblugrqUptdZdLdZd8Nfeb93js1+ksuGm9SGm9VHaLhJarxKZqxKbL9La7pNbr9Pb71Ucr1Wbag/XqU/X6pAVopffMdjf8ZphMpwicx2js9BW51CWZN/ldCBl9KCmNNFYKRFZbGJndWOodVKX5RKX5ZKYJdWdcNXbKJYdL1KYJtAVYpaeMVJXpJKbMBgebpjeLBjf8VLYp5kd65kgMlofLRog8log8tJYqBth8xugrpviMtNabBxi851jc8/X6t3i8BOaK56kdB9lNFOaa5Ob8FPY5qBl9NGXJODmNOEmdNQbrpRcsJUb7RGXJSTptmUptiUp9kfFguNAAAAK3RSTlMAJCQkJDw8P0JCRUVubpaWlpmZwMDAw8nJzMzV29vb7e3t7fDw+Pn5+fn8jndhZAAAAQhJREFUeF6tz2VXwgAYBtBnhBKKkgoGKPY2urvT7u7ujn/vtsM5fN/e+w8uJEaLa+HvR7Zfl8WILo293Qq8vykQaLXtGnRoPcH6i1L1oEcLidpde6BQc6shslXvaVSHIdD7S9c0Sv5+ACbfFRXftBoYuzijUry1AXPHJ1QK5349pvYOqeSPfCaM8Dkq/EFxHAMst0mDY3cL89Clkis0kqmd/CxgvUt8Ukg8rub4UYCZicTiT0rFY5HnNY4dBNC32GiGwtFt+aLhULOx9CWMdRAMbVXK6cyNfJl0ubL8IYytEDHe0/XX7IZ82e/9S3HsZSDpmSQZT/SiQ+UgGDtU6DKYnYrGTrMBon97+TS1J80efgAAAABJRU5ErkJggg=="
 
 /***/ },
-/* 17 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var context = __webpack_require__(1);
-	var events = __webpack_require__(12);
-	var utils = __webpack_require__(8);
-	var select = __webpack_require__(4);
-	var bubbleset = __webpack_require__(7);
-	var Modernizr = __webpack_require__(18);
+	var events = __webpack_require__(10);
+	var utils = __webpack_require__(6);
+	var select = __webpack_require__(14);
+	var bubbleset = __webpack_require__(3);
+	var Modernizr = __webpack_require__(20);
 
-	var _require = __webpack_require__(14),
+	var _require = __webpack_require__(12),
 	    CLS = _require.CLS,
 	    EV = _require.EV;
 
-	var _require2 = __webpack_require__(15),
+	var _require2 = __webpack_require__(17),
 	    getDragImage = _require2.getDragImage,
 	    onDropSuccess = _require2.onDropSuccess,
 	    DRAG_IMG = _require2.DRAG_IMG;
@@ -2158,27 +2601,23 @@ var XBubbles =
 	    }
 
 	    if (currentDragSet) {
-	        (function () {
-	            var nodeSet = bubbleset.closestNodeSet(event.target);
+	        var nodeSet = bubbleset.closestNodeSet(event.target);
 
-	            if (nodeSet && nodeSet !== currentDragSet) {
-	                var list = select.get(currentDragSet);
+	        if (nodeSet && nodeSet !== currentDragSet) {
+	            var list = select.get(currentDragSet);
 
-	                if (list.length) {
-	                    list.forEach(function (item) {
-	                        return nodeSet.appendChild(item);
-	                    });
-	                    context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
-	                }
+	            if (list.length) {
+	                bubbleset.moveBubbles(currentDragSet, nodeSet, list);
+	                context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
 	            }
+	        }
 
-	            var _ = currentDragSet;
-	            currentDragSet = null;
+	        var _2 = currentDragSet;
+	        currentDragSet = null;
 
-	            _.classList.remove(CLS.DRAGSTART);
-	            events.dispatch(_, EV.DROP, { bubbles: false, cancelable: false });
-	            events.dispatch(_, EV.DRAGEND, { bubbles: false, cancelable: false });
-	        })();
+	        _2.classList.remove(CLS.DRAGSTART);
+	        events.dispatch(_2, EV.DROP, { bubbles: false, cancelable: false });
+	        events.dispatch(_2, EV.DRAGEND, { bubbles: false, cancelable: false });
 	    }
 	}
 
@@ -2260,86 +2699,94 @@ var XBubbles =
 	}
 
 /***/ },
-/* 18 */
+/* 20 */
 /***/ function(module, exports) {
 
 	module.exports = Modernizr;
 
 /***/ },
-/* 19 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var raf = __webpack_require__(9);
-	var context = __webpack_require__(1);
-	var bubbleset = __webpack_require__(7);
-	var bubble = __webpack_require__(5);
-	var cursor = __webpack_require__(20);
-	var select = __webpack_require__(4);
+	var events = __webpack_require__(10);
 
-	var _require = __webpack_require__(14),
-	    KEY = _require.KEY,
-	    EV = _require.EV,
+	var _require = __webpack_require__(12),
 	    PROPS = _require.PROPS;
 
-	var text = __webpack_require__(6);
-	var events = __webpack_require__(12);
-	var utils = __webpack_require__(8);
+	/**
+	 * @param {Event} event
+	 * @returns {?boolean}
+	 */
 
-	var eventCopy = __webpack_require__(21);
-	var eventPaste = __webpack_require__(22);
-	var eventBackspace = __webpack_require__(23);
-	var eventDelete = __webpack_require__(24);
 
-	var EVENTS = {
-	    blur: onBlur,
-	    click: onClick,
-	    focus: onFocus,
-	    keydown: onKeydown,
-	    keypress: onKeypress,
-	    keyup: onKeyup,
-	    mscontrolselect: events.prevent,
-	    paste: eventPaste,
-	    resize: events.prevent,
-	    resizestart: events.prevent
+	module.exports = function (event) {
+	    if (event.currentTarget[PROPS.LOCK_COPY]) {
+	        return events.prevent(event);
+	    }
 	};
 
-	exports.init = function (nodeWrap) {
-	    var nodeEditor = nodeWrap;
-	    nodeEditor.setAttribute('contenteditable', 'true');
-	    nodeEditor.setAttribute('spellcheck', 'false');
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
 
-	    nodeEditor.fireChange = utils.throttle(fireChange, nodeWrap);
-	    nodeEditor.fireEdit = utils.throttle(fireEdit, nodeWrap);
-	    nodeEditor.fireInput = utils.throttle(fireInput, nodeWrap);
+	'use strict';
 
-	    events.on(nodeEditor, EVENTS);
+	var events = __webpack_require__(10);
+	var bubbleset = __webpack_require__(3);
 
-	    return {
-	        addBubble: addBubble.bind(nodeEditor),
-	        editBubble: editBubble.bind(nodeEditor),
-	        inputValue: inputValue.bind(nodeEditor),
-	        removeBubble: removeBubble.bind(nodeEditor),
-	        setContent: setContent.bind(nodeEditor)
-	    };
-	};
+	var _require = __webpack_require__(12),
+	    PROPS = _require.PROPS;
 
-	exports.destroy = function (nodeEditor) {
-	    events.off(nodeEditor, EVENTS);
-	};
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 * @param {HTMLElement} [sharedData.nodeBubble]
+	 * @param {boolean} [sharedData.isDblclick]
+	 * @returns {?boolean}
+	 */
 
-	function onBlur(event) {
-	    var nodeEditor = event.currentTarget;
-	    if (nodeEditor[PROPS.LOCK_COPY]) {
+
+	module.exports = function (event, sharedData) {
+	    var nodeEditor = bubbleset.closestNodeSet(event.target);
+	    if (!nodeEditor) {
 	        return events.prevent(event);
 	    }
 
-	    select.clear(nodeEditor);
-	    bubble.bubbling(nodeEditor);
-	}
+	    sharedData.nodeEditor = nodeEditor;
+	    sharedData.nodeBubble = bubbleset.closestNodeBubble(event.target);
+	    sharedData.isDblclick = false;
 
-	function onFocus(event) {
+	    if (sharedData.nodeBubble) {
+	        var clickTime = Date.now();
+	        sharedData.isDblclick = nodeEditor[PROPS.CLICK_TIME] && clickTime - nodeEditor[PROPS.CLICK_TIME] < 200;
+
+	        nodeEditor[PROPS.CLICK_TIME] = clickTime;
+	    }
+	};
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var raf = __webpack_require__(7);
+	var context = __webpack_require__(1);
+	var events = __webpack_require__(10);
+
+	var _require = __webpack_require__(12),
+	    PROPS = _require.PROPS;
+
+	/**
+	 * @param {Event} event
+	 * @returns {?boolean}
+	 */
+
+
+	module.exports = function (event) {
 	    var nodeEditor = event.currentTarget;
 	    if (nodeEditor[PROPS.LOCK_COPY]) {
 	        events.prevent(event);
@@ -2353,11 +2800,315 @@ var XBubbles =
 
 	        return false;
 	    }
+	};
 
-	    cursor.restore(nodeEditor);
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var utils = __webpack_require__(6);
+	var events = __webpack_require__(10);
+
+	var _require = __webpack_require__(12),
+	    KEY = _require.KEY;
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {Selection} [sharedData.selection]
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+
+
+	module.exports = function (event, sharedData) {
+	    var code = events.keyCode(event);
+	    sharedData.nodeEditor = event.currentTarget;
+
+	    switch (code) {
+	        case KEY.Left:
+	        case KEY.Right:
+	        case KEY.Delete:
+	        case KEY.Backspace:
+	            event.preventDefault();
+	            sharedData.selection = utils.getSelection(event.currentTarget);
+	            break;
+	    }
+	};
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var bubble = __webpack_require__(4);
+
+	/**
+	 * @param {Event} event
+	 */
+	module.exports = function (event) {
+	  bubble.bubbling(event.currentTarget);
+	};
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var events = __webpack_require__(10);
+	var bubble = __webpack_require__(4);
+	var cursor = __webpack_require__(13);
+	var utils = __webpack_require__(6);
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {HTMLElement} sharedData.nodeEditor
+	 * @param {HTMLElement} [sharedData.nodeBubble]
+	 * @param {boolean} sharedData.isDblclick
+	 */
+	module.exports = function (event, sharedData) {
+	    var nodeEditor = sharedData.nodeEditor;
+	    var nodeBubble = sharedData.nodeBubble;
+	    var isDblclick = sharedData.isDblclick;
+
+	    if (nodeBubble) {
+	        if (isDblclick) {
+	            if (!event.shiftKey && !events.metaKey(event)) {
+	                bubble.edit(nodeEditor, nodeBubble);
+	            }
+	        } else if (!nodeEditor.options('selection')) {
+	            bubble.bubbling(nodeEditor);
+	            cursor.restore(nodeEditor);
+	        }
+	    } else {
+	        var selection = utils.getSelection(nodeEditor);
+
+	        if (!selection || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
+	            cursor.restore(nodeEditor);
+	        }
+	    }
+	};
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var cursor = __webpack_require__(13);
+
+	/**
+	 * @param {Event} event
+	 */
+	module.exports = function (event) {
+	  cursor.restore(event.currentTarget);
+	};
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var events = __webpack_require__(10);
+	var bubble = __webpack_require__(4);
+	var cursor = __webpack_require__(13);
+	var text = __webpack_require__(5);
+	var bubbleset = __webpack_require__(3);
+
+	var _require = __webpack_require__(12),
+	    KEY = _require.KEY;
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isTextSelectAll]
+	 * @param {boolean} [sharedData.isEmptyLeft]
+	 * @param {boolean} [sharedData.isEmptyRight]
+	 * @param {Selection} [sharedData.selection]
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+
+
+	module.exports = function (event, sharedData) {
+	    var code = events.keyCode(event);
+	    var metaKey = events.metaKey(event);
+
+	    switch (code) {
+	        case KEY.Esc:
+	            event.preventDefault();
+	            bubble.bubbling(sharedData.nodeEditor);
+	            cursor.restore(sharedData.nodeEditor);
+	            break;
+
+	        case KEY.Backspace:
+	            onBackspace(event, sharedData);
+	            break;
+
+	        case KEY.Delete:
+	            onDelete(event, sharedData);
+	            break;
+
+	        case KEY.Left:
+	            onArrowLeft(event, sharedData);
+	            break;
+
+	        case KEY.Right:
+	            onArrowRight(event, sharedData);
+	            break;
+
+	        case KEY.a:
+	            if (metaKey) {
+	                event.preventDefault();
+	                sharedData.isTextSelectAll = text.selectAll(null, sharedData.nodeEditor);
+	            }
+	            break;
+	    }
+	};
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isEmptyLeft]
+	 * @param {Selection} [sharedData.selection]
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+	function onBackspace(event, sharedData) {
+	    var selection = sharedData.selection;
+	    if (!selection) {
+	        return;
+	    }
+
+	    var nodeEditor = sharedData.nodeEditor;
+
+	    if (!selection.isCollapsed || text.arrowLeft(selection, true)) {
+	        text.remove(selection);
+	        nodeEditor.fireInput();
+	    } else if (!nodeEditor.options('selection')) {
+	        var nodeBubble = bubbleset.findBubbleLeft(selection);
+
+	        if (nodeBubble) {
+	            bubbleset.removeBubbles(nodeEditor, [nodeBubble]);
+	            nodeEditor.fireChange();
+	        }
+	    } else {
+	        sharedData.isEmptyLeft = true;
+	    }
 	}
 
-	function onKeyup(event) {
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isEmptyRight]
+	 * @param {Selection} [sharedData.selection]
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+	function onDelete(event, sharedData) {
+	    var selection = sharedData.selection;
+	    if (!selection) {
+	        return;
+	    }
+
+	    var nodeEditor = sharedData.nodeEditor;
+
+	    if (!selection.isCollapsed || text.arrowRight(selection, true)) {
+	        text.remove(selection);
+	        nodeEditor.fireInput();
+	    } else if (!nodeEditor.options('selection')) {
+	        var nodeBubble = bubbleset.findBubbleRight(selection);
+
+	        if (nodeBubble) {
+	            bubbleset.removeBubbles(nodeEditor, [nodeBubble]);
+	            nodeEditor.fireChange();
+	        }
+	    } else {
+	        sharedData.isEmptyRight = true;
+	    }
+	}
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isEmptyLeft]
+	 * @param {Selection} [sharedData.selection]
+	 */
+	function onArrowLeft(event, sharedData) {
+	    sharedData.isEmptyLeft = !text.arrowLeft(sharedData.selection, event.shiftKey);
+	}
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isEmptyRight]
+	 * @param {Selection} [sharedData.selection]
+	 */
+	function onArrowRight(event, sharedData) {
+	    sharedData.isEmptyRight = !text.arrowRight(sharedData.selection, event.shiftKey);
+	}
+
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var events = __webpack_require__(10);
+	var bubble = __webpack_require__(4);
+	var cursor = __webpack_require__(13);
+
+	var _require = __webpack_require__(12),
+	    KEY = _require.KEY;
+
+	/**
+	 * @param {Event} event
+	 */
+
+
+	module.exports = function (event) {
+	    var code = events.keyCode(event);
+	    var nodeEditor = event.currentTarget;
+
+	    if (code === KEY.Enter) {
+	        event.preventDefault();
+	        if (!nodeEditor.options('disableControls')) {
+	            bubble.bubbling(nodeEditor);
+	            cursor.restore(nodeEditor);
+	        }
+	    } else {
+	        var separator = nodeEditor.options('separator');
+	        if (separator && separator.test(String.fromCharCode(code))) {
+	            var separatorCond = nodeEditor.options('separatorCond');
+
+	            if (!separatorCond || separatorCond(nodeEditor.inputValue)) {
+	                event.preventDefault();
+	                bubble.bubbling(nodeEditor);
+	                cursor.restore(nodeEditor);
+	            }
+	        }
+	    }
+	};
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var events = __webpack_require__(10);
+
+	var _require = __webpack_require__(12),
+	    KEY = _require.KEY;
+
+	/**
+	 * @param {Event} event
+	 */
+
+
+	module.exports = function (event) {
 	    var nodeEditor = event.currentTarget;
 	    var code = events.keyCode(event);
 	    var isPrintableChar = event.key ? event.key.length === 1 : (code > 47 || code === KEY.Space || code === KEY.Backspace) && code !== KEY.Cmd;
@@ -2365,467 +3116,21 @@ var XBubbles =
 	    if (isPrintableChar) {
 	        nodeEditor.fireInput();
 	    }
-	}
-
-	function onKeypress(event) {
-	    var code = events.keyCode(event);
-	    var nodeEditor = event.currentTarget;
-
-	    /* eslint no-case-declarations: 0 */
-	    switch (code) {
-	        case KEY.Enter:
-	            event.preventDefault();
-	            if (!nodeEditor.options('disableControls')) {
-	                if (!editBubbleKeyboardEvent(nodeEditor)) {
-	                    bubble.bubbling(nodeEditor);
-	                    cursor.restore(nodeEditor);
-	                }
-	            }
-	            break;
-
-	        case KEY.Space:
-	            if (editBubbleKeyboardEvent(nodeEditor)) {
-	                event.preventDefault();
-	            }
-	            break;
-
-	        default:
-	            var separator = nodeEditor.options('separator');
-	            if (separator && separator.test(String.fromCharCode(code))) {
-	                event.preventDefault();
-	                bubble.bubbling(nodeEditor);
-	                cursor.restore(nodeEditor);
-	            }
-	    }
-	}
-
-	function onKeydown(event) {
-	    var code = events.keyCode(event);
-	    var metaKey = events.metaKey(event);
-	    var nodeEditor = event.currentTarget;
-	    var enable = !nodeEditor.options('disableControls');
-
-	    switch (code) {
-	        case KEY.Esc:
-	            event.preventDefault();
-	            bubble.bubbling(nodeEditor);
-	            cursor.restore(nodeEditor);
-	            break;
-
-	        case KEY.Backspace:
-	            event.preventDefault();
-	            eventBackspace(event);
-	            break;
-
-	        case KEY.Delete:
-	            event.preventDefault();
-	            eventDelete(event);
-	            break;
-
-	        case KEY.Left:
-	            event.preventDefault();
-	            arrowLeft(event);
-	            break;
-
-	        // сдвигаем курсор в начало списка
-	        case KEY.Top:
-	            event.preventDefault();
-	            if (enable) {
-	                var headBubble = bubbleset.headBubble(nodeEditor);
-	                headBubble && select.uniq(headBubble);
-	            }
-	            break;
-
-	        case KEY.Right:
-	            event.preventDefault();
-	            arrowRight(event);
-	            break;
-
-	        // сдвигаем курсор в конец списка
-	        // case KEY.Tab:
-	        case KEY.Bottom:
-	            event.preventDefault();
-	            if (enable && select.has(nodeEditor)) {
-	                cursor.restore(nodeEditor);
-	            }
-	            break;
-
-	        case KEY.a:
-	            if (metaKey) {
-	                event.preventDefault();
-
-	                if (!text.selectAll(null, event.currentTarget)) {
-	                    select.all(nodeEditor);
-	                }
-	            }
-	            break;
-
-	        case KEY.c:
-	            if (metaKey) {
-	                eventCopy(event);
-	            }
-	            break;
-
-	        case KEY.x:
-	            if (metaKey) {
-	                eventCopy(event, function () {
-	                    return eventDelete(event);
-	                });
-	            }
-	            break;
-	    }
-	}
-
-	function arrowLeft(event) {
-	    var selection = context.getSelection();
-
-	    if (text.arrowLeft(selection, event.shiftKey)) {
-	        return;
-	    }
-
-	    if (selection.anchorNode && selection.anchorNode.nodeType === Node.TEXT_NODE) {
-	        var nodeBubble = bubbleset.prevBubble(selection.anchorNode);
-	        nodeBubble && select.uniq(nodeBubble);
-	        return;
-	    }
-
-	    var nodeSet = event.currentTarget;
-	    var list = select.get(nodeSet);
-	    var begin = list.length > 1 && list[0] === nodeSet.startRangeSelect ? list[list.length - 1] : list[0];
-
-	    var node = bubbleset.prevBubble(begin);
-
-	    if (node) {
-	        if (event.shiftKey) {
-	            select.range(node);
-	        } else {
-	            select.uniq(node);
-	        }
-	    }
-	}
-
-	function arrowRight(event) {
-	    var selection = context.getSelection();
-
-	    if (text.arrowRight(selection, event.shiftKey)) {
-	        return;
-	    }
-
-	    if (selection.focusNode && selection.focusNode.nodeType === Node.TEXT_NODE) {
-	        var nodeBubble = bubbleset.nextBubble(selection.focusNode);
-	        nodeBubble && select.uniq(nodeBubble);
-	        return;
-	    }
-
-	    var nodeSet = event.currentTarget;
-	    var list = select.get(nodeSet);
-	    var begin = list.length > 1 && list[list.length - 1] === nodeSet.startRangeSelect ? list[0] : list[list.length - 1];
-
-	    var node = bubbleset.nextBubble(begin);
-
-	    if (node) {
-	        if (event.shiftKey) {
-	            select.range(node);
-	        } else {
-	            select.uniq(node);
-	        }
-	    } else if (begin && begin.nextSibling && begin.nextSibling.nodeType === Node.TEXT_NODE) {
-	        select.clear(nodeSet);
-	        selection.collapse(begin.nextSibling, 0);
-	    } else {
-	        cursor.restore(nodeSet);
-	    }
-	}
-
-	function onClick(event) {
-	    var nodeSet = bubbleset.closestNodeSet(event.target);
-
-	    if (!nodeSet) {
-	        return;
-	    }
-
-	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
-
-	    if (nodeBubble) {
-	        var clickTime = Date.now();
-	        var isDblclick = nodeSet[PROPS.CLICK_TIME] && clickTime - nodeSet[PROPS.CLICK_TIME] < 200;
-
-	        nodeSet[PROPS.CLICK_TIME] = clickTime;
-
-	        if (events.metaKey(event)) {
-	            select.add(nodeBubble);
-	        } else if (event.shiftKey) {
-	            if (!nodeSet.startRangeSelect) {
-	                select.uniq(nodeBubble);
-	            } else {
-	                select.range(nodeBubble);
-	            }
-	        } else if (isDblclick) {
-	            bubble.edit(nodeSet, nodeBubble);
-	        } else {
-	            select.toggleUniq(nodeBubble);
-	        }
-	    } else {
-	        select.clear(nodeSet);
-
-	        var selection = context.getSelection();
-
-	        if (!selection || !selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) {
-
-	            cursor.restore(nodeSet);
-	        }
-	    }
-	}
-
-	function editBubbleKeyboardEvent(nodeEditor) {
-	    var selection = context.getSelection();
-
-	    if (!selection || !selection.rangeCount) {
-	        var list = select.get(nodeEditor);
-
-	        if (list.length === 1) {
-	            return bubble.edit(nodeEditor, list[0]);
-	        }
-	    }
-
-	    return false;
-	}
-
-	function setContent(data) {
-	    var selection = context.getSelection();
-	    selection && selection.removeAllRanges();
-
-	    while (this.firstChild) {
-	        this.removeChild(this.firstChild);
-	    }
-
-	    data = text.html2text(data);
-	    this.appendChild(this.ownerDocument.createTextNode(data));
-	    bubble.bubbling(this);
-	    cursor.restore(this);
-	}
-
-	function addBubble(bubbleText, dataAttributes) {
-	    var nodeBubble = bubble.create(this, bubbleText, dataAttributes);
-	    if (!nodeBubble) {
-	        return false;
-	    }
-
-	    if (text.text2bubble(this, nodeBubble)) {
-	        this.fireInput();
-	        this.fireChange();
-	        cursor.restore(this);
-	        return true;
-	    }
-
-	    return false;
-	}
-
-	function removeBubble(nodeBubble) {
-	    if (this.contains(nodeBubble)) {
-	        this.removeChild(nodeBubble);
-	        this.fireChange();
-	        return true;
-	    }
-
-	    return false;
-	}
-
-	function editBubble(nodeBubble) {
-	    if (this.contains(nodeBubble)) {
-	        return bubble.edit(this, nodeBubble);
-	    }
-
-	    return false;
-	}
-
-	function inputValue() {
-	    var textRange = text.currentTextRange(this);
-	    return textRange && text.textClean(textRange.toString()) || '';
-	}
-
-	/**
-	 * Генерация события редактирования бабла.
-	 * Выполняется в контексте узла-обертки.
-	 * @alias module:x-bubbles/editor.fireEdit
-	 * @param {HTMLElement} nodeBubble нода бабл
-	 * @this HTMLElement
-	 * @private
-	 */
-	function fireEdit(nodeBubble) {
-	    events.dispatch(this, EV.BUBBLE_EDIT, {
-	        bubbles: false,
-	        cancelable: false,
-	        detail: { data: nodeBubble }
-	    });
-	}
-
-	/**
-	 * Генерация события изменения набора баблов.
-	 * Выполняется в контексте узла-обертки.
-	 * @alias module:x-bubbles/editor.fireChange
-	 * @this HTMLElement
-	 * @private
-	 */
-	function fireChange() {
-	    events.dispatch(this, EV.CHANGE, {
-	        bubbles: false,
-	        cancelable: false
-	    });
-	}
-
-	/**
-	 * Генерация события ввода текста.
-	 * Выполняется в контексте узла-обертки.
-	 * @alias module:x-bubbles/editor.fireInput
-	 * @this HTMLElement
-	 * @private
-	 */
-	function fireInput() {
-	    var editText = inputValue.call(this);
-
-	    if (this[PROPS.BUBBLE_VALUE] !== editText) {
-	        this[PROPS.BUBBLE_VALUE] = editText;
-
-	        events.dispatch(this, EV.BUBBLE_INPUT, {
-	            bubbles: false,
-	            cancelable: false,
-	            detail: { data: editText }
-	        });
-	    }
-	}
-
-/***/ },
-/* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	/**
-	 * @module x-bubbles/cursor
-	 */
-
-	var context = __webpack_require__(1);
-	var text = __webpack_require__(6);
-	var select = __webpack_require__(4);
-
-	exports.restore = restore;
-	exports.restoreBasis = restoreBasis;
-
-	/**
-	 * Reset the cursor position to the end of the input field.
-	 * @alias module:x-bubbles/cursor.restore
-	 * @param {HTMLElement} nodeSet
-	 */
-	function restore(nodeSet) {
-	    select.clear(nodeSet);
-	    var basis = restoreBasis(nodeSet);
-	    var selection = context.getSelection();
-	    selection.removeAllRanges();
-	    selection.collapse(basis, 1);
-	}
-
-	/**
-	 * The creation of the fake text at the end childNodes
-	 * @alias module:x-bubbles/cursor.restoreBasis
-	 * @param {HTMLElement} nodeSet
-	 * @returns {HTMLTextElement} fake text node
-	 */
-	function restoreBasis(nodeSet) {
-	    var fakeText = text.createZws();
-
-	    if (nodeSet.hasChildNodes()) {
-	        var lastNode = nodeSet.childNodes[nodeSet.childNodes.length - 1];
-
-	        if (lastNode.isEqualNode(fakeText)) {
-	            fakeText = lastNode;
-	        } else {
-	            nodeSet.appendChild(fakeText);
-	        }
-	    } else {
-	        nodeSet.appendChild(fakeText);
-	    }
-
-	    return fakeText;
-	}
-
-/***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var raf = __webpack_require__(9);
-	var events = __webpack_require__(12);
-	var select = __webpack_require__(4);
-
-	var _require = __webpack_require__(14),
-	    PROPS = _require.PROPS;
-
-	var utils = __webpack_require__(8);
-
-	module.exports = function (event) {
-	    var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
-
-	    var nodeEditor = event.target;
-	    var selection = utils.getSelection(nodeEditor);
-
-	    if (selection) {
-	        return false;
-	    }
-
-	    var list = select.get(nodeEditor);
-
-	    if (!list.length) {
-	        return false;
-	    }
-
-	    var bubbleCopy = nodeEditor.options('bubbleCopy');
-	    var value = bubbleCopy(list);
-
-	    if (!value) {
-	        return false;
-	    }
-
-	    nodeEditor[PROPS.LOCK_COPY] = true;
-
-	    var target = nodeEditor.ownerDocument.createElement('input');
-	    target.value = value;
-	    target.style.cssText = '\n        position: absolute;\n        left: -9999px;\n        width: 1px;\n        height: 1px;\n        margin: 0;\n        padding: 0;\n        border: none;';
-
-	    nodeEditor.parentNode.appendChild(target);
-
-	    events.one(target, {
-	        keyup: function keyup() {
-	            return nodeEditor.focus();
-	        },
-	        blur: function blur() {
-	            removeNode(target);
-	            raf(callback);
-	        }
-	    });
-
-	    target.select();
-	    return true;
 	};
 
-	function removeNode(node) {
-	    node && node.parentNode && node.parentNode.removeChild(node);
-	}
-
 /***/ },
-/* 22 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var raf = __webpack_require__(9);
+	var raf = __webpack_require__(7);
 	var context = __webpack_require__(1);
-	var bubble = __webpack_require__(5);
-	var cursor = __webpack_require__(20);
-	var text = __webpack_require__(6);
+	var bubble = __webpack_require__(4);
+	var cursor = __webpack_require__(13);
+	var text = __webpack_require__(5);
 
-	var _require = __webpack_require__(8),
+	var _require = __webpack_require__(6),
 	    isIE = _require.isIE;
 
 	module.exports = function (event) {
@@ -2888,36 +3193,183 @@ var XBubbles =
 	}
 
 /***/ },
-/* 23 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var raf = __webpack_require__(9);
-	var select = __webpack_require__(4);
-	var text = __webpack_require__(6);
-	var bubbleset = __webpack_require__(7);
-	var bubble = __webpack_require__(5);
-	var cursor = __webpack_require__(20);
-	var utils = __webpack_require__(8);
+	var select = __webpack_require__(14);
 
 	/**
-	 * Реакция на событие нажатия на кнопку Backspace.
-	 * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
-	 * @param {KeyboardEvent} event
+	 * @param {Event} event
 	 */
 	module.exports = function (event) {
-	    var nodeEditor = event.target;
-	    var selection = utils.getSelection(nodeEditor);
+	  select.clear(event.currentTarget);
+	};
+
+/***/ },
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var events = __webpack_require__(10);
+	var select = __webpack_require__(14);
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {HTMLElement} sharedData.nodeEditor
+	 * @param {HTMLElement} [sharedData.nodeBubble]
+	 * @param {boolean} sharedData.isDblclick
+	 */
+	module.exports = function (event, sharedData) {
+	    var nodeEditor = sharedData.nodeEditor;
+	    var nodeBubble = sharedData.nodeBubble;
+	    var isDblclick = sharedData.isDblclick;
+
+	    if (nodeBubble) {
+	        if (events.metaKey(event)) {
+	            select.add(nodeBubble);
+	        } else if (event.shiftKey) {
+	            if (!nodeEditor.startRangeSelect) {
+	                select.uniq(nodeBubble);
+	            } else {
+	                select.range(nodeBubble);
+	            }
+	        } else if (!isDblclick) {
+	            select.toggleUniq(nodeBubble);
+	        }
+	    } else {
+	        select.clear(nodeEditor);
+	    }
+	};
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var raf = __webpack_require__(7);
+	var events = __webpack_require__(10);
+	var utils = __webpack_require__(6);
+	var bubble = __webpack_require__(4);
+	var select = __webpack_require__(14);
+	var bubbleset = __webpack_require__(3);
+	var cursor = __webpack_require__(13);
+
+	var _require = __webpack_require__(12),
+	    KEY = _require.KEY,
+	    PROPS = _require.PROPS;
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isTextSelectAll]
+	 * @param {boolean} [sharedData.isEmptyLeft]
+	 * @param {boolean} [sharedData.isEmptyRight]
+	 * @param {Selection} [sharedData.selection]
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+
+
+	module.exports = function (event, sharedData) {
+	    var code = events.keyCode(event);
+	    var metaKey = events.metaKey(event);
+
+	    switch (code) {
+	        case KEY.Backspace:
+	            onBackspace(event, sharedData);
+	            break;
+
+	        case KEY.Delete:
+	            onDelete(event, sharedData);
+	            break;
+
+	        case KEY.Left:
+	            onArrowLeft(event, sharedData);
+	            break;
+
+	        case KEY.Right:
+	            onArrowRight(event, sharedData);
+	            break;
+
+	        // курсор в начало списка
+	        case KEY.Top:
+	            event.preventDefault();
+	            onTop(event, sharedData);
+	            break;
+
+	        // курсор в конец списка
+	        case KEY.Bottom:
+	            event.preventDefault();
+	            onBottom(event, sharedData);
+	            break;
+
+	        case KEY.a:
+	            if (metaKey && !sharedData.isTextSelectAll) {
+	                event.preventDefault();
+	                select.all(sharedData.nodeEditor);
+	            }
+	            break;
+
+	        case KEY.c:
+	            metaKey && copyBubbles(sharedData.nodeEditor);
+	            break;
+
+	        case KEY.x:
+	            metaKey && copyBubbles(sharedData.nodeEditor, function () {
+	                return onDelete(event, sharedData);
+	            });
+	            break;
+	    }
+	};
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+	function onTop(event, sharedData) {
+	    var nodeEditor = sharedData.nodeEditor;
+	    if (nodeEditor.options('disableControls')) {
+	        return;
+	    }
+
+	    var nodeBubble = bubbleset.headBubble(nodeEditor);
+	    nodeBubble && select.uniq(nodeBubble);
+	}
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+	function onBottom(event, sharedData) {
+	    var nodeEditor = sharedData.nodeEditor;
+	    if (nodeEditor.options('disableControls')) {
+	        return;
+	    }
+
+	    if (select.has(nodeEditor)) {
+	        cursor.restore(nodeEditor);
+	    }
+	}
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isEmptyLeft]
+	 * @param {Selection} [sharedData.selection]
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+	function onBackspace(event, sharedData) {
+	    var nodeEditor = sharedData.nodeEditor;
+	    var selection = sharedData.selection;
 
 	    if (selection) {
-	        if (!selection.isCollapsed) {
-	            text.remove(selection);
-	            nodeEditor.fireInput();
-	        } else if (text.arrowLeft(selection, true)) {
-	            text.remove(selection);
-	            nodeEditor.fireInput();
-	        } else {
+	        if (sharedData.isEmptyLeft) {
 	            var nodeBubble = bubbleset.findBubbleLeft(selection);
 	            nodeBubble && select.uniq(nodeBubble);
 	        }
@@ -2928,25 +3380,126 @@ var XBubbles =
 	            return cursor.restore(nodeEditor);
 	        });
 	    }
-	};
+	}
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isEmptyRight]
+	 * @param {Selection} [sharedData.selection]
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+	function onDelete(event, sharedData) {
+	    var nodeEditor = sharedData.nodeEditor;
+	    var selection = sharedData.selection;
+
+	    if (selection) {
+	        if (sharedData.isEmptyRight) {
+	            var nodeBubble = bubbleset.findBubbleRight(selection);
+	            nodeBubble && select.uniq(nodeBubble);
+	        }
+	    } else if (!removeBubbles(nodeEditor, true)) {
+	        nodeEditor.focus();
+	        // без задержки не восстанавливает курсор
+	        raf(function () {
+	            return cursor.restore(nodeEditor);
+	        });
+	    }
+	}
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isEmptyLeft]
+	 * @param {Selection} [sharedData.selection]
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+	function onArrowLeft(event, sharedData) {
+	    var selection = sharedData.selection;
+
+	    if (selection) {
+	        if (sharedData.isEmptyLeft) {
+	            var nodeBubble = bubbleset.findBubbleLeft(selection);
+	            nodeBubble && select.uniq(nodeBubble);
+	        }
+	    } else {
+	        var nodeEditor = sharedData.nodeEditor;
+	        var list = select.get(nodeEditor);
+	        var begin = list.length > 1 && list[0] === nodeEditor.startRangeSelect ? list[list.length - 1] : list[0];
+
+	        var node = bubbleset.prevBubble(begin);
+
+	        if (node) {
+	            if (event.shiftKey) {
+	                select.range(node);
+	            } else {
+	                select.uniq(node);
+	            }
+	        }
+	    }
+	}
+
+	/**
+	 * @param {Event} event
+	 * @param {Object} sharedData
+	 * @param {boolean} [sharedData.isEmptyRight]
+	 * @param {Selection} [sharedData.selection]
+	 * @param {HTMLElement} [sharedData.nodeEditor]
+	 */
+	function onArrowRight(event, sharedData) {
+	    var selection = sharedData.selection;
+
+	    if (selection) {
+	        if (sharedData.isEmptyRight) {
+	            var nodeBubble = bubbleset.findBubbleRight(selection);
+	            nodeBubble && select.uniq(nodeBubble);
+	        }
+	    } else {
+	        var nodeEditor = sharedData.nodeEditor;
+	        var list = select.get(nodeEditor);
+	        var begin = list.length > 1 && list[list.length - 1] === nodeEditor.startRangeSelect ? list[0] : list[list.length - 1];
+
+	        var node = bubbleset.nextBubble(begin);
+
+	        if (node) {
+	            if (event.shiftKey) {
+	                select.range(node);
+	            } else {
+	                select.uniq(node);
+	            }
+
+	            // } else if (begin && begin.nextSibling && begin.nextSibling.nodeType === Node.TEXT_NODE) {
+	            //     select.clear(nodeEditor);
+	            //     selection.collapse(begin.nextSibling, 0);
+	        } else {
+	            cursor.restore(nodeEditor);
+	        }
+	    }
+	}
 
 	function removeBubbles(nodeEditor) {
+	    var removeFromRight = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
 	    var list = select.get(nodeEditor);
 	    if (!list.length) {
 	        return false;
 	    }
 
-	    var prevBubble = list[0].previousSibling;
-	    var nextBubble = list[list.length - 1].nextSibling;
+	    var firstBubble = list[0].previousSibling;
+	    var secondBubble = list[list.length - 1].nextSibling;
 
-	    list.forEach(function (item) {
-	        return item.parentNode.removeChild(item);
-	    });
+	    if (removeFromRight) {
+	        var _ = firstBubble;
+	        firstBubble = secondBubble;
+	        secondBubble = _;
+	    }
 
-	    if (bubble.isBubbleNode(prevBubble)) {
-	        select.uniq(prevBubble);
-	    } else if (bubble.isBubbleNode(nextBubble)) {
-	        select.uniq(nextBubble);
+	    bubbleset.removeBubbles(nodeEditor, list);
+
+	    if (bubble.isBubbleNode(firstBubble)) {
+	        select.uniq(firstBubble);
+	    } else if (bubble.isBubbleNode(secondBubble)) {
+	        select.uniq(secondBubble);
 	    } else {
 	        nodeEditor.focus();
 	        // без задержки не восстанавливает курсор
@@ -2959,76 +3512,227 @@ var XBubbles =
 	    return true;
 	}
 
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
+	function copyBubbles(nodeEditor) {
+	    var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
 
-	'use strict';
-
-	var raf = __webpack_require__(9);
-	var select = __webpack_require__(4);
-	var text = __webpack_require__(6);
-	var bubbleset = __webpack_require__(7);
-	var bubble = __webpack_require__(5);
-	var cursor = __webpack_require__(20);
-	var utils = __webpack_require__(8);
-
-	/**
-	 * Реакция на событие нажатия на кнопку Delete.
-	 * Нельзя выполнять normalize() перед выполнением, иначе в ИЕ сбивается Selection.
-	 * @param {KeyboardEvent} event
-	 */
-	module.exports = function (event) {
-	    var nodeEditor = event.target;
 	    var selection = utils.getSelection(nodeEditor);
-
 	    if (selection) {
-	        if (!selection.isCollapsed) {
-	            text.remove(selection);
-	            nodeEditor.fireInput();
-	        } else if (text.arrowRight(selection, true)) {
-	            text.remove(selection);
-	            nodeEditor.fireInput();
-	        } else {
-	            var nodeBubble = bubbleset.findBubbleRight(selection);
-	            nodeBubble && select.uniq(nodeBubble);
-	        }
-	    } else if (!removeBubbles(nodeEditor)) {
-	        nodeEditor.focus();
-	        // без задержки не восстанавливает курсор
-	        raf(function () {
-	            return cursor.restore(nodeEditor);
-	        });
+	        return false;
 	    }
-	};
 
-	function removeBubbles(nodeEditor) {
 	    var list = select.get(nodeEditor);
 	    if (!list.length) {
 	        return false;
 	    }
 
-	    var prevBubble = list[0].previousSibling;
-	    var nextBubble = list[list.length - 1].nextSibling;
+	    var bubbleCopy = nodeEditor.options('bubbleCopy');
+	    var value = bubbleCopy(list);
 
-	    list.forEach(function (item) {
-	        return item.parentNode.removeChild(item);
-	    });
-
-	    if (bubble.isBubbleNode(nextBubble)) {
-	        select.uniq(nextBubble);
-	    } else if (bubble.isBubbleNode(prevBubble)) {
-	        select.uniq(prevBubble);
-	    } else {
-	        nodeEditor.focus();
-	        // без задержки не восстанавливает курсор
-	        raf(function () {
-	            return cursor.restore(nodeEditor);
-	        });
+	    if (!value) {
+	        return false;
 	    }
 
-	    nodeEditor.fireChange();
+	    nodeEditor[PROPS.LOCK_COPY] = true;
+
+	    var target = nodeEditor.ownerDocument.createElement('input');
+	    target.value = value;
+	    target.style.cssText = '\n        position: absolute;\n        left: -9999px;\n        width: 1px;\n        height: 1px;\n        margin: 0;\n        padding: 0;\n        border: none;';
+
+	    nodeEditor.parentNode.appendChild(target);
+
+	    events.one(target, {
+	        keyup: function keyup() {
+	            return nodeEditor.focus();
+	        },
+	        blur: function blur() {
+	            target && target.parentNode && target.parentNode.removeChild(target);
+	            raf(callback);
+	        }
+	    });
+
+	    target.select();
 	    return true;
+	}
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var events = __webpack_require__(10);
+	var utils = __webpack_require__(6);
+	var bubble = __webpack_require__(4);
+	var select = __webpack_require__(14);
+
+	var _require = __webpack_require__(12),
+	    KEY = _require.KEY;
+
+	/**
+	 * @param {Event} event
+	 */
+
+
+	module.exports = function (event) {
+	    var code = events.keyCode(event);
+	    var nodeEditor = event.currentTarget;
+
+	    if (code === KEY.Enter) {
+	        event.preventDefault();
+	        if (!nodeEditor.options('disableControls')) {
+	            editBubbleKeyboardEvent(nodeEditor);
+	        }
+	    } else if (code === KEY.Space) {
+	        if (editBubbleKeyboardEvent(nodeEditor)) {
+	            event.preventDefault();
+	        }
+	    }
+	};
+
+	function editBubbleKeyboardEvent(nodeEditor) {
+	    var selection = utils.getSelection(nodeEditor);
+
+	    if (!selection || !selection.rangeCount) {
+	        var list = select.get(nodeEditor);
+
+	        if (list.length === 1) {
+	            return bubble.edit(nodeEditor, list[0]);
+	        }
+	    }
+
+	    return false;
+	}
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	var context = __webpack_require__(1);
+
+	var _require = __webpack_require__(12),
+	    PROPS = _require.PROPS;
+
+	var REG_STRREG = /\/(.+)\/([gimy]{0,3})/i;
+
+	var OPTIONS = {
+	    begining: ['reg', null, 'begining'],
+	    bubbleCopy: ['func', function (list) {
+	        return list.map(function (item) {
+	            return item.innerHTML;
+	        }).join(', ');
+	    }, 'bubble-copy'],
+	    bubbleDeformation: ['func', function () {}, 'bubble-deformation'],
+	    bubbleFormation: ['func', function () {}, 'bubble-formation'],
+	    checkBubblePaste: ['func', function () {
+	        return true;
+	    }, 'check-bubble-paste'],
+	    classBubble: ['str', 'bubble', 'class-bubble'],
+	    disableControls: ['bool', false, 'disable-controls'],
+	    draggable: ['bool', true, 'draggable'],
+	    ending: ['reg', null, 'ending'], // /\@ya\.ru/g
+	    selection: ['bool', true, 'selection'],
+	    separator: ['reg', /[,;]/, 'separator'],
+	    separatorCond: ['func', null, 'separator-cond'],
+	    tokenizer: ['func', null, 'tokenizer']
+	};
+
+	var OPTIONS_PREPARE = {
+	    func: function func(value) {
+	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+	        switch (type) {
+	            case 'string':
+	                return new Function('context', 'return context.' + value + ';')(context);
+
+	            case 'function':
+	                return value;
+	        }
+	    },
+	    bool: function bool(value) {
+	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+	        switch (type) {
+	            case 'string':
+	                return value === 'true' || value === 'on';
+
+	            case 'boolean':
+	                return value;
+	        }
+	    },
+	    noop: function noop(value) {
+	        return value;
+	    },
+	    reg: function reg(value) {
+	        var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+	        switch (type) {
+	            case 'string':
+	                if (value) {
+	                    var match = value.match(REG_STRREG);
+	                    if (match) {
+	                        return new RegExp(match[1], match[2]);
+	                    }
+	                }
+
+	                return null;
+
+	            case 'object':
+	                if (value instanceof context.RegExp || value === null) {
+	                    return value;
+	                }
+	        }
+	    },
+	    str: function str(value) {
+	        if (typeof value !== 'undefined') {
+	            return value ? String(value) : '';
+	        }
+	    }
+	};
+
+	module.exports = function (node, name, value) {
+	    if (name) {
+	        if (!node[PROPS.OPTIONS]) {
+	            reinitOptions(node);
+	        }
+
+	        if (typeof value !== 'undefined') {
+	            node[PROPS.OPTIONS][name] = value;
+	            prepareOptions(node[PROPS.OPTIONS]);
+	        } else {
+	            return node[PROPS.OPTIONS][name];
+	        }
+	    } else {
+	        reinitOptions(node);
+	    }
+	};
+
+	function reinitOptions(node) {
+	    var options = node[PROPS.OPTIONS] = node[PROPS.OPTIONS] || {};
+
+	    for (var optionName in OPTIONS) {
+	        var attrName = 'data-' + OPTIONS[optionName][2];
+	        if (node.hasAttribute(attrName)) {
+	            options[optionName] = node.getAttribute(attrName);
+	        }
+	    }
+
+	    prepareOptions(options);
+	}
+
+	function prepareOptions(options) {
+	    for (var name in OPTIONS) {
+	        var _OPTIONS$name = _slicedToArray(OPTIONS[name], 2),
+	            type = _OPTIONS$name[0],
+	            def = _OPTIONS$name[1];
+
+	        options[name] = OPTIONS_PREPARE[type](options[name]);
+	        if (typeof options[name] === 'undefined') {
+	            options[name] = def;
+	        }
+	    }
 	}
 
 /***/ }
