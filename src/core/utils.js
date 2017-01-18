@@ -28,6 +28,7 @@ const REG_UNESCAPED_HTML = /[&<>"'`]/g;
 const REG_HAS_ESCAPED_HTML = RegExp(REG_ESCAPED_HTML.source);
 const REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
 const REG_IE = /Trident|Edge/;
+const REG_MOBILE_IE = /IEMobile/;
 
 exports.getSelection = function (nodeEditor) {
     const selection = context.getSelection();
@@ -106,6 +107,10 @@ exports.canUseDrag = (function () {
 
 exports.isIE = (function () {
     return REG_IE.test(context.navigator.userAgent);
+})();
+
+exports.isMobileIE = (function () {
+    return REG_MOBILE_IE.test(context.navigator.userAgent);
 })();
 
 exports.ready = (function () {

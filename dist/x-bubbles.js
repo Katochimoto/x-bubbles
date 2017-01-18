@@ -1309,6 +1309,7 @@ var XBubbles =
 	var REG_HAS_ESCAPED_HTML = RegExp(REG_ESCAPED_HTML.source);
 	var REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
 	var REG_IE = /Trident|Edge/;
+	var REG_MOBILE_IE = /IEMobile/;
 
 	exports.getSelection = function (nodeEditor) {
 	    var selection = context.getSelection();
@@ -1386,6 +1387,10 @@ var XBubbles =
 
 	exports.isIE = function () {
 	    return REG_IE.test(context.navigator.userAgent);
+	}();
+
+	exports.isMobileIE = function () {
+	    return REG_MOBILE_IE.test(context.navigator.userAgent);
 	}();
 
 	exports.ready = function () {
@@ -2087,21 +2092,26 @@ var XBubbles =
 	var context = __webpack_require__(1);
 	var text = __webpack_require__(5);
 	var select = __webpack_require__(14);
+	var utils = __webpack_require__(6);
 
 	exports.restore = restore;
 	exports.restoreBasis = restoreBasis;
 
 	/**
 	 * Reset the cursor position to the end of the input field.
+	 * This action is forbidden in the IE Mobile because it
+	 * causes a browser crash. There is still no workaround.
 	 * @alias module:x-bubbles/cursor.restore
 	 * @param {HTMLElement} nodeSet
 	 */
 	function restore(nodeSet) {
-	    select.clear(nodeSet);
-	    var basis = restoreBasis(nodeSet);
-	    var selection = context.getSelection();
-	    selection.removeAllRanges();
-	    selection.collapse(basis, 1);
+	    if (!utils.isMobileIE) {
+	        select.clear(nodeSet);
+	        var basis = restoreBasis(nodeSet);
+	        var selection = context.getSelection();
+	        selection.removeAllRanges();
+	        selection.collapse(basis, 1);
+	    }
 	}
 
 	/**
