@@ -73,7 +73,7 @@ exports.init = function (nodeWrap) {
         getItems: getItems.bind(nodeEditor),
         inputValue: inputValue.bind(nodeEditor),
         removeBubble: removeBubble.bind(nodeEditor),
-        setContent: setContent.bind(nodeEditor),
+        setContent: setContent.bind(nodeEditor)
     };
 };
 

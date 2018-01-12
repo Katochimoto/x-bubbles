@@ -76,18 +76,44 @@ const OPTIONS_PREPARE = {
     }
 };
 
-module.exports = function (node, name, value) {
-    if (name) {
+/**
+ * @param {HTMLElement} node
+ * @param {array} args
+ * @param {string|object} args.0 - string, if only one option is inserted, or object, if many options inserted,
+ *  in the second case second argument doing nothing
+ * @param {*} args.1 - value of inserted option
+ *
+ * @returns {*}
+ */
+module.exports = function (node, ...args) {
+    const value = args[0];
+
+    if (value) {
         if (!node[ PROPS.OPTIONS ]) {
             reinitOptions(node);
         }
 
-        if (typeof value !== 'undefined') {
-            node[ PROPS.OPTIONS ][ name ] = value;
+        if (typeof value === 'object' && value !== null) {
+            const optionsObj = value;
+
+            Object.keys(optionsObj).forEach((optionName) => {
+                node[ PROPS.OPTIONS ][ optionName ] = optionsObj[ optionName ];
+            });
+
+            prepareOptions(node[ PROPS.OPTIONS ]);
+
+            return;
+        }
+
+        const optionName = value;
+        const optionValue = args[1];
+
+        if (typeof optionValue !== 'undefined') {
+            node[ PROPS.OPTIONS ][ optionName ] = optionValue;
             prepareOptions(node[ PROPS.OPTIONS ]);
 
         } else {
-            return node[ PROPS.OPTIONS ][ name ];
+            return node[ PROPS.OPTIONS ][ optionName ];
         }
 
     } else {

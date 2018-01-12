@@ -92,7 +92,7 @@ var XBubbles =
 	     * The receiving and recording settings.
 	     * @memberof XBubbles
 	     * @function
-	     * @param {string} name
+	     * @param {string|object} name - string, if only one option is inserted, or object - if many options inserted
 	     * @param {*} value
 	     * @returns {*}
 	     * @public
@@ -3709,17 +3709,43 @@ var XBubbles =
 	    }
 	};
 
-	module.exports = function (node, name, value) {
-	    if (name) {
+	/**
+	 * @param {HTMLElement} node
+	 * @param {array} args
+	 * @param {string|object} args.0 - string, if only one option is inserted, or object, if many options inserted,
+	 *  in the second case second argument doing nothing
+	 * @param {*} args.1 - value of inserted option
+	 *
+	 * @returns {*}
+	 */
+	module.exports = function (node) {
+	    var value = arguments.length <= 1 ? undefined : arguments[1];
+
+	    if (value) {
 	        if (!node[PROPS.OPTIONS]) {
 	            reinitOptions(node);
 	        }
 
-	        if (typeof value !== 'undefined') {
-	            node[PROPS.OPTIONS][name] = value;
+	        if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' && value !== null) {
+	            var optionsObj = value;
+
+	            Object.keys(optionsObj).forEach(function (optionName) {
+	                node[PROPS.OPTIONS][optionName] = optionsObj[optionName];
+	            });
+
+	            prepareOptions(node[PROPS.OPTIONS]);
+
+	            return;
+	        }
+
+	        var optionName = value;
+	        var optionValue = arguments.length <= 2 ? undefined : arguments[2];
+
+	        if (typeof optionValue !== 'undefined') {
+	            node[PROPS.OPTIONS][optionName] = optionValue;
 	            prepareOptions(node[PROPS.OPTIONS]);
 	        } else {
-	            return node[PROPS.OPTIONS][name];
+	            return node[PROPS.OPTIONS][optionName];
 	        }
 	    } else {
 	        reinitOptions(node);
