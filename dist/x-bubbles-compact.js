@@ -1753,6 +1753,8 @@ var XBubbles =
 
 	'use strict';
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 	/**
@@ -1874,12 +1876,14 @@ var XBubbles =
 	 * @param {Object} params the event parameters
 	 * @param {boolean} [params.bubbles=false]
 	 * @param {boolean} [params.cancelable=false]
+	 * @param {object} [data] additional data for event
 	 * @param {*} [params.detail]
 	 */
 	function dispatch(element, name) {
 	    var params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+	    var data = arguments[3];
 
-	    element.dispatchEvent(new Custom(name, params));
+	    element.dispatchEvent(_extends(new Custom(name, params), data));
 	}
 
 	function dispatchLocalEvent(element, event) {
@@ -1902,17 +1906,21 @@ var XBubbles =
 	    };
 	}
 
+	function getEventHandlersQueue(element, eventName) {
+	    if (!element[PROPS.LOCAL_EVENTS]) {
+	        element[PROPS.LOCAL_EVENTS] = {};
+	    }
+
+	    if (!element[PROPS.LOCAL_EVENTS][eventName]) {
+	        element[PROPS.LOCAL_EVENTS][eventName] = [];
+	    }
+
+	    return element[PROPS.LOCAL_EVENTS][eventName];
+	}
+
 	var EV_ACTIONS = {
 	    addLocalEventListener: function addLocalEventListener(element, eventName, callback) {
-	        if (!element[PROPS.LOCAL_EVENTS]) {
-	            element[PROPS.LOCAL_EVENTS] = {};
-	        }
-
-	        if (!element[PROPS.LOCAL_EVENTS][eventName]) {
-	            element[PROPS.LOCAL_EVENTS][eventName] = [];
-	        }
-
-	        element[PROPS.LOCAL_EVENTS][eventName].push(callback);
+	        getEventHandlersQueue(element, eventName).push(callback);
 	    },
 
 	    removeLocalEventListener: function removeLocalEventListener(element, eventName, callback) {
@@ -2374,6 +2382,7 @@ var XBubbles =
 	};
 
 	var currentDragSet = null;
+	var currentDragClassNames = null;
 
 	exports.init = function (nodeSet) {
 	    events.on(nodeSet, EVENTS);
@@ -2401,10 +2410,16 @@ var XBubbles =
 	    nodeSet.classList.add(CLS.DRAGSTART);
 	    select.add(nodeBubble);
 
+	    var list = select.get(currentDragSet);
+	    currentDragClassNames = list.map(function (elem) {
+	        return elem.className;
+	    });
+
+	    addCustomPropsForEvent(event);
+
 	    event.dataTransfer.effectAllowed = 'move';
 	    event.dataTransfer.setData('text/plain', '');
 
-	    var list = select.get(currentDragSet);
 	    if (list.length > 1) {
 	        event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG.w, DRAG_IMG.h);
 	    }
@@ -2417,6 +2432,8 @@ var XBubbles =
 	    if (!currentDragSet) {
 	        return;
 	    }
+
+	    addCustomPropsForEvent(event);
 
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
 	    var checkBubbleDrop = nodeSet.options('checkBubbleDrop');
@@ -2441,6 +2458,8 @@ var XBubbles =
 	        return;
 	    }
 
+	    addCustomPropsForEvent(event);
+
 	    event.dataTransfer.dropEffect = 'move';
 	}
 
@@ -2451,6 +2470,8 @@ var XBubbles =
 	    if (!currentDragSet) {
 	        return;
 	    }
+
+	    addCustomPropsForEvent(event);
 
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
 	    if (nodeSet && nodeSet !== currentDragSet) {
@@ -2466,6 +2487,8 @@ var XBubbles =
 	        return;
 	    }
 
+	    addCustomPropsForEvent(event);
+
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
 	    if (nodeSet && nodeSet !== currentDragSet) {
 	        nodeSet.classList.remove(CLS.DROPZONE);
@@ -2480,6 +2503,8 @@ var XBubbles =
 	        return;
 	    }
 
+	    addCustomPropsForEvent(event);
+
 	    currentDragSet.classList.remove(CLS.DRAGSTART);
 
 	    var nodeSet = bubbleset.closestNodeSet(event.target);
@@ -2489,6 +2514,11 @@ var XBubbles =
 	    }
 
 	    currentDragSet = null;
+	    currentDragClassNames = null;
+	}
+
+	function addCustomPropsForEvent(event) {
+	    event.dragClassNames = currentDragClassNames;
 	}
 
 /***/ },
@@ -2549,6 +2579,7 @@ var XBubbles =
 	var currentDragSet = null;
 	var currentMoveSet = null;
 	var currentDragElement = null;
+	var currentDragClassNames = null;
 
 	exports.init = function (nodeSet) {
 	    events.on(nodeSet, 'mousedown', onMousedown);
@@ -2586,6 +2617,7 @@ var XBubbles =
 	    currentDragSet = null;
 	    currentMoveSet = null;
 	    currentDragElement = null;
+	    currentDragClassNames = null;
 
 	    events.one(document, 'mouseup', drag.onMouseup);
 	    events.on(document, 'mousemove', drag.onMousemove);
@@ -2612,7 +2644,7 @@ var XBubbles =
 	        currentMoveSet = null;
 
 	        _.classList.remove(CLS.DROPZONE);
-	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false });
+	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
 	    }
 
 	    if (currentDragSet) {
@@ -2632,8 +2664,10 @@ var XBubbles =
 	        currentDragSet = null;
 
 	        _2.classList.remove(CLS.DRAGSTART);
-	        events.dispatch(_2, EV.DROP, { bubbles: false, cancelable: false });
-	        events.dispatch(_2, EV.DRAGEND, { bubbles: false, cancelable: false });
+	        events.dispatch(_2, EV.DROP, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+	        events.dispatch(_2, EV.DRAGEND, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+
+	        currentDragClassNames = null;
 	    }
 	}
 
@@ -2653,7 +2687,12 @@ var XBubbles =
 
 	        var moveElement = void 0;
 
-	        if (select.get(currentDragSet).length === 1) {
+	        var list = select.get(currentDragSet);
+	        currentDragClassNames = list.map(function (elem) {
+	            return elem.className;
+	        });
+
+	        if (list.length === 1) {
 	            moveElement = drag.nodeBubble.cloneNode(true);
 	        }
 
@@ -2667,7 +2706,7 @@ var XBubbles =
 	        currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
 	        currentDragElement.appendChild(moveElement);
 
-	        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false });
+	        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
 	    }
 
 	    drag.x = event.clientX;
@@ -2680,18 +2719,18 @@ var XBubbles =
 	            currentMoveSet.classList.remove(CLS.DROPZONE);
 	            nodeSet.classList.add(CLS.DROPZONE);
 	            currentMoveSet = nodeSet;
-	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false });
+	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
 	        } else if (!currentMoveSet) {
 	            nodeSet.classList.add(CLS.DROPZONE);
 	            currentMoveSet = nodeSet;
-	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false });
+	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
 	        }
 	    } else if (currentMoveSet) {
 	        var _ = currentMoveSet;
 	        currentMoveSet = null;
 
 	        _.classList.remove(CLS.DROPZONE);
-	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false });
+	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
 	    }
 	}
 

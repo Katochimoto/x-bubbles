@@ -10,6 +10,7 @@ const { getDragImage, onDropSuccess, DRAG_IMG } = require('./common');
 let currentDragSet = null;
 let currentMoveSet = null;
 let currentDragElement = null;
+let currentDragClassNames = null;
 
 exports.init = function (nodeSet) {
     events.on(nodeSet, 'mousedown', onMousedown);
@@ -47,6 +48,7 @@ function onMousedown(event) {
     currentDragSet = null;
     currentMoveSet = null;
     currentDragElement = null;
+    currentDragClassNames = null;
 
     events.one(document, 'mouseup', drag.onMouseup);
     events.on(document, 'mousemove', drag.onMousemove);
@@ -73,7 +75,7 @@ function onMouseup(dragSet, event) {
         currentMoveSet = null;
 
         _.classList.remove(CLS.DROPZONE);
-        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false });
+        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
     }
 
     if (currentDragSet) {
@@ -93,8 +95,10 @@ function onMouseup(dragSet, event) {
         currentDragSet = null;
 
         _.classList.remove(CLS.DRAGSTART);
-        events.dispatch(_, EV.DROP, { bubbles: false, cancelable: false });
-        events.dispatch(_, EV.DRAGEND, { bubbles: false, cancelable: false });
+        events.dispatch(_, EV.DROP, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+        events.dispatch(_, EV.DRAGEND, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+
+        currentDragClassNames = null;
     }
 }
 
@@ -114,7 +118,10 @@ function onMousemove(dragSet) {
 
         let moveElement;
 
-        if (select.get(currentDragSet).length === 1) {
+        const list = select.get(currentDragSet);
+        currentDragClassNames = list.map((elem) => elem.className);
+
+        if (list.length === 1) {
             moveElement = drag.nodeBubble.cloneNode(true);
         }
 
@@ -128,7 +135,7 @@ function onMousemove(dragSet) {
         currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
         currentDragElement.appendChild(moveElement);
 
-        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false });
+        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
     }
 
     drag.x = event.clientX;
@@ -141,12 +148,12 @@ function onMousemove(dragSet) {
             currentMoveSet.classList.remove(CLS.DROPZONE);
             nodeSet.classList.add(CLS.DROPZONE);
             currentMoveSet = nodeSet;
-            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false });
+            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
 
         } else if (!currentMoveSet) {
             nodeSet.classList.add(CLS.DROPZONE);
             currentMoveSet = nodeSet;
-            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false });
+            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
         }
 
     } else if (currentMoveSet) {
@@ -154,7 +161,7 @@ function onMousemove(dragSet) {
         currentMoveSet = null;
 
         _.classList.remove(CLS.DROPZONE);
-        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false });
+        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
     }
 }
 

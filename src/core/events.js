@@ -119,10 +119,11 @@ const Custom = (function () {
  * @param {Object} params the event parameters
  * @param {boolean} [params.bubbles=false]
  * @param {boolean} [params.cancelable=false]
+ * @param {object} [data] additional data for event
  * @param {*} [params.detail]
  */
-function dispatch(element, name, params = {}) {
-    element.dispatchEvent(new Custom(name, params));
+function dispatch(element, name, params = {}, data) {
+    element.dispatchEvent(Object.assign(new Custom(name, params), data));
 }
 
 function dispatchLocalEvent(element, event) {
@@ -145,17 +146,21 @@ function oneCallback(element, eventName, callback) {
     };
 }
 
+function getEventHandlersQueue(element, eventName) {
+    if (!element[ PROPS.LOCAL_EVENTS ]) {
+        element[ PROPS.LOCAL_EVENTS ] = {};
+    }
+
+    if (!element[ PROPS.LOCAL_EVENTS ][ eventName ]) {
+        element[ PROPS.LOCAL_EVENTS ][ eventName ] = [];
+    }
+
+    return element[ PROPS.LOCAL_EVENTS ][ eventName ];
+}
+
 const EV_ACTIONS = {
     addLocalEventListener: function (element, eventName, callback) {
-        if (!element[ PROPS.LOCAL_EVENTS ]) {
-            element[ PROPS.LOCAL_EVENTS ] = {};
-        }
-
-        if (!element[ PROPS.LOCAL_EVENTS ][ eventName ]) {
-            element[ PROPS.LOCAL_EVENTS ][ eventName ] = [];
-        }
-
-        element[ PROPS.LOCAL_EVENTS ][ eventName ].push(callback);
+        getEventHandlersQueue(element, eventName).push(callback);
     },
 
     removeLocalEventListener: function (element, eventName, callback) {
