@@ -16,11 +16,14 @@ const OPTIONS = {
     classBubble:        [ 'str', 'bubble', 'class-bubble' ],
     disableControls:    [ 'bool', false, 'disable-controls' ],
     draggable:          [ 'bool', true, 'draggable' ],
+    checkBubbleDrop:    [ 'func', function () {
+        return true;
+    }, 'check-bubble-drop' ],
     ending:             [ 'reg', null, 'ending' ], // /\@ya\.ru/g
     selection:          [ 'bool', true, 'selection' ],
     separator:          [ 'reg', /[,;]/, 'separator' ],
     separatorCond:      [ 'func', null, 'separator-cond' ],
-    tokenizer:          [ 'func', null, 'tokenizer' ],
+    tokenizer:          [ 'func', null, 'tokenizer' ]
 };
 
 const OPTIONS_PREPARE = {
@@ -70,7 +73,7 @@ const OPTIONS_PREPARE = {
         if (typeof value !== 'undefined') {
             return value ? String(value) : '';
         }
-    },
+    }
 };
 
 module.exports = function (node, name, value) {

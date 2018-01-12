@@ -60,6 +60,7 @@ function onDrop(event) {
     }
 
     const nodeSet = bubbleset.closestNodeSet(event.target);
+    const checkBubbleDrop = nodeSet.options('checkBubbleDrop');
 
     if (!nodeSet || nodeSet === currentDragSet) {
         return;
@@ -67,7 +68,7 @@ function onDrop(event) {
 
     const list = select.get(currentDragSet);
 
-    if (list.length) {
+    if (list.length && checkBubbleDrop(list)) {
         bubbleset.moveBubbles(currentDragSet, nodeSet, list);
         context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
     }

@@ -1,4 +1,6 @@
 {
+    "root": true,
+
     "rules": {
         "indent": [
             2,

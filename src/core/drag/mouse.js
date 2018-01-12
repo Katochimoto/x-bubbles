@@ -78,11 +78,12 @@ function onMouseup(dragSet, event) {
 
     if (currentDragSet) {
         const nodeSet = bubbleset.closestNodeSet(event.target);
+        const checkBubblePaste = nodeSet.options('checkBubbleDrop');
 
         if (nodeSet && nodeSet !== currentDragSet) {
             const list = select.get(currentDragSet);
 
-            if (list.length) {
+            if (list.length && checkBubblePaste(currentDragSet)) {
                 bubbleset.moveBubbles(currentDragSet, nodeSet, list);
                 context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
             }
