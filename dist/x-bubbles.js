@@ -2644,17 +2644,19 @@ var XBubbles =
 	        currentMoveSet = null;
 
 	        _.classList.remove(CLS.DROPZONE);
-	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false }, {
+	            dragClassNames: currentDragClassNames
+	        });
 	    }
 
 	    if (currentDragSet) {
 	        var nodeSet = bubbleset.closestNodeSet(event.target);
-	        var checkBubblePaste = nodeSet.options('checkBubbleDrop');
+	        var checkBubbleDrop = nodeSet.options('checkBubbleDrop');
 
 	        if (nodeSet && nodeSet !== currentDragSet) {
 	            var list = select.get(currentDragSet);
 
-	            if (list.length && checkBubblePaste(currentDragSet)) {
+	            if (list.length && checkBubbleDrop(currentDragSet)) {
 	                bubbleset.moveBubbles(currentDragSet, nodeSet, list);
 	                context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
 	            }
@@ -2665,7 +2667,9 @@ var XBubbles =
 
 	        _2.classList.remove(CLS.DRAGSTART);
 	        events.dispatch(_2, EV.DROP, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
-	        events.dispatch(_2, EV.DRAGEND, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+	        events.dispatch(_2, EV.DRAGEND, { bubbles: false, cancelable: false }, {
+	            dragClassNames: currentDragClassNames
+	        });
 
 	        currentDragClassNames = null;
 	    }
@@ -2706,7 +2710,9 @@ var XBubbles =
 	        currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
 	        currentDragElement.appendChild(moveElement);
 
-	        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+	        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false }, {
+	            dragClassNames: currentDragClassNames
+	        });
 	    }
 
 	    drag.x = event.clientX;
@@ -2719,18 +2725,24 @@ var XBubbles =
 	            currentMoveSet.classList.remove(CLS.DROPZONE);
 	            nodeSet.classList.add(CLS.DROPZONE);
 	            currentMoveSet = nodeSet;
-	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false }, {
+	                dragClassNames: currentDragClassNames
+	            });
 	        } else if (!currentMoveSet) {
 	            nodeSet.classList.add(CLS.DROPZONE);
 	            currentMoveSet = nodeSet;
-	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+	            events.dispatch(currentMoveSet, EV.DRAGENTER, { bubbles: false, cancelable: false }, {
+	                dragClassNames: currentDragClassNames
+	            });
 	        }
 	    } else if (currentMoveSet) {
 	        var _ = currentMoveSet;
 	        currentMoveSet = null;
 
 	        _.classList.remove(CLS.DROPZONE);
-	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false }, { dragClassNames: currentDragClassNames });
+	        events.dispatch(_, EV.DRAGLEAVE, { bubbles: false, cancelable: false }, {
+	            dragClassNames: currentDragClassNames
+	        });
 	    }
 	}
 
