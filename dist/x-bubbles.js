@@ -2656,7 +2656,7 @@ var XBubbles =
 	        if (nodeSet && nodeSet !== currentDragSet) {
 	            var list = select.get(currentDragSet);
 
-	            if (list.length && checkBubbleDrop(currentDragSet)) {
+	            if (list.length && checkBubbleDrop(list)) {
 	                bubbleset.moveBubbles(currentDragSet, nodeSet, list);
 	                context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
 	            }
