@@ -119,11 +119,10 @@ const Custom = (function () {
  * @param {Object} params the event parameters
  * @param {boolean} [params.bubbles=false]
  * @param {boolean} [params.cancelable=false]
- * @param {object} [data] additional data for event
  * @param {*} [params.detail]
  */
-function dispatch(element, name, params = {}, data) {
-    element.dispatchEvent(Object.assign(new Custom(name, params), data));
+function dispatch(element, name, params = {}) {
+    element.dispatchEvent(new Custom(name, params));
 }
 
 function dispatchLocalEvent(element, event) {

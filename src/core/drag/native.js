@@ -15,7 +15,6 @@ const EVENTS = {
 };
 
 let currentDragSet = null;
-let currentDragClassNames = null;
 
 exports.init = function (nodeSet) {
     events.on(nodeSet, EVENTS);
@@ -43,13 +42,10 @@ function onDragstart(event) {
     nodeSet.classList.add(CLS.DRAGSTART);
     select.add(nodeBubble);
 
-    const list = select.get(currentDragSet);
-    currentDragClassNames = list.map((elem) => elem.className);
-
-    addCustomPropsForEvent(event);
-
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', '');
+
+    const list = select.get(currentDragSet);
 
     if (list.length > 1) {
         event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG.w, DRAG_IMG.h);
@@ -64,14 +60,13 @@ function onDrop(event) {
         return;
     }
 
-    addCustomPropsForEvent(event);
-
     const nodeSet = bubbleset.closestNodeSet(event.target);
-    const checkBubbleDrop = nodeSet.options('checkBubbleDrop');
 
     if (!nodeSet || nodeSet === currentDragSet) {
         return;
     }
+
+    const checkBubbleDrop = nodeSet.options('checkBubbleDrop');
 
     const list = select.get(currentDragSet);
 
@@ -89,8 +84,6 @@ function onDragover(event) {
         return;
     }
 
-    addCustomPropsForEvent(event);
-
     event.dataTransfer.dropEffect = 'move';
 }
 
@@ -101,8 +94,6 @@ function onDragenter(event) {
     if (!currentDragSet) {
         return;
     }
-
-    addCustomPropsForEvent(event);
 
     const nodeSet = bubbleset.closestNodeSet(event.target);
     if (nodeSet && nodeSet !== currentDragSet) {
@@ -118,8 +109,6 @@ function onDragleave(event) {
         return;
     }
 
-    addCustomPropsForEvent(event);
-
     const nodeSet = bubbleset.closestNodeSet(event.target);
     if (nodeSet && nodeSet !== currentDragSet) {
         nodeSet.classList.remove(CLS.DROPZONE);
@@ -134,8 +123,6 @@ function onDragend(event) {
         return;
     }
 
-    addCustomPropsForEvent(event);
-
     currentDragSet.classList.remove(CLS.DRAGSTART);
 
     const nodeSet = bubbleset.closestNodeSet(event.target);
@@ -145,9 +132,4 @@ function onDragend(event) {
     }
 
     currentDragSet = null;
-    currentDragClassNames = null;
-}
-
-function addCustomPropsForEvent(event) {
-    event.dragClassNames = currentDragClassNames;
 }
