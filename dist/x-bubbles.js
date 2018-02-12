@@ -2634,12 +2634,12 @@ var XBubbles =
 	            }
 	        }
 
-	        var _2 = currentDragSet;
+	        var tmpDragSet = currentDragSet;
 	        currentDragSet = null;
 
-	        _2.classList.remove(CLS.DRAGSTART);
-	        events.dispatch(_2, EV.DROP, { bubbles: false, cancelable: false });
-	        events.dispatch(_2, EV.DRAGEND, { bubbles: false, cancelable: false });
+	        tmpDragSet.classList.remove(CLS.DRAGSTART);
+	        events.dispatch(tmpDragSet, EV.DROP, { bubbles: false, cancelable: false });
+	        events.dispatch(tmpDragSet, EV.DRAGEND, { bubbles: false, cancelable: false, detail: { target: select.head(tmpDragSet) } });
 	    }
 	}
 
@@ -2675,7 +2675,7 @@ var XBubbles =
 	        currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
 	        currentDragElement.appendChild(moveElement);
 
-	        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false });
+	        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false, detail: { target: select.head(currentDragSet) } });
 	    }
 
 	    drag.x = event.clientX;

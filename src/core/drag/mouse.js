@@ -89,12 +89,16 @@ function onMouseup(dragSet, event) {
             }
         }
 
-        const _ = currentDragSet;
+        const tmpDragSet = currentDragSet;
         currentDragSet = null;
 
-        _.classList.remove(CLS.DRAGSTART);
-        events.dispatch(_, EV.DROP, { bubbles: false, cancelable: false });
-        events.dispatch(_, EV.DRAGEND, { bubbles: false, cancelable: false });
+        tmpDragSet.classList.remove(CLS.DRAGSTART);
+        events.dispatch(tmpDragSet, EV.DROP, { bubbles: false, cancelable: false });
+        events.dispatch(
+            tmpDragSet,
+            EV.DRAGEND,
+            { bubbles: false, cancelable: false, detail: { target: select.head(tmpDragSet) } }
+        );
     }
 }
 
@@ -130,7 +134,11 @@ function onMousemove(dragSet) {
         currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
         currentDragElement.appendChild(moveElement);
 
-        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false });
+        events.dispatch(
+            currentDragSet,
+            EV.DRAGSTART,
+            { bubbles: false, cancelable: false, detail: { target: select.head(currentDragSet) } },
+        );
     }
 
     drag.x = event.clientX;
