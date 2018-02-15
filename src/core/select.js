@@ -1,4 +1,5 @@
 const context = require('../context');
+const utils = require('./utils');
 const bubble = require('./bubble');
 const bubbleset = require('./bubbleset');
 
@@ -17,6 +18,7 @@ exports.has = has;
 exports.range = range;
 exports.toggleUniq = toggleUniq;
 exports.setLast = setLast;
+exports.getEditable = getEditable;
 
 function range(node) {
     if (!bubble.isBubbleNode(node)) {
@@ -97,6 +99,26 @@ function last(set) {
 
 function get(nodeSet) {
     return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
+}
+
+function getEditable(nodeSet) {
+    if (!nodeSet.options('selection')) {
+        return false;
+    }
+
+    const selection = utils.getSelection(nodeSet);
+
+    if (selection && selection.rangeCount) {
+        return false;
+    }
+
+    const list = get(nodeSet);
+
+    if (list.length !== 1) {
+        return false;
+    }
+
+    return list[0];
 }
 
 function clear(nodeSet) {

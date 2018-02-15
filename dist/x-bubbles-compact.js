@@ -2212,6 +2212,7 @@ var XBubbles =
 	'use strict';
 
 	var context = __webpack_require__(1);
+	var utils = __webpack_require__(6);
 	var bubble = __webpack_require__(4);
 	var bubbleset = __webpack_require__(3);
 
@@ -2230,6 +2231,7 @@ var XBubbles =
 	exports.range = range;
 	exports.toggleUniq = toggleUniq;
 	exports.setLast = setLast;
+	exports.getEditable = getEditable;
 
 	function range(node) {
 	    if (!bubble.isBubbleNode(node)) {
@@ -2311,6 +2313,26 @@ var XBubbles =
 
 	function get(nodeSet) {
 	    return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
+	}
+
+	function getEditable(nodeSet) {
+	    if (!nodeSet.options('selection')) {
+	        return false;
+	    }
+
+	    var selection = utils.getSelection(nodeSet);
+
+	    if (selection && selection.rangeCount) {
+	        return false;
+	    }
+
+	    var list = get(nodeSet);
+
+	    if (list.length !== 1) {
+	        return false;
+	    }
+
+	    return list[0];
 	}
 
 	function clear(nodeSet) {
@@ -3149,6 +3171,7 @@ var XBubbles =
 	var events = __webpack_require__(10);
 	var bubble = __webpack_require__(4);
 	var cursor = __webpack_require__(13);
+	var select = __webpack_require__(14);
 
 	var _require = __webpack_require__(12),
 	    KEY = _require.KEY;
@@ -3167,7 +3190,7 @@ var XBubbles =
 
 	    if (code === KEY.Enter) {
 	        event.preventDefault();
-	        if (!nodeEditor.options('disableControls')) {
+	        if (!nodeEditor.options('disableControls') && !select.getEditable(nodeEditor)) {
 	            bubble.bubbling(nodeEditor);
 	            cursor.restore(nodeEditor);
 
@@ -3657,7 +3680,6 @@ var XBubbles =
 	'use strict';
 
 	var events = __webpack_require__(10);
-	var utils = __webpack_require__(6);
 	var bubble = __webpack_require__(4);
 	var select = __webpack_require__(14);
 
@@ -3687,14 +3709,10 @@ var XBubbles =
 	};
 
 	function editBubbleKeyboardEvent(nodeEditor) {
-	    var selection = utils.getSelection(nodeEditor);
+	    var editableBubble = select.getEditable(nodeEditor);
 
-	    if (!selection || !selection.rangeCount) {
-	        var list = select.get(nodeEditor);
-
-	        if (list.length === 1) {
-	            return bubble.edit(nodeEditor, list[0]);
-	        }
+	    if (editableBubble) {
+	        return bubble.edit(nodeEditor, editableBubble);
 	    }
 
 	    return false;
