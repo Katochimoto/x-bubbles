@@ -67,6 +67,7 @@ exports.init = function (nodeWrap) {
     nodeEditor.fireBeforeRemove = fireBeforeRemove.bind(nodeEditor);
 
     return {
+        canAddBubble: canAddBubble.bind(nodeEditor),
         addBubble: addBubble.bind(nodeEditor),
         bubbling: bubbling.bind(nodeEditor),
         editBubble: editBubble.bind(nodeEditor),
@@ -89,12 +90,16 @@ exports.destroy = function (nodeWrap) {
     }
 };
 
+function canAddBubble() {
+    return bubbleset.canAddBubble(this);
+}
+
 function getItems() {
     return bubbleset.getBubbles(this);
 }
 
 function setContent(data) {
-    var selection = context.getSelection();
+    const selection = context.getSelection();
     selection && selection.removeAllRanges();
 
     const list = select.get(this);
@@ -117,7 +122,7 @@ function setContent(data) {
 
 function addBubble(bubbleText, dataAttributes) {
     const nodeBubble = bubble.create(this, bubbleText, dataAttributes);
-    if (!nodeBubble) {
+    if (!this.canAddBubble() || !nodeBubble) {
         return false;
     }
 

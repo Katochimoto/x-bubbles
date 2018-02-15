@@ -141,6 +141,12 @@ var XBubbles =
 	        }
 	    },
 
+	    canAddBubble: {
+	        value: function value() {
+	            return this.editor.canAddBubble();
+	        }
+	    },
+
 	    /**
 	     * Add bubble.
 	     * @function
@@ -309,6 +315,7 @@ var XBubbles =
 	    nodeEditor.fireBeforeRemove = fireBeforeRemove.bind(nodeEditor);
 
 	    return {
+	        canAddBubble: canAddBubble.bind(nodeEditor),
 	        addBubble: addBubble.bind(nodeEditor),
 	        bubbling: bubbling.bind(nodeEditor),
 	        editBubble: editBubble.bind(nodeEditor),
@@ -330,6 +337,10 @@ var XBubbles =
 	        drag.destroy(nodeEditor);
 	    }
 	};
+
+	function canAddBubble() {
+	    return bubbleset.canAddBubble(this);
+	}
 
 	function getItems() {
 	    return bubbleset.getBubbles(this);
@@ -359,7 +370,7 @@ var XBubbles =
 
 	function addBubble(bubbleText, dataAttributes) {
 	    var nodeBubble = bubble.create(this, bubbleText, dataAttributes);
-	    if (!nodeBubble) {
+	    if (!this.canAddBubble() || !nodeBubble) {
 	        return false;
 	    }
 
@@ -481,6 +492,7 @@ var XBubbles =
 	exports.findBubbleLeft = findBubbleLeft;
 	exports.findBubbleRight = findBubbleRight;
 	exports.getBubbles = getBubbles;
+	exports.bubblesCount = bubblesCount;
 	exports.hasBubbles = hasBubbles;
 	exports.headBubble = headBubble;
 	exports.lastBubble = lastBubble;
@@ -488,6 +500,8 @@ var XBubbles =
 	exports.prevBubble = prevBubble;
 	exports.removeBubbles = removeBubbles;
 	exports.moveBubbles = moveBubbles;
+	exports.canAddBubble = canAddBubble;
+	exports.remCapacity = remCapacity;
 
 	function lastBubble(nodeSet) {
 	    return nodeSet.querySelector('[bubble]:last-child');
@@ -499,6 +513,11 @@ var XBubbles =
 
 	function getBubbles(nodeSet) {
 	    return Array.prototype.slice.call(nodeSet.querySelectorAll('[bubble]'));
+	}
+
+	function bubblesCount(nodeSet) {
+	    var bubbles = getBubbles(nodeSet);
+	    return bubbles.length;
 	}
 
 	function hasBubbles(nodeSet) {
@@ -611,10 +630,38 @@ var XBubbles =
 	}
 
 	function moveBubbles(nodeEditorFrom, nodeEditorTo, list) {
-	    nodeEditorFrom.fireBeforeRemove(list);
-	    list.forEach(function (item) {
+	    var remainingCapacity = remCapacity(nodeEditorTo);
+
+	    if (remainingCapacity <= 0) {
+	        return;
+	    }
+
+	    var movedBubbles = list.slice(0, remainingCapacity);
+
+	    nodeEditorFrom.fireBeforeRemove(movedBubbles);
+	    movedBubbles.forEach(function (item) {
 	        return nodeEditorTo.appendChild(item);
 	    });
+	}
+
+	function canAddBubble(nodeEditor) {
+	    var bubblesLimit = nodeEditor.options('limit');
+
+	    if (!bubblesLimit) {
+	        return true;
+	    }
+
+	    return bubblesCount(nodeEditor) < bubblesLimit;
+	}
+
+	function remCapacity(nodeEditor) {
+	    var bubblesLimit = nodeEditor.options('limit');
+
+	    if (!bubblesLimit) {
+	        return Number.POSITIVE_INFINITY;
+	    }
+
+	    return bubblesLimit - bubblesCount(nodeEditor);
 	}
 
 /***/ },
@@ -625,6 +672,7 @@ var XBubbles =
 
 	var context = __webpack_require__(1);
 	var text = __webpack_require__(5);
+	var bubbleset = __webpack_require__(3);
 
 	var _require = __webpack_require__(6),
 	    escape = _require.escape,
@@ -738,6 +786,8 @@ var XBubbles =
 	    var ranges = getBubbleRanges(nodeSet);
 	    var nodes = [];
 
+	    var remainingCapacity = bubbleset.remCapacity(nodeSet);
+
 	    ranges.forEach(function (range) {
 	        var dataText = text.textClean(range.toString());
 
@@ -774,6 +824,10 @@ var XBubbles =
 	        var fragment = context.document.createDocumentFragment();
 
 	        textParts.forEach(function (textPart) {
+	            if (nodes.length >= remainingCapacity) {
+	                return;
+	            }
+
 	            var nodeBubble = create(nodeSet, textPart);
 	            if (nodeBubble) {
 	                fragment.appendChild(nodeBubble);
@@ -2114,6 +2168,11 @@ var XBubbles =
 	 */
 	function restore(nodeSet) {
 	    if (!utils.isMobileIE) {
+	        if (!nodeSet.canAddBubble()) {
+	            select.setLast(nodeSet);
+	            return;
+	        }
+
 	        select.clear(nodeSet);
 	        var basis = restoreBasis(nodeSet);
 	        var selection = context.getSelection();
@@ -2170,6 +2229,7 @@ var XBubbles =
 	exports.has = has;
 	exports.range = range;
 	exports.toggleUniq = toggleUniq;
+	exports.setLast = setLast;
 
 	function range(node) {
 	    if (!bubble.isBubbleNode(node)) {
@@ -2285,6 +2345,10 @@ var XBubbles =
 	    clear(nodeSet);
 
 	    return add(node);
+	}
+
+	function setLast(nodeEditor) {
+	    return uniq(bubbleset.lastBubble(nodeEditor));
 	}
 
 	function toggleUniq(node) {
@@ -3664,6 +3728,7 @@ var XBubbles =
 	    sharedData.nodeEditor = nodeEditor;
 	    sharedData.nodeBubble = bubbleset.closestNodeBubble(event.target);
 	    sharedData.isDblclick = false;
+	    sharedData.canAddBubble = bubbleset.canAddBubble(nodeEditor);
 
 	    if (sharedData.nodeBubble) {
 	        var clickTime = Date.now();
@@ -3811,7 +3876,8 @@ var XBubbles =
 	 * @param {Event} event
 	 */
 	module.exports = function (event) {
-	  cursor.restore(event.currentTarget);
+	  var nodeEditor = event.currentTarget;
+	  cursor.restore(nodeEditor);
 	};
 
 /***/ },
@@ -3971,20 +4037,25 @@ var XBubbles =
 
 	/**
 	 * @param {Event} event
+	 * @param {Object} sharedData
 	 */
 
 
-	module.exports = function (event) {
+	module.exports = function (event, sharedData) {
 	    var code = events.keyCode(event);
 	    var nodeEditor = event.currentTarget;
+
+	    sharedData.enterBubbling = false;
 
 	    if (code === KEY.Enter) {
 	        event.preventDefault();
 	        if (!nodeEditor.options('disableControls')) {
 	            bubble.bubbling(nodeEditor);
 	            cursor.restore(nodeEditor);
+
+	            sharedData.enterBubbling = true;
 	        }
-	    } else {
+	    } else if (nodeEditor.canAddBubble()) {
 	        var separator = nodeEditor.options('separator');
 	        if (separator && separator.test(String.fromCharCode(code))) {
 	            var separatorCond = nodeEditor.options('separatorCond');
@@ -3995,6 +4066,8 @@ var XBubbles =
 	                cursor.restore(nodeEditor);
 	            }
 	        }
+	    } else {
+	        event.preventDefault();
 	    }
 	};
 
@@ -4019,7 +4092,7 @@ var XBubbles =
 	    var code = events.keyCode(event);
 	    var isPrintableChar = event.key ? event.key.length === 1 : (code > 47 || code === KEY.Space || code === KEY.Backspace) && code !== KEY.Cmd;
 
-	    if (isPrintableChar) {
+	    if (isPrintableChar && nodeEditor.canAddBubble()) {
 	        nodeEditor.fireInput();
 	    }
 	};
@@ -4131,6 +4204,7 @@ var XBubbles =
 	    var nodeEditor = sharedData.nodeEditor;
 	    var nodeBubble = sharedData.nodeBubble;
 	    var isDblclick = sharedData.isDblclick;
+	    var canAddBubble = sharedData.canAddBubble;
 
 	    if (nodeBubble) {
 	        if (events.metaKey(event)) {
@@ -4142,9 +4216,9 @@ var XBubbles =
 	                select.range(nodeBubble);
 	            }
 	        } else if (!isDblclick) {
-	            select.toggleUniq(nodeBubble);
+	            canAddBubble ? select.toggleUniq(nodeBubble) : select.uniq(nodeBubble);
 	        }
-	    } else {
+	    } else if (canAddBubble) {
 	        select.clear(nodeEditor);
 	    }
 	};
@@ -4474,16 +4548,17 @@ var XBubbles =
 
 	/**
 	 * @param {Event} event
+	 * @param {Object} sharedData
 	 */
 
 
-	module.exports = function (event) {
+	module.exports = function (event, sharedData) {
 	    var code = events.keyCode(event);
 	    var nodeEditor = event.currentTarget;
 
 	    if (code === KEY.Enter) {
 	        event.preventDefault();
-	        if (!nodeEditor.options('disableControls')) {
+	        if (!nodeEditor.options('disableControls') && !sharedData.enterBubbling) {
 	            editBubbleKeyboardEvent(nodeEditor);
 	        }
 	    } else if (code === KEY.Space) {
@@ -4536,13 +4611,14 @@ var XBubbles =
 	    checkBubblePaste: ['func', function () {
 	        return true;
 	    }, 'check-bubble-paste'],
-	    classBubble: ['str', 'bubble', 'class-bubble'],
-	    disableControls: ['bool', false, 'disable-controls'],
-	    draggable: ['bool', true, 'draggable'],
 	    checkBubbleDrop: ['func', function () {
 	        return true;
 	    }, 'check-bubble-drop'],
+	    classBubble: ['str', 'bubble', 'class-bubble'],
+	    disableControls: ['bool', false, 'disable-controls'],
+	    draggable: ['bool', true, 'draggable'],
 	    ending: ['reg', null, 'ending'], // /\@ya\.ru/g
+	    limit: ['int', 0, 'limit'],
 	    selection: ['bool', true, 'selection'],
 	    separator: ['reg', /[,;]/, 'separator'],
 	    separatorCond: ['func', null, 'separator-cond'],
@@ -4595,6 +4671,13 @@ var XBubbles =
 	    str: function str(value) {
 	        if (typeof value !== 'undefined') {
 	            return value ? String(value) : '';
+	        }
+	    },
+	    int: function int(value) {
+	        value = Number(value);
+
+	        if (!isNaN(value) && value > 0) {
+	            return value;
 	        }
 	    }
 	};

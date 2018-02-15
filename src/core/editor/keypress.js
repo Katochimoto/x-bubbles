@@ -5,19 +5,24 @@ const { KEY } = require('../constant');
 
 /**
  * @param {Event} event
+ * @param {Object} sharedData
  */
-module.exports = function (event) {
+module.exports = function (event, sharedData) {
     const code = events.keyCode(event);
     const nodeEditor = event.currentTarget;
+
+    sharedData.enterBubbling = false;
 
     if (code === KEY.Enter) {
         event.preventDefault();
         if (!nodeEditor.options('disableControls')) {
             bubble.bubbling(nodeEditor);
             cursor.restore(nodeEditor);
+
+            sharedData.enterBubbling = true;
         }
 
-    } else {
+    } else if (nodeEditor.canAddBubble()) {
         const separator = nodeEditor.options('separator');
         if (separator && separator.test(String.fromCharCode(code))) {
             const separatorCond = nodeEditor.options('separatorCond');
@@ -28,5 +33,7 @@ module.exports = function (event) {
                 cursor.restore(nodeEditor);
             }
         }
+    } else {
+        event.preventDefault();
     }
 };

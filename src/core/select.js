@@ -16,6 +16,7 @@ exports.last = last;
 exports.has = has;
 exports.range = range;
 exports.toggleUniq = toggleUniq;
+exports.setLast = setLast;
 
 function range(node) {
     if (!bubble.isBubbleNode(node)) {
@@ -128,6 +129,10 @@ function uniq(node) {
     clear(nodeSet);
 
     return add(node);
+}
+
+function setLast(nodeEditor) {
+    return uniq(bubbleset.lastBubble(nodeEditor));
 }
 
 function toggleUniq(node) {

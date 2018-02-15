@@ -92,6 +92,12 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
         }
     },
 
+    canAddBubble: {
+        value: function () {
+            return this.editor.canAddBubble();
+        }
+    },
+
     /**
      * Add bubble.
      * @function

@@ -12,6 +12,7 @@ module.exports = function (event, sharedData) {
     const nodeEditor = sharedData.nodeEditor;
     const nodeBubble = sharedData.nodeBubble;
     const isDblclick = sharedData.isDblclick;
+    const canAddBubble = sharedData.canAddBubble;
 
     if (nodeBubble) {
         if (events.metaKey(event)) {
@@ -26,10 +27,10 @@ module.exports = function (event, sharedData) {
             }
 
         } else if (!isDblclick) {
-            select.toggleUniq(nodeBubble);
+            canAddBubble ? select.toggleUniq(nodeBubble) : select.uniq(nodeBubble);
         }
 
-    } else {
+    } else if (canAddBubble) {
         select.clear(nodeEditor);
     }
 };
