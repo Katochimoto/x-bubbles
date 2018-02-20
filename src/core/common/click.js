@@ -19,7 +19,7 @@ module.exports = function (event, sharedData) {
     sharedData.nodeEditor = nodeEditor;
     sharedData.nodeBubble = bubbleset.closestNodeBubble(event.target);
     sharedData.isDblclick = false;
-    sharedData.canAddBubble = bubbleset.canAddBubble(nodeEditor);
+    sharedData.canAddBubble = nodeEditor.canAddBubble();
 
     if (sharedData.nodeBubble) {
         const clickTime = Date.now();

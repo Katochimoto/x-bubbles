@@ -3750,7 +3750,7 @@ var XBubbles =
 	    sharedData.nodeEditor = nodeEditor;
 	    sharedData.nodeBubble = bubbleset.closestNodeBubble(event.target);
 	    sharedData.isDblclick = false;
-	    sharedData.canAddBubble = bubbleset.canAddBubble(nodeEditor);
+	    sharedData.canAddBubble = nodeEditor.canAddBubble();
 
 	    if (sharedData.nodeBubble) {
 	        var clickTime = Date.now();
@@ -4138,6 +4138,10 @@ var XBubbles =
 	module.exports = function (event) {
 	    event.preventDefault();
 	    var nodeEditor = event.currentTarget;
+
+	    if (!nodeEditor.canAddBubble()) {
+	        return;
+	    }
 
 	    if (context.clipboardData && context.clipboardData.getData) {
 	        onPasteSuccess(nodeEditor, context.clipboardData.getData('Text'));
