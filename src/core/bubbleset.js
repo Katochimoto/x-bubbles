@@ -15,7 +15,7 @@ exports.prevBubble = prevBubble;
 exports.removeBubbles = removeBubbles;
 exports.moveBubbles = moveBubbles;
 exports.canAddBubble = canAddBubble;
-exports.remCapacity = remCapacity;
+exports.getRemainingCapacity = getRemainingCapacity;
 
 function lastBubble(nodeSet) {
     return nodeSet.querySelector('[bubble]:last-child');
@@ -147,7 +147,7 @@ function removeBubbles(nodeEditor, list) {
 }
 
 function moveBubbles(nodeEditorFrom, nodeEditorTo, list) {
-    const remainingCapacity = remCapacity(nodeEditorTo);
+    const remainingCapacity = getRemainingCapacity(nodeEditorTo);
 
     if (remainingCapacity <= 0) {
         return;
@@ -162,14 +162,10 @@ function moveBubbles(nodeEditorFrom, nodeEditorTo, list) {
 function canAddBubble(nodeEditor) {
     const bubblesLimit = nodeEditor.options('limit');
 
-    if (!bubblesLimit) {
-        return true;
-    }
-
-    return bubblesCount(nodeEditor) < bubblesLimit;
+    return !bubblesLimit || (bubblesCount(nodeEditor) < bubblesLimit);
 }
 
-function remCapacity(nodeEditor) {
+function getRemainingCapacity(nodeEditor) {
     const bubblesLimit = nodeEditor.options('limit');
 
     if (!bubblesLimit) {

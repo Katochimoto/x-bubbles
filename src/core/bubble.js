@@ -109,7 +109,7 @@ function bubbling(nodeSet) {
     const ranges = getBubbleRanges(nodeSet);
     const nodes = [];
 
-    const remainingCapacity = bubbleset.remCapacity(nodeSet);
+    const remainingCapacity = bubbleset.getRemainingCapacity(nodeSet);
 
     ranges.forEach(function (range) {
         const dataText = text.textClean(range.toString());

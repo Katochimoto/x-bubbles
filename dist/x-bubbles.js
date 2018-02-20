@@ -501,7 +501,7 @@ var XBubbles =
 	exports.removeBubbles = removeBubbles;
 	exports.moveBubbles = moveBubbles;
 	exports.canAddBubble = canAddBubble;
-	exports.remCapacity = remCapacity;
+	exports.getRemainingCapacity = getRemainingCapacity;
 
 	function lastBubble(nodeSet) {
 	    return nodeSet.querySelector('[bubble]:last-child');
@@ -630,7 +630,7 @@ var XBubbles =
 	}
 
 	function moveBubbles(nodeEditorFrom, nodeEditorTo, list) {
-	    var remainingCapacity = remCapacity(nodeEditorTo);
+	    var remainingCapacity = getRemainingCapacity(nodeEditorTo);
 
 	    if (remainingCapacity <= 0) {
 	        return;
@@ -647,14 +647,10 @@ var XBubbles =
 	function canAddBubble(nodeEditor) {
 	    var bubblesLimit = nodeEditor.options('limit');
 
-	    if (!bubblesLimit) {
-	        return true;
-	    }
-
-	    return bubblesCount(nodeEditor) < bubblesLimit;
+	    return !bubblesLimit || bubblesCount(nodeEditor) < bubblesLimit;
 	}
 
-	function remCapacity(nodeEditor) {
+	function getRemainingCapacity(nodeEditor) {
 	    var bubblesLimit = nodeEditor.options('limit');
 
 	    if (!bubblesLimit) {
@@ -786,7 +782,7 @@ var XBubbles =
 	    var ranges = getBubbleRanges(nodeSet);
 	    var nodes = [];
 
-	    var remainingCapacity = bubbleset.remCapacity(nodeSet);
+	    var remainingCapacity = bubbleset.getRemainingCapacity(nodeSet);
 
 	    ranges.forEach(function (range) {
 	        var dataText = text.textClean(range.toString());
@@ -4640,7 +4636,7 @@ var XBubbles =
 	    disableControls: ['bool', false, 'disable-controls'],
 	    draggable: ['bool', true, 'draggable'],
 	    ending: ['reg', null, 'ending'], // /\@ya\.ru/g
-	    limit: ['int', 0, 'limit'],
+	    limit: ['uint', 0, 'limit'],
 	    selection: ['bool', true, 'selection'],
 	    separator: ['reg', /[,;]/, 'separator'],
 	    separatorCond: ['func', null, 'separator-cond'],
@@ -4695,7 +4691,7 @@ var XBubbles =
 	            return value ? String(value) : '';
 	        }
 	    },
-	    int: function int(value) {
+	    uint: function uint(value) {
 	        value = Number(value);
 
 	        if (!isNaN(value) && value > 0) {

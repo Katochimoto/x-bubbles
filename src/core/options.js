@@ -20,7 +20,7 @@ const OPTIONS = {
     disableControls:    [ 'bool', false, 'disable-controls' ],
     draggable:          [ 'bool', true, 'draggable' ],
     ending:             [ 'reg', null, 'ending' ], // /\@ya\.ru/g
-    limit:              [ 'int', 0, 'limit' ],
+    limit:              [ 'uint', 0, 'limit' ],
     selection:          [ 'bool', true, 'selection' ],
     separator:          [ 'reg', /[,;]/, 'separator' ],
     separatorCond:      [ 'func', null, 'separator-cond' ],
@@ -75,7 +75,7 @@ const OPTIONS_PREPARE = {
             return value ? String(value) : '';
         }
     },
-    int: function (value) {
+    uint: function (value) {
         value = Number(value);
 
         if (!isNaN(value) && value > 0) {
