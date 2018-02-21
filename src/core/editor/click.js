@@ -25,7 +25,6 @@ module.exports = function (event, sharedData) {
             bubble.bubbling(nodeEditor);
             cursor.restore(nodeEditor);
         }
-
     } else {
         const selection = utils.getSelection(nodeEditor);
 

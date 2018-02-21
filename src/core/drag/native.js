@@ -46,6 +46,7 @@ function onDragstart(event) {
     event.dataTransfer.setData('text/plain', '');
 
     const list = select.get(currentDragSet);
+
     if (list.length > 1) {
         event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG.w, DRAG_IMG.h);
     }
@@ -65,9 +66,11 @@ function onDrop(event) {
         return;
     }
 
+    const checkBubbleDrop = nodeSet.options('checkBubbleDrop');
+
     const list = select.get(currentDragSet);
 
-    if (list.length) {
+    if (list.length && checkBubbleDrop(list)) {
         bubbleset.moveBubbles(currentDragSet, nodeSet, list);
         context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
     }

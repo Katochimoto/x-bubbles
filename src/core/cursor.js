@@ -19,6 +19,11 @@ exports.restoreBasis = restoreBasis;
  */
 function restore(nodeSet) {
     if (!utils.isMobileIE) {
+        if (!nodeSet.canAddBubble()) {
+            select.setLast(nodeSet);
+            return;
+        }
+
         select.clear(nodeSet);
         const basis = restoreBasis(nodeSet);
         const selection = context.getSelection();

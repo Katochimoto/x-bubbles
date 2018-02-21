@@ -16,7 +16,7 @@ module.exports = function (event) {
         }
     };
 
-    if (isPrintableChar) {
+    if (isPrintableChar && nodeEditor.canAddBubble()) {
         nodeEditor.fireInput();
     }
 };

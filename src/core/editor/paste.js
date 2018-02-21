@@ -9,6 +9,10 @@ module.exports = function (event) {
     event.preventDefault();
     const nodeEditor = event.currentTarget;
 
+    if (!nodeEditor.canAddBubble()) {
+        return;
+    }
+
     if (context.clipboardData && context.clipboardData.getData) {
         onPasteSuccess(nodeEditor, context.clipboardData.getData('Text'));
 

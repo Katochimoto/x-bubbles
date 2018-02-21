@@ -1,19 +1,19 @@
 const events = require('../events');
-const utils = require('../utils');
 const bubble = require('../bubble');
 const select = require('../select');
 const { KEY } = require('../constant');
 
 /**
  * @param {Event} event
+ * @param {Object} sharedData
  */
-module.exports = function (event) {
+module.exports = function (event, sharedData) {
     const code = events.keyCode(event);
     const nodeEditor = event.currentTarget;
 
     if (code === KEY.Enter) {
         event.preventDefault();
-        if (!nodeEditor.options('disableControls')) {
+        if (!nodeEditor.options('disableControls') && !sharedData.enterBubbling) {
             editBubbleKeyboardEvent(nodeEditor);
         }
 
@@ -25,14 +25,10 @@ module.exports = function (event) {
 };
 
 function editBubbleKeyboardEvent(nodeEditor) {
-    const selection = utils.getSelection(nodeEditor);
+    const editableBubble = select.getEditable(nodeEditor);
 
-    if (!selection || !selection.rangeCount) {
-        const list = select.get(nodeEditor);
-
-        if (list.length === 1) {
-            return bubble.edit(nodeEditor, list[0]);
-        }
+    if (editableBubble) {
+        return bubble.edit(nodeEditor, editableBubble);
     }
 
     return false;
