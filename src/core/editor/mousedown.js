@@ -11,6 +11,7 @@ module.exports = function (event) {
 
     // Don't show cursor if can't add bubble
     if (!nodeBubble && !nodeEditor.canAddBubble()) {
+        nodeEditor.focus();
         event.preventDefault();
     }
 };

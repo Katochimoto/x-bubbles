@@ -3021,6 +3021,7 @@ var XBubbles =
 
 	    // Don't show cursor if can't add bubble
 	    if (!nodeBubble && !nodeEditor.canAddBubble()) {
+	        nodeEditor.focus();
 	        event.preventDefault();
 	    }
 	};
