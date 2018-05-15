@@ -16,6 +16,8 @@ exports.html2text = html2text;
 exports.currentTextRange = currentTextRange;
 exports.text2bubble = text2bubble;
 exports.replaceString = replaceString;
+exports.findTextBorderNode = findTextBorderNode;
+exports.selectFromCursorToStrBegin = selectFromCursorToStrBegin;
 exports.selectAll = selectAll;
 exports.textClean = textClean;
 exports.checkZws = checkZws;
@@ -351,11 +353,44 @@ function findTextBorderNode(cursorNode, mode) {
 
     while (item && item.nodeType === Node.TEXT_NODE) {
         result = item;
-        result = item[sibling];
+        item = item[sibling];
     }
 
     return result;
 }
+
+function selectFromCursorToStrBegin(selection, nodeSet) {
+    selection = selection || context.getSelection();
+    const node = selection && selection.anchorNode;
+
+    if (!node || node.nodeType !== Node.TEXT_NODE) {
+        return false;
+    }
+
+    const cursorPosition = selection.anchorOffset;
+
+    const fromNode = findTextBorderNode(node, 'begin');
+
+    const hasBubbles = bubbleset.hasBubbles(nodeSet);
+    const range = context.document.createRange();
+    range.setStart(fromNode, 0);
+    range.setEnd(node, cursorPosition);
+
+    const dataText = textClean(range.toString());
+
+    if (dataText || (!dataText && !hasBubbles)) {
+        if (!dataText) {
+            range.collapse();
+        }
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+        return true;
+    }
+
+    return false;
+}
+
 
 function selectAll(selection, nodeSet) {
     selection = selection || context.getSelection();
