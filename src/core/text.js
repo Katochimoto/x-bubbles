@@ -344,6 +344,19 @@ function html2text(value) {
         .trim();
 }
 
+function findTextBorderNode(cursorNode, mode) {
+    let item = cursorNode;
+    let result = null;
+    let sibling = mode === 'begin' ? 'previousSibling' : 'nextSibling';
+
+    while (item && item.nodeType === Node.TEXT_NODE) {
+        result = item;
+        result = item[sibling];
+    }
+
+    return result;
+}
+
 function selectAll(selection, nodeSet) {
     selection = selection || context.getSelection();
     const node = selection && selection.anchorNode;
@@ -352,21 +365,8 @@ function selectAll(selection, nodeSet) {
         return false;
     }
 
-    let fromNode;
-    let toNode;
-    let item = node;
-
-    while (item && item.nodeType === Node.TEXT_NODE) {
-        fromNode = item;
-        item = item.previousSibling;
-    }
-
-    item = node;
-
-    while (item && item.nodeType === Node.TEXT_NODE) {
-        toNode = item;
-        item = item.nextSibling;
-    }
+    const fromNode = findTextBorderNode(node, 'begin');
+    const toNode = findTextBorderNode(node, 'end');
 
     const hasBubbles = bubbleset.hasBubbles(nodeSet);
     const range = context.document.createRange();
