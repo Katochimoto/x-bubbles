@@ -1,4 +1,5 @@
 const context = require('../context');
+const utils = require('./utils');
 const bubble = require('./bubble');
 const bubbleset = require('./bubbleset');
 
@@ -7,6 +8,7 @@ const PATH_SELECTED = '[bubble][selected]';
 const PATH_NOT_SELECTED = '[bubble]:not([selected])';
 
 exports.all = all;
+exports.allLeft = allLeft;
 exports.add = add;
 exports.clear = clear;
 exports.get = get;
@@ -16,6 +18,8 @@ exports.last = last;
 exports.has = has;
 exports.range = range;
 exports.toggleUniq = toggleUniq;
+exports.setLast = setLast;
+exports.getEditable = getEditable;
 
 function range(node) {
     if (!bubble.isBubbleNode(node)) {
@@ -81,6 +85,25 @@ function all(nodeSet) {
     selection && selection.removeAllRanges();
 }
 
+function allLeft(nodeSet) {
+    const lastSelectedBubble = last(nodeSet);
+
+    if (!lastSelectedBubble) {
+        return;
+    }
+
+    for (let item = bubbleset.prevBubble(lastSelectedBubble); item; item = bubbleset.prevBubble(item)) {
+        setSelected(item);
+    }
+
+    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
+
+    bubble.bubbling(nodeSet);
+
+    const selection = context.getSelection();
+    selection && selection.removeAllRanges();
+}
+
 function has(nodeSet) {
     return Boolean(nodeSet.querySelector(PATH_SELECTED));
 }
@@ -96,6 +119,26 @@ function last(set) {
 
 function get(nodeSet) {
     return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
+}
+
+function getEditable(nodeSet) {
+    if (!nodeSet.options('selection')) {
+        return false;
+    }
+
+    const selection = utils.getSelection(nodeSet);
+
+    if (selection && selection.rangeCount) {
+        return false;
+    }
+
+    const list = get(nodeSet);
+
+    if (list.length !== 1) {
+        return false;
+    }
+
+    return list[0];
 }
 
 function clear(nodeSet) {
@@ -128,6 +171,10 @@ function uniq(node) {
     clear(nodeSet);
 
     return add(node);
+}
+
+function setLast(nodeEditor) {
+    return uniq(bubbleset.lastBubble(nodeEditor));
 }
 
 function toggleUniq(node) {

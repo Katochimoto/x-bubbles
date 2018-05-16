@@ -81,19 +81,24 @@ function onMouseup(dragSet, event) {
 
         if (nodeSet && nodeSet !== currentDragSet) {
             const list = select.get(currentDragSet);
+            const checkBubbleDrop = nodeSet.options('checkBubbleDrop');
 
-            if (list.length) {
+            if (list.length && checkBubbleDrop(list)) {
                 bubbleset.moveBubbles(currentDragSet, nodeSet, list);
                 context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
             }
         }
 
-        const _ = currentDragSet;
+        const tmpDragSet = currentDragSet;
         currentDragSet = null;
 
-        _.classList.remove(CLS.DRAGSTART);
-        events.dispatch(_, EV.DROP, { bubbles: false, cancelable: false });
-        events.dispatch(_, EV.DRAGEND, { bubbles: false, cancelable: false });
+        tmpDragSet.classList.remove(CLS.DRAGSTART);
+        events.dispatch(tmpDragSet, EV.DROP, { bubbles: false, cancelable: false });
+        events.dispatch(
+            tmpDragSet,
+            EV.DRAGEND,
+            { bubbles: false, cancelable: false, detail: { target: select.head(tmpDragSet) } }
+        );
     }
 }
 
@@ -113,7 +118,9 @@ function onMousemove(dragSet) {
 
         let moveElement;
 
-        if (select.get(currentDragSet).length === 1) {
+        const list = select.get(currentDragSet);
+
+        if (list.length === 1) {
             moveElement = drag.nodeBubble.cloneNode(true);
         }
 
@@ -127,7 +134,11 @@ function onMousemove(dragSet) {
         currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
         currentDragElement.appendChild(moveElement);
 
-        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false });
+        events.dispatch(
+            currentDragSet,
+            EV.DRAGSTART,
+            { bubbles: false, cancelable: false, detail: { target: select.head(currentDragSet) } },
+        );
     }
 
     drag.x = event.clientX;

@@ -1,5 +1,6 @@
 const context = require('../context');
 const text = require('./text');
+const bubbleset = require('./bubbleset');
 const { escape, canUseDrag } = require('./utils');
 
 exports.isBubbleNode = isBubbleNode;
@@ -108,6 +109,8 @@ function bubbling(nodeSet) {
     const ranges = getBubbleRanges(nodeSet);
     const nodes = [];
 
+    const remainingCapacity = bubbleset.getRemainingCapacity(nodeSet);
+
     ranges.forEach(function (range) {
         const dataText = text.textClean(range.toString());
 
@@ -151,6 +154,10 @@ function bubbling(nodeSet) {
         const fragment = context.document.createDocumentFragment();
 
         textParts.forEach(function (textPart) {
+            if (nodes.length >= remainingCapacity) {
+                return;
+            }
+
             const nodeBubble = create(nodeSet, textPart);
             if (nodeBubble) {
                 fragment.appendChild(nodeBubble);

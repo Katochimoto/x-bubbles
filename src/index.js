@@ -43,7 +43,7 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
      * The receiving and recording settings.
      * @memberof XBubbles
      * @function
-     * @param {string} name
+     * @param {string|object} name - string, if only one option is inserted, or object - if many options inserted
      * @param {*} value
      * @returns {*}
      * @public
@@ -89,6 +89,12 @@ const XBubbles = Object.create(HTMLDivElement.prototype, {
     setContent: {
         value: function (data) {
             return this.editor.setContent(data);
+        }
+    },
+
+    canAddBubble: {
+        value: function () {
+            return this.editor.canAddBubble();
         }
     },
 

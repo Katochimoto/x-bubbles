@@ -92,7 +92,7 @@ var XBubbles =
 	     * The receiving and recording settings.
 	     * @memberof XBubbles
 	     * @function
-	     * @param {string} name
+	     * @param {string|object} name - string, if only one option is inserted, or object - if many options inserted
 	     * @param {*} value
 	     * @returns {*}
 	     * @public
@@ -138,6 +138,12 @@ var XBubbles =
 	    setContent: {
 	        value: function value(data) {
 	            return this.editor.setContent(data);
+	        }
+	    },
+
+	    canAddBubble: {
+	        value: function value() {
+	            return this.editor.canAddBubble();
 	        }
 	    },
 
@@ -309,6 +315,7 @@ var XBubbles =
 	    nodeEditor.fireBeforeRemove = fireBeforeRemove.bind(nodeEditor);
 
 	    return {
+	        canAddBubble: canAddBubble.bind(nodeEditor),
 	        addBubble: addBubble.bind(nodeEditor),
 	        bubbling: bubbling.bind(nodeEditor),
 	        editBubble: editBubble.bind(nodeEditor),
@@ -330,6 +337,10 @@ var XBubbles =
 	        drag.destroy(nodeEditor);
 	    }
 	};
+
+	function canAddBubble() {
+	    return bubbleset.canAddBubble(this);
+	}
 
 	function getItems() {
 	    return bubbleset.getBubbles(this);
@@ -359,7 +370,7 @@ var XBubbles =
 
 	function addBubble(bubbleText, dataAttributes) {
 	    var nodeBubble = bubble.create(this, bubbleText, dataAttributes);
-	    if (!nodeBubble) {
+	    if (!this.canAddBubble() || !nodeBubble) {
 	        return false;
 	    }
 
@@ -481,6 +492,7 @@ var XBubbles =
 	exports.findBubbleLeft = findBubbleLeft;
 	exports.findBubbleRight = findBubbleRight;
 	exports.getBubbles = getBubbles;
+	exports.bubblesCount = bubblesCount;
 	exports.hasBubbles = hasBubbles;
 	exports.headBubble = headBubble;
 	exports.lastBubble = lastBubble;
@@ -488,6 +500,8 @@ var XBubbles =
 	exports.prevBubble = prevBubble;
 	exports.removeBubbles = removeBubbles;
 	exports.moveBubbles = moveBubbles;
+	exports.canAddBubble = canAddBubble;
+	exports.getRemainingCapacity = getRemainingCapacity;
 
 	function lastBubble(nodeSet) {
 	    return nodeSet.querySelector('[bubble]:last-child');
@@ -499,6 +513,11 @@ var XBubbles =
 
 	function getBubbles(nodeSet) {
 	    return Array.prototype.slice.call(nodeSet.querySelectorAll('[bubble]'));
+	}
+
+	function bubblesCount(nodeSet) {
+	    var bubbles = getBubbles(nodeSet);
+	    return bubbles.length;
 	}
 
 	function hasBubbles(nodeSet) {
@@ -611,10 +630,34 @@ var XBubbles =
 	}
 
 	function moveBubbles(nodeEditorFrom, nodeEditorTo, list) {
-	    nodeEditorFrom.fireBeforeRemove(list);
-	    list.forEach(function (item) {
+	    var remainingCapacity = getRemainingCapacity(nodeEditorTo);
+
+	    if (remainingCapacity <= 0) {
+	        return;
+	    }
+
+	    var movedBubbles = list.slice(0, remainingCapacity);
+
+	    nodeEditorFrom.fireBeforeRemove(movedBubbles);
+	    movedBubbles.forEach(function (item) {
 	        return nodeEditorTo.appendChild(item);
 	    });
+	}
+
+	function canAddBubble(nodeEditor) {
+	    var bubblesLimit = nodeEditor.options('limit');
+
+	    return !bubblesLimit || bubblesCount(nodeEditor) < bubblesLimit;
+	}
+
+	function getRemainingCapacity(nodeEditor) {
+	    var bubblesLimit = nodeEditor.options('limit');
+
+	    if (!bubblesLimit) {
+	        return Number.POSITIVE_INFINITY;
+	    }
+
+	    return bubblesLimit - bubblesCount(nodeEditor);
 	}
 
 /***/ },
@@ -625,6 +668,7 @@ var XBubbles =
 
 	var context = __webpack_require__(1);
 	var text = __webpack_require__(5);
+	var bubbleset = __webpack_require__(3);
 
 	var _require = __webpack_require__(6),
 	    escape = _require.escape,
@@ -738,6 +782,8 @@ var XBubbles =
 	    var ranges = getBubbleRanges(nodeSet);
 	    var nodes = [];
 
+	    var remainingCapacity = bubbleset.getRemainingCapacity(nodeSet);
+
 	    ranges.forEach(function (range) {
 	        var dataText = text.textClean(range.toString());
 
@@ -774,6 +820,10 @@ var XBubbles =
 	        var fragment = context.document.createDocumentFragment();
 
 	        textParts.forEach(function (textPart) {
+	            if (nodes.length >= remainingCapacity) {
+	                return;
+	            }
+
 	            var nodeBubble = create(nodeSet, textPart);
 	            if (nodeBubble) {
 	                fragment.appendChild(nodeBubble);
@@ -896,6 +946,8 @@ var XBubbles =
 	exports.currentTextRange = currentTextRange;
 	exports.text2bubble = text2bubble;
 	exports.replaceString = replaceString;
+	exports.findTextBorderNode = findTextBorderNode;
+	exports.selectFromCursorToStrBegin = selectFromCursorToStrBegin;
 	exports.selectAll = selectAll;
 	exports.textClean = textClean;
 	exports.checkZws = checkZws;
@@ -1213,34 +1265,24 @@ var XBubbles =
 	    return DOMContainer.innerText.replace(/^[\u0020\u00a0]+$/gm, '').replace(/\n/gm, ' ').trim();
 	}
 
-	function selectAll(selection, nodeSet) {
-	    selection = selection || context.getSelection();
-	    var node = selection && selection.anchorNode;
-
-	    if (!node || node.nodeType !== Node.TEXT_NODE) {
-	        return false;
-	    }
-
-	    var fromNode = void 0;
-	    var toNode = void 0;
-	    var item = node;
+	function findTextBorderNode(cursorNode, mode) {
+	    var item = cursorNode;
+	    var result = null;
+	    var sibling = mode === 'begin' ? 'previousSibling' : 'nextSibling';
 
 	    while (item && item.nodeType === Node.TEXT_NODE) {
-	        fromNode = item;
-	        item = item.previousSibling;
+	        result = item;
+	        item = item[sibling];
 	    }
 
-	    item = node;
+	    return result;
+	}
 
-	    while (item && item.nodeType === Node.TEXT_NODE) {
-	        toNode = item;
-	        item = item.nextSibling;
-	    }
-
+	function setTextSelection(selection, from, to, nodeSet) {
 	    var hasBubbles = bubbleset.hasBubbles(nodeSet);
 	    var range = context.document.createRange();
-	    range.setStartBefore(fromNode);
-	    range.setEndAfter(toNode);
+	    range.setStart(from.node, from.offset);
+	    range.setEnd(to.node, to.offset);
 
 	    var dataText = textClean(range.toString());
 
@@ -1255,6 +1297,35 @@ var XBubbles =
 	    }
 
 	    return false;
+	}
+
+	function selectFromCursorToStrBegin(selection, nodeSet) {
+	    selection = selection || context.getSelection();
+	    var node = selection && selection.anchorNode;
+
+	    if (!node || node.nodeType !== Node.TEXT_NODE) {
+	        return false;
+	    }
+
+	    var cursorPosition = selection.anchorOffset;
+
+	    var fromNode = findTextBorderNode(node, 'begin');
+
+	    return setTextSelection(selection, { node: fromNode, offset: 0 }, { node: node, offset: cursorPosition }, nodeSet);
+	}
+
+	function selectAll(selection, nodeSet) {
+	    selection = selection || context.getSelection();
+	    var node = selection && selection.anchorNode;
+
+	    if (!node || node.nodeType !== Node.TEXT_NODE) {
+	        return false;
+	    }
+
+	    var fromNode = findTextBorderNode(node, 'begin');
+	    var toNode = findTextBorderNode(node, 'end');
+
+	    return setTextSelection(selection, { node: fromNode, offset: 0 }, { node: toNode, offset: toNode.nodeValue ? toNode.nodeValue.length : 0 }, nodeSet);
 	}
 
 	function createZws() {
@@ -1731,6 +1802,10 @@ var XBubbles =
 	process.removeListener = noop;
 	process.removeAllListeners = noop;
 	process.emit = noop;
+	process.prependListener = noop;
+	process.prependOnceListener = noop;
+
+	process.listeners = function (name) { return [] }
 
 	process.binding = function (name) {
 	    throw new Error('process.binding is not supported');
@@ -1898,17 +1973,21 @@ var XBubbles =
 	    };
 	}
 
+	function getEventHandlersQueue(element, eventName) {
+	    if (!element[PROPS.LOCAL_EVENTS]) {
+	        element[PROPS.LOCAL_EVENTS] = {};
+	    }
+
+	    if (!element[PROPS.LOCAL_EVENTS][eventName]) {
+	        element[PROPS.LOCAL_EVENTS][eventName] = [];
+	    }
+
+	    return element[PROPS.LOCAL_EVENTS][eventName];
+	}
+
 	var EV_ACTIONS = {
 	    addLocalEventListener: function addLocalEventListener(element, eventName, callback) {
-	        if (!element[PROPS.LOCAL_EVENTS]) {
-	            element[PROPS.LOCAL_EVENTS] = {};
-	        }
-
-	        if (!element[PROPS.LOCAL_EVENTS][eventName]) {
-	            element[PROPS.LOCAL_EVENTS][eventName] = [];
-	        }
-
-	        element[PROPS.LOCAL_EVENTS][eventName].push(callback);
+	        getEventHandlersQueue(element, eventName).push(callback);
 	    },
 
 	    removeLocalEventListener: function removeLocalEventListener(element, eventName, callback) {
@@ -2044,6 +2123,7 @@ var XBubbles =
 	    Delete: 46,
 	    Enter: 13, // Enter
 	    Esc: 27,
+	    Home: 36,
 	    Left: 37,
 	    Right: 39,
 	    Semicolon: 59, // ;
@@ -2106,6 +2186,11 @@ var XBubbles =
 	 */
 	function restore(nodeSet) {
 	    if (!utils.isMobileIE) {
+	        if (!nodeSet.canAddBubble()) {
+	            select.setLast(nodeSet);
+	            return;
+	        }
+
 	        select.clear(nodeSet);
 	        var basis = restoreBasis(nodeSet);
 	        var selection = context.getSelection();
@@ -2145,6 +2230,7 @@ var XBubbles =
 	'use strict';
 
 	var context = __webpack_require__(1);
+	var utils = __webpack_require__(6);
 	var bubble = __webpack_require__(4);
 	var bubbleset = __webpack_require__(3);
 
@@ -2153,6 +2239,7 @@ var XBubbles =
 	var PATH_NOT_SELECTED = '[bubble]:not([selected])';
 
 	exports.all = all;
+	exports.allLeft = allLeft;
 	exports.add = add;
 	exports.clear = clear;
 	exports.get = get;
@@ -2162,6 +2249,8 @@ var XBubbles =
 	exports.has = has;
 	exports.range = range;
 	exports.toggleUniq = toggleUniq;
+	exports.setLast = setLast;
+	exports.getEditable = getEditable;
 
 	function range(node) {
 	    if (!bubble.isBubbleNode(node)) {
@@ -2228,6 +2317,25 @@ var XBubbles =
 	    selection && selection.removeAllRanges();
 	}
 
+	function allLeft(nodeSet) {
+	    var lastSelectedBubble = last(nodeSet);
+
+	    if (!lastSelectedBubble) {
+	        return;
+	    }
+
+	    for (var item = bubbleset.prevBubble(lastSelectedBubble); item; item = bubbleset.prevBubble(item)) {
+	        setSelected(item);
+	    }
+
+	    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
+
+	    bubble.bubbling(nodeSet);
+
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
+	}
+
 	function has(nodeSet) {
 	    return Boolean(nodeSet.querySelector(PATH_SELECTED));
 	}
@@ -2243,6 +2351,26 @@ var XBubbles =
 
 	function get(nodeSet) {
 	    return slice.call(nodeSet.querySelectorAll(PATH_SELECTED));
+	}
+
+	function getEditable(nodeSet) {
+	    if (!nodeSet.options('selection')) {
+	        return false;
+	    }
+
+	    var selection = utils.getSelection(nodeSet);
+
+	    if (selection && selection.rangeCount) {
+	        return false;
+	    }
+
+	    var list = get(nodeSet);
+
+	    if (list.length !== 1) {
+	        return false;
+	    }
+
+	    return list[0];
 	}
 
 	function clear(nodeSet) {
@@ -2277,6 +2405,10 @@ var XBubbles =
 	    clear(nodeSet);
 
 	    return add(node);
+	}
+
+	function setLast(nodeEditor) {
+	    return uniq(bubbleset.lastBubble(nodeEditor));
 	}
 
 	function toggleUniq(node) {
@@ -2401,6 +2533,7 @@ var XBubbles =
 	    event.dataTransfer.setData('text/plain', '');
 
 	    var list = select.get(currentDragSet);
+
 	    if (list.length > 1) {
 	        event.dataTransfer.setDragImage(getDragImage(), DRAG_IMG.w, DRAG_IMG.h);
 	    }
@@ -2420,9 +2553,11 @@ var XBubbles =
 	        return;
 	    }
 
+	    var checkBubbleDrop = nodeSet.options('checkBubbleDrop');
+
 	    var list = select.get(currentDragSet);
 
-	    if (list.length) {
+	    if (list.length && checkBubbleDrop(list)) {
 	        bubbleset.moveBubbles(currentDragSet, nodeSet, list);
 	        context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
 	    }
@@ -2615,19 +2750,20 @@ var XBubbles =
 
 	        if (nodeSet && nodeSet !== currentDragSet) {
 	            var list = select.get(currentDragSet);
+	            var checkBubbleDrop = nodeSet.options('checkBubbleDrop');
 
-	            if (list.length) {
+	            if (list.length && checkBubbleDrop(list)) {
 	                bubbleset.moveBubbles(currentDragSet, nodeSet, list);
 	                context.setTimeout(onDropSuccess, 0, currentDragSet, nodeSet);
 	            }
 	        }
 
-	        var _2 = currentDragSet;
+	        var tmpDragSet = currentDragSet;
 	        currentDragSet = null;
 
-	        _2.classList.remove(CLS.DRAGSTART);
-	        events.dispatch(_2, EV.DROP, { bubbles: false, cancelable: false });
-	        events.dispatch(_2, EV.DRAGEND, { bubbles: false, cancelable: false });
+	        tmpDragSet.classList.remove(CLS.DRAGSTART);
+	        events.dispatch(tmpDragSet, EV.DROP, { bubbles: false, cancelable: false });
+	        events.dispatch(tmpDragSet, EV.DRAGEND, { bubbles: false, cancelable: false, detail: { target: select.head(tmpDragSet) } });
 	    }
 	}
 
@@ -2647,7 +2783,9 @@ var XBubbles =
 
 	        var moveElement = void 0;
 
-	        if (select.get(currentDragSet).length === 1) {
+	        var list = select.get(currentDragSet);
+
+	        if (list.length === 1) {
 	            moveElement = drag.nodeBubble.cloneNode(true);
 	        }
 
@@ -2661,7 +2799,7 @@ var XBubbles =
 	        currentDragElement.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;top:0;left:0;';
 	        currentDragElement.appendChild(moveElement);
 
-	        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false });
+	        events.dispatch(currentDragSet, EV.DRAGSTART, { bubbles: false, cancelable: false, detail: { target: select.head(currentDragSet) } });
 	    }
 
 	    drag.x = event.clientX;
@@ -3650,6 +3788,7 @@ var XBubbles =
 	    sharedData.nodeEditor = nodeEditor;
 	    sharedData.nodeBubble = bubbleset.closestNodeBubble(event.target);
 	    sharedData.isDblclick = false;
+	    sharedData.canAddBubble = nodeEditor.canAddBubble();
 
 	    if (sharedData.nodeBubble) {
 	        var clickTime = Date.now();
@@ -3797,7 +3936,8 @@ var XBubbles =
 	 * @param {Event} event
 	 */
 	module.exports = function (event) {
-	  cursor.restore(event.currentTarget);
+	  var nodeEditor = event.currentTarget;
+	  cursor.restore(nodeEditor);
 	};
 
 /***/ },
@@ -3819,6 +3959,7 @@ var XBubbles =
 	 * @param {Event} event
 	 * @param {Object} sharedData
 	 * @param {boolean} [sharedData.isTextSelectAll]
+	 * @param {boolean} [sharedData.isTextSelectedFromBeginToCursor]
 	 * @param {boolean} [sharedData.isEmptyLeft]
 	 * @param {boolean} [sharedData.isEmptyRight]
 	 * @param {Selection} [sharedData.selection]
@@ -3851,6 +3992,13 @@ var XBubbles =
 
 	        case KEY.Right:
 	            onArrowRight(event, sharedData);
+	            break;
+
+	        case KEY.Home:
+	            if (event.shiftKey) {
+	                event.preventDefault();
+	                sharedData.isTextSelectedFromBeginToCursor = text.selectFromCursorToStrBegin(null, sharedData.nodeEditor);
+	            }
 	            break;
 
 	        case KEY.a:
@@ -3951,26 +4099,32 @@ var XBubbles =
 	var events = __webpack_require__(10);
 	var bubble = __webpack_require__(4);
 	var cursor = __webpack_require__(13);
+	var select = __webpack_require__(14);
 
 	var _require = __webpack_require__(12),
 	    KEY = _require.KEY;
 
 	/**
 	 * @param {Event} event
+	 * @param {Object} sharedData
 	 */
 
 
-	module.exports = function (event) {
+	module.exports = function (event, sharedData) {
 	    var code = events.keyCode(event);
 	    var nodeEditor = event.currentTarget;
 
+	    sharedData.enterBubbling = false;
+
 	    if (code === KEY.Enter) {
 	        event.preventDefault();
-	        if (!nodeEditor.options('disableControls')) {
+	        if (!nodeEditor.options('disableControls') && !select.getEditable(nodeEditor)) {
 	            bubble.bubbling(nodeEditor);
 	            cursor.restore(nodeEditor);
+
+	            sharedData.enterBubbling = true;
 	        }
-	    } else {
+	    } else if (nodeEditor.canAddBubble()) {
 	        var separator = nodeEditor.options('separator');
 	        if (separator && separator.test(String.fromCharCode(code))) {
 	            var separatorCond = nodeEditor.options('separatorCond');
@@ -3981,6 +4135,8 @@ var XBubbles =
 	                cursor.restore(nodeEditor);
 	            }
 	        }
+	    } else {
+	        event.preventDefault();
 	    }
 	};
 
@@ -4005,7 +4161,7 @@ var XBubbles =
 	    var code = events.keyCode(event);
 	    var isPrintableChar = event.key ? event.key.length === 1 : (code > 47 || code === KEY.Space || code === KEY.Backspace) && code !== KEY.Cmd;
 
-	    if (isPrintableChar) {
+	    if (isPrintableChar && nodeEditor.canAddBubble()) {
 	        nodeEditor.fireInput();
 	    }
 	};
@@ -4029,26 +4185,28 @@ var XBubbles =
 	    event.preventDefault();
 	    var nodeEditor = event.currentTarget;
 
+	    if (!nodeEditor.canAddBubble()) {
+	        return;
+	    }
+
 	    if (context.clipboardData && context.clipboardData.getData) {
 	        onPasteSuccess(nodeEditor, context.clipboardData.getData('Text'));
 	    } else if (event.clipboardData) {
-	        (function () {
-	            var contentType = 'text/plain';
-	            var clipboardData = event.clipboardData;
-	            var data = clipboardData.getData && clipboardData.getData(contentType);
+	        var contentType = 'text/plain';
+	        var clipboardData = event.clipboardData;
+	        var data = clipboardData.getData && clipboardData.getData(contentType);
 
-	            if (!onPasteSuccess(nodeEditor, data) && clipboardData.items) {
-	                Array.prototype.slice.call(clipboardData.items).filter(function (item) {
-	                    return item.kind === 'string' && item.type === contentType;
-	                }).some(function (item) {
-	                    item.getAsString(function (dataText) {
-	                        onPasteSuccess(nodeEditor, dataText);
-	                    });
-
-	                    return true;
+	        if (!onPasteSuccess(nodeEditor, data) && clipboardData.items) {
+	            Array.prototype.slice.call(clipboardData.items).filter(function (item) {
+	                return item.kind === 'string' && item.type === contentType;
+	            }).some(function (item) {
+	                item.getAsString(function (dataText) {
+	                    onPasteSuccess(nodeEditor, dataText);
 	                });
-	            }
-	        })();
+
+	                return true;
+	            });
+	        }
 	    }
 	};
 
@@ -4119,6 +4277,7 @@ var XBubbles =
 	    var nodeEditor = sharedData.nodeEditor;
 	    var nodeBubble = sharedData.nodeBubble;
 	    var isDblclick = sharedData.isDblclick;
+	    var canAddBubble = sharedData.canAddBubble;
 
 	    if (nodeBubble) {
 	        if (events.metaKey(event)) {
@@ -4130,9 +4289,9 @@ var XBubbles =
 	                select.range(nodeBubble);
 	            }
 	        } else if (!isDblclick) {
-	            select.toggleUniq(nodeBubble);
+	            canAddBubble ? select.toggleUniq(nodeBubble) : select.uniq(nodeBubble);
 	        }
-	    } else {
+	    } else if (canAddBubble) {
 	        select.clear(nodeEditor);
 	    }
 	};
@@ -4159,6 +4318,7 @@ var XBubbles =
 	 * @param {Event} event
 	 * @param {Object} sharedData
 	 * @param {boolean} [sharedData.isTextSelectAll]
+	 * @param {boolean} [sharedData.isTextSelectedFromBeginToCursor]
 	 * @param {boolean} [sharedData.isEmptyLeft]
 	 * @param {boolean} [sharedData.isEmptyRight]
 	 * @param {Selection} [sharedData.selection]
@@ -4197,6 +4357,14 @@ var XBubbles =
 	        case KEY.Bottom:
 	            event.preventDefault();
 	            onBottom(event, sharedData);
+	            break;
+
+	        case KEY.Home:
+	            if (event.shiftKey && !sharedData.isTextSelectedFromBeginToCursor && select.has(sharedData.nodeEditor)) {
+	                event.preventDefault();
+	                select.allLeft(sharedData.nodeEditor);
+	            }
+
 	            break;
 
 	        case KEY.a:
@@ -4453,7 +4621,6 @@ var XBubbles =
 	'use strict';
 
 	var events = __webpack_require__(10);
-	var utils = __webpack_require__(6);
 	var bubble = __webpack_require__(4);
 	var select = __webpack_require__(14);
 
@@ -4462,16 +4629,17 @@ var XBubbles =
 
 	/**
 	 * @param {Event} event
+	 * @param {Object} sharedData
 	 */
 
 
-	module.exports = function (event) {
+	module.exports = function (event, sharedData) {
 	    var code = events.keyCode(event);
 	    var nodeEditor = event.currentTarget;
 
 	    if (code === KEY.Enter) {
 	        event.preventDefault();
-	        if (!nodeEditor.options('disableControls')) {
+	        if (!nodeEditor.options('disableControls') && !sharedData.enterBubbling) {
 	            editBubbleKeyboardEvent(nodeEditor);
 	        }
 	    } else if (code === KEY.Space) {
@@ -4482,14 +4650,10 @@ var XBubbles =
 	};
 
 	function editBubbleKeyboardEvent(nodeEditor) {
-	    var selection = utils.getSelection(nodeEditor);
+	    var editableBubble = select.getEditable(nodeEditor);
 
-	    if (!selection || !selection.rangeCount) {
-	        var list = select.get(nodeEditor);
-
-	        if (list.length === 1) {
-	            return bubble.edit(nodeEditor, list[0]);
-	        }
+	    if (editableBubble) {
+	        return bubble.edit(nodeEditor, editableBubble);
 	    }
 
 	    return false;
@@ -4524,10 +4688,14 @@ var XBubbles =
 	    checkBubblePaste: ['func', function () {
 	        return true;
 	    }, 'check-bubble-paste'],
+	    checkBubbleDrop: ['func', function () {
+	        return true;
+	    }, 'check-bubble-drop'],
 	    classBubble: ['str', 'bubble', 'class-bubble'],
 	    disableControls: ['bool', false, 'disable-controls'],
 	    draggable: ['bool', true, 'draggable'],
 	    ending: ['reg', null, 'ending'], // /\@ya\.ru/g
+	    limit: ['uint', 0, 'limit'],
 	    selection: ['bool', true, 'selection'],
 	    separator: ['reg', /[,;]/, 'separator'],
 	    separatorCond: ['func', null, 'separator-cond'],
@@ -4581,20 +4749,53 @@ var XBubbles =
 	        if (typeof value !== 'undefined') {
 	            return value ? String(value) : '';
 	        }
+	    },
+	    uint: function uint(value) {
+	        value = Number(value);
+
+	        if (!isNaN(value) && value > 0) {
+	            return value;
+	        }
 	    }
 	};
 
-	module.exports = function (node, name, value) {
-	    if (name) {
+	/**
+	 * @param {HTMLElement} node
+	 * @param {array} args
+	 * @param {string|object} args.0 - string, if only one option is inserted, or object, if many options inserted,
+	 *  in the second case second argument doing nothing
+	 * @param {*} args.1 - value of inserted option
+	 *
+	 * @returns {*}
+	 */
+	module.exports = function (node) {
+	    var value = arguments.length <= 1 ? undefined : arguments[1];
+
+	    if (value) {
 	        if (!node[PROPS.OPTIONS]) {
 	            reinitOptions(node);
 	        }
 
-	        if (typeof value !== 'undefined') {
-	            node[PROPS.OPTIONS][name] = value;
+	        if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' && value !== null) {
+	            var optionsObj = value;
+
+	            Object.keys(optionsObj).forEach(function (optionName) {
+	                node[PROPS.OPTIONS][optionName] = optionsObj[optionName];
+	            });
+
+	            prepareOptions(node[PROPS.OPTIONS]);
+
+	            return;
+	        }
+
+	        var optionName = value;
+	        var optionValue = arguments.length <= 2 ? undefined : arguments[2];
+
+	        if (typeof optionValue !== 'undefined') {
+	            node[PROPS.OPTIONS][optionName] = optionValue;
 	            prepareOptions(node[PROPS.OPTIONS]);
 	        } else {
-	            return node[PROPS.OPTIONS][name];
+	            return node[PROPS.OPTIONS][optionName];
 	        }
 	    } else {
 	        reinitOptions(node);

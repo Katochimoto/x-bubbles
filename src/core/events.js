@@ -145,17 +145,21 @@ function oneCallback(element, eventName, callback) {
     };
 }
 
+function getEventHandlersQueue(element, eventName) {
+    if (!element[ PROPS.LOCAL_EVENTS ]) {
+        element[ PROPS.LOCAL_EVENTS ] = {};
+    }
+
+    if (!element[ PROPS.LOCAL_EVENTS ][ eventName ]) {
+        element[ PROPS.LOCAL_EVENTS ][ eventName ] = [];
+    }
+
+    return element[ PROPS.LOCAL_EVENTS ][ eventName ];
+}
+
 const EV_ACTIONS = {
     addLocalEventListener: function (element, eventName, callback) {
-        if (!element[ PROPS.LOCAL_EVENTS ]) {
-            element[ PROPS.LOCAL_EVENTS ] = {};
-        }
-
-        if (!element[ PROPS.LOCAL_EVENTS ][ eventName ]) {
-            element[ PROPS.LOCAL_EVENTS ][ eventName ] = [];
-        }
-
-        element[ PROPS.LOCAL_EVENTS ][ eventName ].push(callback);
+        getEventHandlersQueue(element, eventName).push(callback);
     },
 
     removeLocalEventListener: function (element, eventName, callback) {

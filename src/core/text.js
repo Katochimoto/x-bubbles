@@ -16,6 +16,8 @@ exports.html2text = html2text;
 exports.currentTextRange = currentTextRange;
 exports.text2bubble = text2bubble;
 exports.replaceString = replaceString;
+exports.findTextBorderNode = findTextBorderNode;
+exports.selectFromCursorToStrBegin = selectFromCursorToStrBegin;
 exports.selectAll = selectAll;
 exports.textClean = textClean;
 exports.checkZws = checkZws;
@@ -344,34 +346,24 @@ function html2text(value) {
         .trim();
 }
 
-function selectAll(selection, nodeSet) {
-    selection = selection || context.getSelection();
-    const node = selection && selection.anchorNode;
-
-    if (!node || node.nodeType !== Node.TEXT_NODE) {
-        return false;
-    }
-
-    let fromNode;
-    let toNode;
-    let item = node;
+function findTextBorderNode(cursorNode, mode) {
+    let item = cursorNode;
+    let result = null;
+    let sibling = mode === 'begin' ? 'previousSibling' : 'nextSibling';
 
     while (item && item.nodeType === Node.TEXT_NODE) {
-        fromNode = item;
-        item = item.previousSibling;
+        result = item;
+        item = item[sibling];
     }
 
-    item = node;
+    return result;
+}
 
-    while (item && item.nodeType === Node.TEXT_NODE) {
-        toNode = item;
-        item = item.nextSibling;
-    }
-
+function setTextSelection(selection, from, to, nodeSet) {
     const hasBubbles = bubbleset.hasBubbles(nodeSet);
     const range = context.document.createRange();
-    range.setStartBefore(fromNode);
-    range.setEndAfter(toNode);
+    range.setStart(from.node, from.offset);
+    range.setEnd(to.node, to.offset);
 
     const dataText = textClean(range.toString());
 
@@ -386,6 +378,46 @@ function selectAll(selection, nodeSet) {
     }
 
     return false;
+}
+
+function selectFromCursorToStrBegin(selection, nodeSet) {
+    selection = selection || context.getSelection();
+    const node = selection && selection.anchorNode;
+
+    if (!node || node.nodeType !== Node.TEXT_NODE) {
+        return false;
+    }
+
+    const cursorPosition = selection.anchorOffset;
+
+    const fromNode = findTextBorderNode(node, 'begin');
+
+    return setTextSelection(
+        selection,
+        { node: fromNode, offset: 0 },
+        { node, offset: cursorPosition },
+        nodeSet
+    );
+}
+
+
+function selectAll(selection, nodeSet) {
+    selection = selection || context.getSelection();
+    const node = selection && selection.anchorNode;
+
+    if (!node || node.nodeType !== Node.TEXT_NODE) {
+        return false;
+    }
+
+    const fromNode = findTextBorderNode(node, 'begin');
+    const toNode = findTextBorderNode(node, 'end');
+
+    return setTextSelection(
+        selection,
+        { node: fromNode, offset: 0 },
+        { node: toNode, offset: toNode.nodeValue ? toNode.nodeValue.length : 0 },
+        nodeSet
+    );
 }
 
 function createZws() {

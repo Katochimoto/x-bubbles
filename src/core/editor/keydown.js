@@ -9,6 +9,7 @@ const { KEY } = require('../constant');
  * @param {Event} event
  * @param {Object} sharedData
  * @param {boolean} [sharedData.isTextSelectAll]
+ * @param {boolean} [sharedData.isTextSelectedFromBeginToCursor]
  * @param {boolean} [sharedData.isEmptyLeft]
  * @param {boolean} [sharedData.isEmptyRight]
  * @param {Selection} [sharedData.selection]
@@ -39,6 +40,13 @@ module.exports = function (event, sharedData) {
 
     case KEY.Right:
         onArrowRight(event, sharedData);
+        break;
+
+    case KEY.Home:
+        if (event.shiftKey) {
+            event.preventDefault();
+            sharedData.isTextSelectedFromBeginToCursor = text.selectFromCursorToStrBegin(null, sharedData.nodeEditor);
+        }
         break;
 
     case KEY.a:

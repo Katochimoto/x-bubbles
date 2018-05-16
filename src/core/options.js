@@ -13,14 +13,18 @@ const OPTIONS = {
     checkBubblePaste:   [ 'func', function () {
         return true;
     }, 'check-bubble-paste' ],
+    checkBubbleDrop:    [ 'func', function () {
+        return true;
+    }, 'check-bubble-drop' ],
     classBubble:        [ 'str', 'bubble', 'class-bubble' ],
     disableControls:    [ 'bool', false, 'disable-controls' ],
     draggable:          [ 'bool', true, 'draggable' ],
     ending:             [ 'reg', null, 'ending' ], // /\@ya\.ru/g
+    limit:              [ 'uint', 0, 'limit' ],
     selection:          [ 'bool', true, 'selection' ],
     separator:          [ 'reg', /[,;]/, 'separator' ],
     separatorCond:      [ 'func', null, 'separator-cond' ],
-    tokenizer:          [ 'func', null, 'tokenizer' ],
+    tokenizer:          [ 'func', null, 'tokenizer' ]
 };
 
 const OPTIONS_PREPARE = {
@@ -71,20 +75,53 @@ const OPTIONS_PREPARE = {
             return value ? String(value) : '';
         }
     },
+    uint: function (value) {
+        value = Number(value);
+
+        if (!isNaN(value) && value > 0) {
+            return value;
+        }
+    }
 };
 
-module.exports = function (node, name, value) {
-    if (name) {
+/**
+ * @param {HTMLElement} node
+ * @param {array} args
+ * @param {string|object} args.0 - string, if only one option is inserted, or object, if many options inserted,
+ *  in the second case second argument doing nothing
+ * @param {*} args.1 - value of inserted option
+ *
+ * @returns {*}
+ */
+module.exports = function (node, ...args) {
+    const value = args[0];
+
+    if (value) {
         if (!node[ PROPS.OPTIONS ]) {
             reinitOptions(node);
         }
 
-        if (typeof value !== 'undefined') {
-            node[ PROPS.OPTIONS ][ name ] = value;
+        if (typeof value === 'object' && value !== null) {
+            const optionsObj = value;
+
+            Object.keys(optionsObj).forEach((optionName) => {
+                node[ PROPS.OPTIONS ][ optionName ] = optionsObj[ optionName ];
+            });
+
+            prepareOptions(node[ PROPS.OPTIONS ]);
+
+            return;
+        }
+
+        const optionName = value;
+        const optionValue = args[1];
+
+        if (typeof optionValue !== 'undefined') {
+            node[ PROPS.OPTIONS ][ optionName ] = optionValue;
             prepareOptions(node[ PROPS.OPTIONS ]);
 
         } else {
-            return node[ PROPS.OPTIONS ][ name ];
+            return node[ PROPS.OPTIONS ][ optionName ];
         }
 
     } else {

@@ -8,6 +8,7 @@ exports.KEY = {
     Delete: 46,
     Enter: 13, // Enter
     Esc: 27,
+    Home: 36,
     Left: 37,
     Right: 39,
     Semicolon: 59, // ;
