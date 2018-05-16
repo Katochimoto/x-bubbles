@@ -359,22 +359,11 @@ function findTextBorderNode(cursorNode, mode) {
     return result;
 }
 
-function selectFromCursorToStrBegin(selection, nodeSet) {
-    selection = selection || context.getSelection();
-    const node = selection && selection.anchorNode;
-
-    if (!node || node.nodeType !== Node.TEXT_NODE) {
-        return false;
-    }
-
-    const cursorPosition = selection.anchorOffset;
-
-    const fromNode = findTextBorderNode(node, 'begin');
-
+function setTextSelection(selection, from, to, nodeSet) {
     const hasBubbles = bubbleset.hasBubbles(nodeSet);
     const range = context.document.createRange();
-    range.setStart(fromNode, 0);
-    range.setEnd(node, cursorPosition);
+    range.setStart(from.node, from.offset);
+    range.setEnd(to.node, to.offset);
 
     const dataText = textClean(range.toString());
 
@@ -391,6 +380,26 @@ function selectFromCursorToStrBegin(selection, nodeSet) {
     return false;
 }
 
+function selectFromCursorToStrBegin(selection, nodeSet) {
+    selection = selection || context.getSelection();
+    const node = selection && selection.anchorNode;
+
+    if (!node || node.nodeType !== Node.TEXT_NODE) {
+        return false;
+    }
+
+    const cursorPosition = selection.anchorOffset;
+
+    const fromNode = findTextBorderNode(node, 'begin');
+
+    return setTextSelection(
+        selection,
+        { node: fromNode, offset: 0 },
+        { node, offset: cursorPosition },
+        nodeSet
+    );
+}
+
 
 function selectAll(selection, nodeSet) {
     selection = selection || context.getSelection();
@@ -403,24 +412,12 @@ function selectAll(selection, nodeSet) {
     const fromNode = findTextBorderNode(node, 'begin');
     const toNode = findTextBorderNode(node, 'end');
 
-    const hasBubbles = bubbleset.hasBubbles(nodeSet);
-    const range = context.document.createRange();
-    range.setStartBefore(fromNode);
-    range.setEndAfter(toNode);
-
-    const dataText = textClean(range.toString());
-
-    if (dataText || (!dataText && !hasBubbles)) {
-        if (!dataText) {
-            range.collapse();
-        }
-
-        selection.removeAllRanges();
-        selection.addRange(range);
-        return true;
-    }
-
-    return false;
+    return setTextSelection(
+        selection,
+        { node: fromNode, offset: 0 },
+        { node: toNode, offset: toNode.nodeValue ? toNode.nodeValue.length : 0 },
+        nodeSet
+    );
 }
 
 function createZws() {
