@@ -946,6 +946,8 @@ var XBubbles =
 	exports.currentTextRange = currentTextRange;
 	exports.text2bubble = text2bubble;
 	exports.replaceString = replaceString;
+	exports.findTextBorderNode = findTextBorderNode;
+	exports.selectFromCursorToStrBegin = selectFromCursorToStrBegin;
 	exports.selectAll = selectAll;
 	exports.textClean = textClean;
 	exports.checkZws = checkZws;
@@ -1263,34 +1265,24 @@ var XBubbles =
 	    return DOMContainer.innerText.replace(/^[\u0020\u00a0]+$/gm, '').replace(/\n/gm, ' ').trim();
 	}
 
-	function selectAll(selection, nodeSet) {
-	    selection = selection || context.getSelection();
-	    var node = selection && selection.anchorNode;
-
-	    if (!node || node.nodeType !== Node.TEXT_NODE) {
-	        return false;
-	    }
-
-	    var fromNode = void 0;
-	    var toNode = void 0;
-	    var item = node;
+	function findTextBorderNode(cursorNode, mode) {
+	    var item = cursorNode;
+	    var result = null;
+	    var sibling = mode === 'begin' ? 'previousSibling' : 'nextSibling';
 
 	    while (item && item.nodeType === Node.TEXT_NODE) {
-	        fromNode = item;
-	        item = item.previousSibling;
+	        result = item;
+	        item = item[sibling];
 	    }
 
-	    item = node;
+	    return result;
+	}
 
-	    while (item && item.nodeType === Node.TEXT_NODE) {
-	        toNode = item;
-	        item = item.nextSibling;
-	    }
-
+	function setTextSelection(selection, from, to, nodeSet) {
 	    var hasBubbles = bubbleset.hasBubbles(nodeSet);
 	    var range = context.document.createRange();
-	    range.setStartBefore(fromNode);
-	    range.setEndAfter(toNode);
+	    range.setStart(from.node, from.offset);
+	    range.setEnd(to.node, to.offset);
 
 	    var dataText = textClean(range.toString());
 
@@ -1305,6 +1297,35 @@ var XBubbles =
 	    }
 
 	    return false;
+	}
+
+	function selectFromCursorToStrBegin(selection, nodeSet) {
+	    selection = selection || context.getSelection();
+	    var node = selection && selection.anchorNode;
+
+	    if (!node || node.nodeType !== Node.TEXT_NODE) {
+	        return false;
+	    }
+
+	    var cursorPosition = selection.anchorOffset;
+
+	    var fromNode = findTextBorderNode(node, 'begin');
+
+	    return setTextSelection(selection, { node: fromNode, offset: 0 }, { node: node, offset: cursorPosition }, nodeSet);
+	}
+
+	function selectAll(selection, nodeSet) {
+	    selection = selection || context.getSelection();
+	    var node = selection && selection.anchorNode;
+
+	    if (!node || node.nodeType !== Node.TEXT_NODE) {
+	        return false;
+	    }
+
+	    var fromNode = findTextBorderNode(node, 'begin');
+	    var toNode = findTextBorderNode(node, 'end');
+
+	    return setTextSelection(selection, { node: fromNode, offset: 0 }, { node: toNode, offset: toNode.nodeValue ? toNode.nodeValue.length : 0 }, nodeSet);
 	}
 
 	function createZws() {
@@ -2102,6 +2123,7 @@ var XBubbles =
 	    Delete: 46,
 	    Enter: 13, // Enter
 	    Esc: 27,
+	    Home: 36,
 	    Left: 37,
 	    Right: 39,
 	    Semicolon: 59, // ;
@@ -2217,6 +2239,7 @@ var XBubbles =
 	var PATH_NOT_SELECTED = '[bubble]:not([selected])';
 
 	exports.all = all;
+	exports.allLeft = allLeft;
 	exports.add = add;
 	exports.clear = clear;
 	exports.get = get;
@@ -2286,6 +2309,25 @@ var XBubbles =
 	    slice.call(nodeSet.querySelectorAll(PATH_NOT_SELECTED)).forEach(function (item) {
 	        return setSelected(item);
 	    });
+	    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
+
+	    bubble.bubbling(nodeSet);
+
+	    var selection = context.getSelection();
+	    selection && selection.removeAllRanges();
+	}
+
+	function allLeft(nodeSet) {
+	    var lastSelectedBubble = last(nodeSet);
+
+	    if (!lastSelectedBubble) {
+	        return;
+	    }
+
+	    for (var item = bubbleset.prevBubble(lastSelectedBubble); item; item = bubbleset.prevBubble(item)) {
+	        setSelected(item);
+	    }
+
 	    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
 
 	    bubble.bubbling(nodeSet);
@@ -3917,6 +3959,7 @@ var XBubbles =
 	 * @param {Event} event
 	 * @param {Object} sharedData
 	 * @param {boolean} [sharedData.isTextSelectAll]
+	 * @param {boolean} [sharedData.isTextSelectedFromBeginToCursor]
 	 * @param {boolean} [sharedData.isEmptyLeft]
 	 * @param {boolean} [sharedData.isEmptyRight]
 	 * @param {Selection} [sharedData.selection]
@@ -3949,6 +3992,13 @@ var XBubbles =
 
 	        case KEY.Right:
 	            onArrowRight(event, sharedData);
+	            break;
+
+	        case KEY.Home:
+	            if (event.shiftKey) {
+	                event.preventDefault();
+	                sharedData.isTextSelectedFromBeginToCursor = text.selectFromCursorToStrBegin(null, sharedData.nodeEditor);
+	            }
 	            break;
 
 	        case KEY.a:
@@ -4268,6 +4318,7 @@ var XBubbles =
 	 * @param {Event} event
 	 * @param {Object} sharedData
 	 * @param {boolean} [sharedData.isTextSelectAll]
+	 * @param {boolean} [sharedData.isTextSelectedFromBeginToCursor]
 	 * @param {boolean} [sharedData.isEmptyLeft]
 	 * @param {boolean} [sharedData.isEmptyRight]
 	 * @param {Selection} [sharedData.selection]
@@ -4306,6 +4357,14 @@ var XBubbles =
 	        case KEY.Bottom:
 	            event.preventDefault();
 	            onBottom(event, sharedData);
+	            break;
+
+	        case KEY.Home:
+	            if (event.shiftKey && !sharedData.isTextSelectedFromBeginToCursor && select.has(sharedData.nodeEditor)) {
+	                event.preventDefault();
+	                select.allLeft(sharedData.nodeEditor);
+	            }
+
 	            break;
 
 	        case KEY.a:
