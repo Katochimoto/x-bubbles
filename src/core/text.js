@@ -349,7 +349,7 @@ function html2text(value) {
 function findTextBorderNode(cursorNode, mode) {
     let item = cursorNode;
     let result = null;
-    let sibling = mode === 'begin' ? 'previousSibling' : 'nextSibling';
+    const sibling = mode === 'begin' ? 'previousSibling' : 'nextSibling';
 
     while (item && item.nodeType === Node.TEXT_NODE) {
         result = item;
