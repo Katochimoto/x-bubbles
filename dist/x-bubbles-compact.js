@@ -952,6 +952,7 @@ var XBubbles =
 	exports.textClean = textClean;
 	exports.checkZws = checkZws;
 	exports.createZws = createZws;
+	exports.hasNear = hasNear;
 
 	function isEmptyLeft(selection) {
 	    var _correctSelection = correctSelection(selection),
@@ -1326,6 +1327,27 @@ var XBubbles =
 	    var toNode = findTextBorderNode(node, 'end');
 
 	    return setTextSelection(selection, { node: fromNode, offset: 0 }, { node: toNode, offset: toNode.nodeValue ? toNode.nodeValue.length : 0 }, nodeSet);
+	}
+
+	function hasNear(selection) {
+	    selection = selection || context.getSelection();
+	    var node = selection && selection.anchorNode;
+
+	    if (!node || node.nodeType !== Node.TEXT_NODE) {
+	        return false;
+	    }
+
+	    var fromNode = findTextBorderNode(node, 'begin');
+	    var toNode = findTextBorderNode(node, 'end');
+
+	    var range = context.document.createRange();
+
+	    range.setStart(fromNode, 0);
+	    range.setEnd(toNode, toNode.nodeValue ? toNode.nodeValue.length : 0);
+
+	    var dataText = textClean(range.toString());
+
+	    return Boolean(dataText);
 	}
 
 	function createZws() {
@@ -3146,6 +3168,13 @@ var XBubbles =
 	    if (!selection.isCollapsed || text.arrowLeft(selection, true)) {
 	        text.remove(selection);
 	        nodeEditor.fireInput();
+
+	        // Если после удаления больше нет текста, то, возможно,
+	        // удалили какой-то бабл во время его редактирования.
+	        // Нужно оповестить о изменениях
+	        if (!text.hasNear(selection)) {
+	            nodeEditor.fireChange();
+	        }
 	    } else if (!nodeEditor.options('selection')) {
 	        var nodeBubble = bubbleset.findBubbleLeft(selection);
 
@@ -3176,6 +3205,13 @@ var XBubbles =
 	    if (!selection.isCollapsed || text.arrowRight(selection, true)) {
 	        text.remove(selection);
 	        nodeEditor.fireInput();
+
+	        // Если после удаления больше нет текста, то, возможно,
+	        // удалили какой-то бабл во время его редактирования.
+	        // Нужно оповестить о изменениях
+	        if (!text.hasNear(selection)) {
+	            nodeEditor.fireChange();
+	        }
 	    } else if (!nodeEditor.options('selection')) {
 	        var nodeBubble = bubbleset.findBubbleRight(selection);
 
