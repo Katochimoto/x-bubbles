@@ -460,7 +460,7 @@ describe('text', function () {
         );
     });
 
-    describe('selectAll', function() {
+    describe('selectAll', function () {
         beforeEach(function () {
             this.findTextBorderNode = this.sinon.stub();
             this.setTextSelection = this.sinon.stub();
@@ -542,5 +542,84 @@ describe('text', function () {
                 );
             }
         );
+    });
+
+    describe('hasNear', function () {
+        beforeEach(function () {
+            this.rangeSetStart = this.sinon.stub();
+            this.rangeSetEnd = this.sinon.stub();
+            this.rangeToString = this.sinon.stub();
+
+            this.findTextBorderNode = this.sinon.stub();
+            this.createRange = this.sinon.stub().returns({
+                setStart: this.rangeSetStart,
+                setEnd: this.rangeSetEnd,
+                toString: this.rangeToString
+            });
+
+            this.textClean = this.sinon.stub();
+
+            testable.__set__('findTextBorderNode', this.findTextBorderNode);
+            testable.__set__('textClean', this.textClean);
+
+            this.sinon.stub(context, 'getSelection');
+            this.sinon.stub(context.document, 'createRange', this.createRange);
+
+            this.fromNode = { nodeType: Node.TEXT_NODE, test: 1 };
+            this.toNode = { nodeType: Node.TEXT_NODE, test: 2, nodeValue: '1234567890' };
+
+            this.selectionNode = { nodeType: Node.TEXT_NODE, test: 3 };
+            this.selection = { anchorNode: this.selectionNode };
+        });
+
+        it('Если нет selection, то должна вернуть false', function() {
+            expect(testable.hasNear(null)).to.equal(false);
+        });
+
+        it('Если у selection нет anchorNode, то должна вернуть false', function() {
+            expect(testable.hasNear({})).to.equal(false);
+        });
+
+        it('Если у selection anchorNode не текстовая нода, то должна вернуть false', function() {
+            expect(testable.hasNear({ anchorNode: {} })).to.equal(false);
+        });
+
+        it('Должна вызвать findTextBorderNode c правильными параметрами и правильно формировать range', function() {
+            this.findTextBorderNode
+                .withArgs(this.selectionNode, 'begin').returns(this.fromNode)
+                .withArgs(this.selectionNode, 'end').returns(this.toNode);
+
+            this.rangeToString.returns('toString');
+
+            testable.hasNear(this.selection);
+
+            expect(this.findTextBorderNode).have.callCount(2);
+            expect(this.findTextBorderNode).to.have.been.calledWithExactly(this.selectionNode, 'begin');
+            expect(this.findTextBorderNode).to.have.been.calledWithExactly(this.selectionNode, 'end');
+            expect(this.rangeSetStart).to.have.been.calledWithExactly(this.fromNode, 0);
+            expect(this.rangeSetEnd).to.have.been.calledWithExactly(this.toNode, 10);
+            expect(this.textClean).have.callCount(1);
+            expect(this.textClean).to.have.been.calledWithExactly('toString');
+        });
+
+        it('Должна вернуть false, если нет текста', function() {
+            this.findTextBorderNode
+                .withArgs(this.selectionNode, 'begin').returns(this.fromNode)
+                .withArgs(this.selectionNode, 'end').returns(this.toNode);
+
+            this.textClean.returns('');
+
+            expect(testable.hasNear(this.selection)).to.equal(false);
+        });
+
+        it('Должна вернуть true, если текст есть', function() {
+            this.findTextBorderNode
+                .withArgs(this.selectionNode, 'begin').returns(this.fromNode)
+                .withArgs(this.selectionNode, 'end').returns(this.toNode);
+
+            this.textClean.returns('has text');
+
+            expect(testable.hasNear(this.selection)).to.equal(true);
+        });
     });
 });

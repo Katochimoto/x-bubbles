@@ -77,6 +77,13 @@ function onBackspace(event, sharedData) {
         text.remove(selection);
         nodeEditor.fireInput();
 
+        // Если после удаления больше нет текста, то, возможно,
+        // удалили какой-то бабл во время его редактирования.
+        // Нужно оповестить о изменениях
+        if (!text.hasNear(selection)) {
+            nodeEditor.fireChange();
+        }
+
     } else if (!nodeEditor.options('selection')) {
         const nodeBubble = bubbleset.findBubbleLeft(selection);
 
@@ -108,6 +115,13 @@ function onDelete(event, sharedData) {
     if (!selection.isCollapsed || text.arrowRight(selection, true)) {
         text.remove(selection);
         nodeEditor.fireInput();
+
+        // Если после удаления больше нет текста, то, возможно,
+        // удалили какой-то бабл во время его редактирования.
+        // Нужно оповестить о изменениях
+        if (!text.hasNear(selection)) {
+            nodeEditor.fireChange();
+        }
 
     } else if (!nodeEditor.options('selection')) {
         const nodeBubble = bubbleset.findBubbleRight(selection);

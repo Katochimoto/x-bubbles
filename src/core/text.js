@@ -22,6 +22,7 @@ exports.selectAll = selectAll;
 exports.textClean = textClean;
 exports.checkZws = checkZws;
 exports.createZws = createZws;
+exports.hasNear = hasNear;
 
 function isEmptyLeft(selection) {
     let { startNode, startOffset } = correctSelection(selection);
@@ -418,6 +419,27 @@ function selectAll(selection, nodeSet) {
         { node: toNode, offset: toNode.nodeValue ? toNode.nodeValue.length : 0 },
         nodeSet
     );
+}
+
+function hasNear(selection) {
+    selection = selection || context.getSelection();
+    const node = selection && selection.anchorNode;
+
+    if (!node || node.nodeType !== Node.TEXT_NODE) {
+        return false;
+    }
+
+    const fromNode = findTextBorderNode(node, 'begin');
+    const toNode = findTextBorderNode(node, 'end');
+
+    const range = context.document.createRange();
+
+    range.setStart(fromNode, 0);
+    range.setEnd(toNode, toNode.nodeValue ? toNode.nodeValue.length : 0);
+
+    const dataText = textClean(range.toString());
+
+    return Boolean(dataText);
 }
 
 function createZws() {
