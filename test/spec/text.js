@@ -318,4 +318,308 @@ describe('text', function () {
             expect(res).to.be.eql(false);
         });
     });
+
+    describe('findTextBorderNode', function () {
+        it('Если cursorNode не передана, то функция должна вернуть null', function () {
+            expect(testable.findTextBorderNode()).to.equal(null);
+        });
+
+        it('Если cursorNode имеет nodeType не равнй Node.TEXT_NODE, то функция должна вернуть null', function () {
+            expect(testable.findTextBorderNode({ nodeType: 'test' })).to.equal(null);
+        });
+
+        it('Должна вернуть последний текстовый узел слева, если mode="begin"', function () {
+            const cursorNode = {
+                nodeType: Node.TEXT_NODE,
+                test: 1,
+                previousSibling: {
+                    nodeType: Node.TEXT_NODE,
+                    test: 2,
+                    previousSibling: {
+                        nodeType: Node.TEXT_NODE,
+                        test: 3,
+                        previousSibling: {
+                            nodeType: 'not_text_node',
+                            test: 4
+                        }
+                    }
+                }
+            };
+
+            expect(testable.findTextBorderNode(cursorNode, 'begin')).to.eql({
+                nodeType: Node.TEXT_NODE,
+                test: 3,
+                previousSibling: {
+                    nodeType: 'not_text_node',
+                    test: 4
+                }
+            });
+        });
+
+        it('Должна вернуть последний текстовый узел справа, если mode="end"', function () {
+            const cursorNode = {
+                nodeType: Node.TEXT_NODE,
+                test: 1,
+                nextSibling: {
+                    nodeType: Node.TEXT_NODE,
+                    test: 2,
+                    nextSibling: {
+                        nodeType: Node.TEXT_NODE,
+                        test: 3,
+                        nextSibling: {
+                            nodeType: 'not_text_node',
+                            test: 4
+                        }
+                    }
+                }
+            };
+
+            expect(testable.findTextBorderNode(cursorNode)).to.eql({
+                nodeType: Node.TEXT_NODE,
+                test: 3,
+                nextSibling: {
+                    nodeType: 'not_text_node',
+                    test: 4
+                }
+            });
+        });
+    });
+
+    describe('selectFromCursorToStrBegin', function () {
+        beforeEach(function () {
+            this.findTextBorderNode = this.sinon.stub();
+            this.setTextSelection = this.sinon.stub();
+
+            testable.__set__('findTextBorderNode', this.findTextBorderNode);
+            testable.__set__('setTextSelection', this.setTextSelection);
+
+            this.sinon.stub(context, 'getSelection');
+        });
+
+        it('Если нет selection, то должна вернуть false', function() {
+            expect(testable.selectFromCursorToStrBegin(null, [ '[bubble]', '[bubble]' ])).to.equal(false);
+        });
+
+        it('Если у selection нет anchorNode, то должна вернуть false', function() {
+            expect(testable.selectFromCursorToStrBegin({}, [ '[bubble]', '[bubble]' ])).to.equal(false);
+        });
+
+        it('Если у selection anchorNode не текстовая нода, то должна вернуть false', function() {
+            expect(testable.selectFromCursorToStrBegin({ anchorNode: {} }, [ '[bubble]', '[bubble]' ])).to.equal(false);
+        });
+
+        it(
+            'Если передан selection с anchorNode текстовой нодой, ' +
+            'то должна вызвать findTextBorderNode и setTextSelection c правильными параметрами',
+            function () {
+                const fromNode = { nodeType: Node.TEXT_NODE, test: 1 };
+                const toNode = { nodeType: Node.TEXT_NODE, test: 2 };
+                const selection = { anchorNode: toNode, anchorOffset: 10 };
+                const nodeset = [ '[bubble]', '[bubble]' ];
+
+                this.findTextBorderNode.returns(fromNode);
+
+                testable.selectFromCursorToStrBegin(selection, nodeset);
+
+                expect(this.findTextBorderNode).have.callCount(1);
+                expect(this.findTextBorderNode).to.have.been.calledWithExactly(toNode, 'begin');
+                expect(this.setTextSelection).have.callCount(1);
+                expect(this.setTextSelection).to.have.been.calledWithExactly(
+                    selection,
+                    { node: fromNode, offset: 0 },
+                    { node: toNode, offset: 10 },
+                    nodeset
+                );
+            }
+        );
+
+        it(
+            'Если текущий selection имеет текстовую ноду anchorNode, ' +
+            'то должна вызвать findTextBorderNode и setTextSelection c правильными параметрами',
+            function () {
+                const fromNode = { nodeType: Node.TEXT_NODE, test: 1 };
+                const toNode = { nodeType: Node.TEXT_NODE, test: 2 };
+                const selection = { anchorNode: toNode, anchorOffset: 10 };
+                const nodeset = [ '[bubble]', '[bubble]' ];
+
+                context.getSelection.returns(selection);
+                this.findTextBorderNode.returns(fromNode);
+
+                testable.selectFromCursorToStrBegin(null, nodeset);
+
+                expect(this.findTextBorderNode).have.callCount(1);
+                expect(this.findTextBorderNode).to.have.been.calledWithExactly(toNode, 'begin');
+                expect(this.setTextSelection).have.callCount(1);
+                expect(this.setTextSelection).to.have.been.calledWithExactly(
+                    selection,
+                    { node: fromNode, offset: 0 },
+                    { node: toNode, offset: 10 },
+                    nodeset
+                );
+            }
+        );
+    });
+
+    describe('selectAll', function () {
+        beforeEach(function () {
+            this.findTextBorderNode = this.sinon.stub();
+            this.setTextSelection = this.sinon.stub();
+
+            testable.__set__('findTextBorderNode', this.findTextBorderNode);
+            testable.__set__('setTextSelection', this.setTextSelection);
+
+            this.sinon.stub(context, 'getSelection');
+        });
+
+        it('Если нет selection, то должна вернуть false', function() {
+            expect(testable.selectAll(null, [ '[bubble]', '[bubble]' ])).to.equal(false);
+        });
+
+        it('Если у selection нет anchorNode, то должна вернуть false', function() {
+            expect(testable.selectAll({}, [ '[bubble]', '[bubble]' ])).to.equal(false);
+        });
+
+        it('Если у selection anchorNode не текстовая нода, то должна вернуть false', function() {
+            expect(testable.selectAll({ anchorNode: {} }, [ '[bubble]', '[bubble]' ])).to.equal(false);
+        });
+
+        it(
+            'Если передан selection с anchorNode текстовой нодой, ' +
+            'то должна вызвать findTextBorderNode и setTextSelection c правильными параметрами',
+            function () {
+                const fromNode = { nodeType: Node.TEXT_NODE, test: 1 };
+                const toNode = { nodeType: Node.TEXT_NODE, test: 2, nodeValue: '1234567890' };
+                const selectionNode = { nodeType: Node.TEXT_NODE, test: 3 };
+                const selection = { anchorNode: selectionNode };
+                const nodeset = [ '[bubble]', '[bubble]' ];
+
+                this.findTextBorderNode
+                    .withArgs(selectionNode, 'begin').returns(fromNode)
+                    .withArgs(selectionNode, 'end').returns(toNode);
+
+                testable.selectAll(selection, nodeset);
+
+                expect(this.findTextBorderNode).have.callCount(2);
+                expect(this.findTextBorderNode).to.have.been.calledWithExactly(selectionNode, 'begin');
+                expect(this.findTextBorderNode).to.have.been.calledWithExactly(selectionNode, 'end');
+                expect(this.setTextSelection).have.callCount(1);
+                expect(this.setTextSelection).to.have.been.calledWithExactly(
+                    selection,
+                    { node: fromNode, offset: 0 },
+                    { node: toNode, offset: 10 },
+                    nodeset
+                );
+            }
+        );
+
+        it(
+            'Если текущий selection имеет текстовую ноду anchorNode, ' +
+            'то должна вызвать findTextBorderNode и setTextSelection c правильными параметрами',
+            function () {
+                const fromNode = { nodeType: Node.TEXT_NODE, test: 1 };
+                const toNode = { nodeType: Node.TEXT_NODE, test: 2, nodeValue: '1234567890' };
+                const selectionNode = { nodeType: Node.TEXT_NODE, test: 3 };
+                const selection = { anchorNode: selectionNode };
+                const nodeset = [ '[bubble]', '[bubble]' ];
+
+                context.getSelection.returns(selection);
+
+                this.findTextBorderNode
+                    .withArgs(selectionNode, 'begin').returns(fromNode)
+                    .withArgs(selectionNode, 'end').returns(toNode);
+
+                testable.selectAll(selection, nodeset);
+
+                expect(this.findTextBorderNode).have.callCount(2);
+                expect(this.findTextBorderNode).to.have.been.calledWithExactly(selectionNode, 'begin');
+                expect(this.findTextBorderNode).to.have.been.calledWithExactly(selectionNode, 'end');
+                expect(this.setTextSelection).have.callCount(1);
+                expect(this.setTextSelection).to.have.been.calledWithExactly(
+                    selection,
+                    { node: fromNode, offset: 0 },
+                    { node: toNode, offset: 10 },
+                    nodeset
+                );
+            }
+        );
+    });
+
+    describe('hasNear', function () {
+        beforeEach(function () {
+            this.rangeSetStart = this.sinon.stub();
+            this.rangeSetEnd = this.sinon.stub();
+            this.rangeToString = this.sinon.stub();
+
+            this.findTextBorderNode = this.sinon.stub();
+            this.createRange = this.sinon.stub().returns({
+                setStart: this.rangeSetStart,
+                setEnd: this.rangeSetEnd,
+                toString: this.rangeToString
+            });
+
+            this.textClean = this.sinon.stub();
+
+            testable.__set__('findTextBorderNode', this.findTextBorderNode);
+            testable.__set__('textClean', this.textClean);
+
+            this.sinon.stub(context, 'getSelection');
+            this.sinon.stub(context.document, 'createRange', this.createRange);
+
+            this.fromNode = { nodeType: Node.TEXT_NODE, test: 1 };
+            this.toNode = { nodeType: Node.TEXT_NODE, test: 2, nodeValue: '1234567890' };
+
+            this.selectionNode = { nodeType: Node.TEXT_NODE, test: 3 };
+            this.selection = { anchorNode: this.selectionNode };
+        });
+
+        it('Если нет selection, то должна вернуть false', function() {
+            expect(testable.hasNear(null)).to.equal(false);
+        });
+
+        it('Если у selection нет anchorNode, то должна вернуть false', function() {
+            expect(testable.hasNear({})).to.equal(false);
+        });
+
+        it('Если у selection anchorNode не текстовая нода, то должна вернуть false', function() {
+            expect(testable.hasNear({ anchorNode: {} })).to.equal(false);
+        });
+
+        it('Должна вызвать findTextBorderNode c правильными параметрами и правильно формировать range', function() {
+            this.findTextBorderNode
+                .withArgs(this.selectionNode, 'begin').returns(this.fromNode)
+                .withArgs(this.selectionNode, 'end').returns(this.toNode);
+
+            this.rangeToString.returns('toString');
+
+            testable.hasNear(this.selection);
+
+            expect(this.findTextBorderNode).have.callCount(2);
+            expect(this.findTextBorderNode).to.have.been.calledWithExactly(this.selectionNode, 'begin');
+            expect(this.findTextBorderNode).to.have.been.calledWithExactly(this.selectionNode, 'end');
+            expect(this.rangeSetStart).to.have.been.calledWithExactly(this.fromNode, 0);
+            expect(this.rangeSetEnd).to.have.been.calledWithExactly(this.toNode, 10);
+            expect(this.textClean).have.callCount(1);
+            expect(this.textClean).to.have.been.calledWithExactly('toString');
+        });
+
+        it('Должна вернуть false, если нет текста', function() {
+            this.findTextBorderNode
+                .withArgs(this.selectionNode, 'begin').returns(this.fromNode)
+                .withArgs(this.selectionNode, 'end').returns(this.toNode);
+
+            this.textClean.returns('');
+
+            expect(testable.hasNear(this.selection)).to.equal(false);
+        });
+
+        it('Должна вернуть true, если текст есть', function() {
+            this.findTextBorderNode
+                .withArgs(this.selectionNode, 'begin').returns(this.fromNode)
+                .withArgs(this.selectionNode, 'end').returns(this.toNode);
+
+            this.textClean.returns('has text');
+
+            expect(testable.hasNear(this.selection)).to.equal(true);
+        });
+    });
 });

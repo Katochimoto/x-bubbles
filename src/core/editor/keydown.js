@@ -9,6 +9,7 @@ const { KEY } = require('../constant');
  * @param {Event} event
  * @param {Object} sharedData
  * @param {boolean} [sharedData.isTextSelectAll]
+ * @param {boolean} [sharedData.isTextSelectedFromBeginToCursor]
  * @param {boolean} [sharedData.isEmptyLeft]
  * @param {boolean} [sharedData.isEmptyRight]
  * @param {Selection} [sharedData.selection]
@@ -41,6 +42,13 @@ module.exports = function (event, sharedData) {
         onArrowRight(event, sharedData);
         break;
 
+    case KEY.Home:
+        if (event.shiftKey) {
+            event.preventDefault();
+            sharedData.isTextSelectedFromBeginToCursor = text.selectFromCursorToStrBegin(null, sharedData.nodeEditor);
+        }
+        break;
+
     case KEY.a:
         if (metaKey) {
             event.preventDefault();
@@ -68,6 +76,13 @@ function onBackspace(event, sharedData) {
     if (!selection.isCollapsed || text.arrowLeft(selection, true)) {
         text.remove(selection);
         nodeEditor.fireInput();
+
+        // Если после удаления больше нет текста, то, возможно,
+        // удалили какой-то бабл во время его редактирования.
+        // Нужно оповестить о изменениях
+        if (!text.hasNear(selection)) {
+            nodeEditor.fireChange();
+        }
 
     } else if (!nodeEditor.options('selection')) {
         const nodeBubble = bubbleset.findBubbleLeft(selection);
@@ -100,6 +115,13 @@ function onDelete(event, sharedData) {
     if (!selection.isCollapsed || text.arrowRight(selection, true)) {
         text.remove(selection);
         nodeEditor.fireInput();
+
+        // Если после удаления больше нет текста, то, возможно,
+        // удалили какой-то бабл во время его редактирования.
+        // Нужно оповестить о изменениях
+        if (!text.hasNear(selection)) {
+            nodeEditor.fireChange();
+        }
 
     } else if (!nodeEditor.options('selection')) {
         const nodeBubble = bubbleset.findBubbleRight(selection);

@@ -1,7 +1,7 @@
 {
   "name": "x-bubbles",
   "description": "XBubbles provides a simple way to create set of editable elements.",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "keywords": [
     "set of elements"
   ],
@@ -28,6 +28,7 @@
     "babel-preset-es2015": "6.18.0",
     "babel-preset-stage-0": "6.16.0",
     "babel-register": "6.18.0",
+    "babel-plugin-rewire": "1.1.0",
     "benchmark": "2.1.2",
     "chai": "3.5.0",
     "document-register-element": "1.3.0",
@@ -66,8 +67,8 @@
     "npm": ">=3.0.0"
   },
   "scripts": {
-    "test": "eslint . --color; karma start --single-run --browsers PhantomJS",
-    "test-dev": "eslint . --color; karma start --browsers PhantomJS",
+    "test": "eslint . --color; BABEL_ENV=test karma start --single-run --browsers PhantomJS",
+    "test-dev": "eslint . --color; BABEL_ENV=test karma start --browsers PhantomJS",
     "prod": "NODE_ENV=production webpack --progress",
     "dev": "NODE_ENV=development webpack --progress --watch",
     "codeclimate": "rm -rf coverage; npm run test; CODECLIMATE_REPO_TOKEN=984843e3de4f7841d34ede70c12c1d3524791cb800f370e48068f1581ab6eae1 codeclimate-test-reporter < coverage/report/lcov.info",

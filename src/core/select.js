@@ -8,6 +8,7 @@ const PATH_SELECTED = '[bubble][selected]';
 const PATH_NOT_SELECTED = '[bubble]:not([selected])';
 
 exports.all = all;
+exports.allLeft = allLeft;
 exports.add = add;
 exports.clear = clear;
 exports.get = get;
@@ -76,6 +77,25 @@ function range(node) {
 
 function all(nodeSet) {
     slice.call(nodeSet.querySelectorAll(PATH_NOT_SELECTED)).forEach(item => setSelected(item));
+    nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
+
+    bubble.bubbling(nodeSet);
+
+    const selection = context.getSelection();
+    selection && selection.removeAllRanges();
+}
+
+function allLeft(nodeSet) {
+    const lastSelectedBubble = last(nodeSet);
+
+    if (!lastSelectedBubble) {
+        return;
+    }
+
+    for (let item = bubbleset.prevBubble(lastSelectedBubble); item; item = bubbleset.prevBubble(item)) {
+        setSelected(item);
+    }
+
     nodeSet.startRangeSelect = nodeSet.querySelector(PATH_SELECTED);
 
     bubble.bubbling(nodeSet);
