@@ -19,6 +19,7 @@ const COMMON_EVENTS = {
 const EDITOR_EVENTS = {
     blur: require('./editor/blur'),
     click: require('./editor/click'),
+    mousedown: require('./editor/mousedown'),
     focus: require('./editor/focus'),
     keydown: require('./editor/keydown'),
     keypress: require('./editor/keypress'),
@@ -36,6 +37,7 @@ const SELECT_EVENTS = {
 const PROXY_EVENTS = {
     blur: events.proxyLocal,
     click: events.proxyLocal,
+    mousedown: events.proxyLocal,
     focus: events.proxyLocal,
     keydown: events.proxyLocal,
     keypress: events.proxyLocal,

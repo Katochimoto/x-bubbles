@@ -55,7 +55,7 @@ var XBubbles =
 	var context = __webpack_require__(1);
 	var editor = __webpack_require__(2);
 	var utils = __webpack_require__(6);
-	var options = __webpack_require__(36);
+	var options = __webpack_require__(37);
 
 	/**
 	 * Prototype of XBubbles.
@@ -267,23 +267,25 @@ var XBubbles =
 	var EDITOR_EVENTS = {
 	    blur: __webpack_require__(25),
 	    click: __webpack_require__(26),
-	    focus: __webpack_require__(27),
-	    keydown: __webpack_require__(28),
-	    keypress: __webpack_require__(29),
-	    keyup: __webpack_require__(30),
-	    paste: __webpack_require__(31)
+	    mousedown: __webpack_require__(27),
+	    focus: __webpack_require__(28),
+	    keydown: __webpack_require__(29),
+	    keypress: __webpack_require__(30),
+	    keyup: __webpack_require__(31),
+	    paste: __webpack_require__(32)
 	};
 
 	var SELECT_EVENTS = {
-	    blur: __webpack_require__(32),
-	    click: __webpack_require__(33),
-	    keydown: __webpack_require__(34),
-	    keypress: __webpack_require__(35)
+	    blur: __webpack_require__(33),
+	    click: __webpack_require__(34),
+	    keydown: __webpack_require__(35),
+	    keypress: __webpack_require__(36)
 	};
 
 	var PROXY_EVENTS = {
 	    blur: events.proxyLocal,
 	    click: events.proxyLocal,
+	    mousedown: events.proxyLocal,
 	    focus: events.proxyLocal,
 	    keydown: events.proxyLocal,
 	    keypress: events.proxyLocal,
@@ -3006,18 +3008,54 @@ var XBubbles =
 
 	'use strict';
 
+	var bubbleset = __webpack_require__(3);
+
+	module.exports = function (event) {
+	    var nodeEditor = bubbleset.closestNodeSet(event.target);
+
+	    if (!nodeEditor) {
+	        return;
+	    }
+
+	    var nodeBubble = bubbleset.closestNodeBubble(event.target);
+
+	    // Don't show cursor if can't add bubble
+	    if (!nodeBubble && !nodeEditor.canAddBubble()) {
+	        nodeEditor.focus();
+	        event.preventDefault();
+	    }
+	};
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var raf = __webpack_require__(7);
 	var cursor = __webpack_require__(13);
+	var context = __webpack_require__(1);
 
 	/**
 	 * @param {Event} event
 	 */
 	module.exports = function (event) {
-	  var nodeEditor = event.currentTarget;
-	  cursor.restore(nodeEditor);
+	    var nodeEditor = event.currentTarget;
+
+	    // Don't show cursor if can't add bubble
+	    if (!nodeEditor.canAddBubble()) {
+	        // Safary 10 не сбрасывает курсор без задержки
+	        raf(function () {
+	            var selection = context.getSelection();
+	            selection && selection.removeAllRanges();
+	        });
+	    }
+
+	    cursor.restore(nodeEditor);
 	};
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3159,7 +3197,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3209,7 +3247,7 @@ var XBubbles =
 	};
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3235,7 +3273,7 @@ var XBubbles =
 	};
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3311,7 +3349,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3326,7 +3364,7 @@ var XBubbles =
 	};
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3365,7 +3403,7 @@ var XBubbles =
 	};
 
 /***/ },
-/* 34 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3674,7 +3712,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3719,7 +3757,7 @@ var XBubbles =
 	}
 
 /***/ },
-/* 36 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
