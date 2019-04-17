@@ -93,8 +93,8 @@ const OPTIONS_PREPARE = {
  *
  * @returns {*}
  */
-module.exports = function (node, ...args) {
-    const value = args[0];
+function handleOptions(node, ...args) {
+    const value = args[ 0 ];
 
     if (value) {
         if (!node[ PROPS.OPTIONS ]) {
@@ -114,7 +114,7 @@ module.exports = function (node, ...args) {
         }
 
         const optionName = value;
-        const optionValue = args[1];
+        const optionValue = args[ 1 ];
 
         if (typeof optionValue !== 'undefined') {
             node[ PROPS.OPTIONS ][ optionName ] = optionValue;
@@ -127,7 +127,11 @@ module.exports = function (node, ...args) {
     } else {
         reinitOptions(node);
     }
-};
+}
+
+handleOptions.attributes = Object.keys(OPTIONS).map((optionName) => `data-${OPTIONS[optionName][2]}`);
+
+module.exports = handleOptions;
 
 function reinitOptions(node) {
     const options = node[ PROPS.OPTIONS ] = node[ PROPS.OPTIONS ] || {};

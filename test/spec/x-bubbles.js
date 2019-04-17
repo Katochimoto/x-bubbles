@@ -6,7 +6,7 @@ describe('x-bubbles ->', function () {
     beforeEach(function () {
         this.selection = window.getSelection();
         this.selection.removeAllRanges();
-        this.buffer = document.createElement('div', 'x-bubbles');
+        this.buffer = document.createElement('div', { is: 'x-bubbles' });
     });
 
     afterEach(function () {
@@ -35,6 +35,7 @@ describe('x-bubbles ->', function () {
     describe('.setContent', function () {
         it('должен создать набор яблов по переданному тексту', function () {
             document.body.appendChild(this.buffer);
+
             this.buffer.setContent('bubble1,bubble2');
 
             return this.webcomponentsready().then(() => {
@@ -235,6 +236,7 @@ describe('x-bubbles ->', function () {
                     this.buffer.addEventListener(EV.CHANGE, function _onChange(event) {
                         event.currentTarget.removeEventListener(EV.CHANGE, _onChange);
                         const nodeBubble = event.currentTarget.items[0];
+
                         expect(nodeBubble.hasAttribute('draggable')).not.to.be.ok;
                         resolve();
                     });

@@ -6,7 +6,7 @@ describe('editor ->', function () {
     beforeEach(function () {
         this.selection = window.getSelection();
         this.selection.removeAllRanges();
-        this.buffer = document.createElement('div', 'x-bubbles');
+        this.buffer = document.createElement('div', { is: 'x-bubbles' });
     });
 
     afterEach(function () {
