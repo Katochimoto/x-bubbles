@@ -1,10 +1,16 @@
 {
-  "presets": ["es2015", "stage-0"],
-  "plugins": ["transform-object-assign"],
-
+  "presets": [
+    "@babel/preset-env"
+  ],
+  "plugins": [
+    "@babel/plugin-proposal-do-expressions"
+  ],
   "env": {
     "test": {
-      "plugins": ["babel-plugin-rewire"]
+      "plugins": [
+        "@babel/plugin-transform-object-assign",
+        "babel-plugin-rewire"
+      ]
     }
   }
 }
