@@ -2,6 +2,7 @@
  * @module x-bubbles/events
  */
 
+const utils = require('./utils');
 const context = require('../context');
 const CustomEventCommon = require('../polyfills/CustomEventCommon');
 const { PROPS } = require('./constant');
@@ -9,6 +10,11 @@ const { PROPS } = require('./constant');
 exports.scrollX = scrollX;
 exports.scrollY = scrollY;
 exports.dispatch = dispatch;
+exports.inputCharIs = inputCharIs;
+
+exports.inputCharIsSpace = function (event) {
+    return inputCharIs(event, ' ');
+};
 
 exports.keyCode = function (event) {
     return event.charCode || event.keyCode;
@@ -66,6 +72,10 @@ exports.prevent = function (event) {
 exports.proxyLocal = function (event) {
     dispatchLocalEvent(event.currentTarget, event);
 };
+
+function inputCharIs(event, char) {
+    return utils.getLastChar(event.target) === char;
+}
 
 function scrollX() {
     const html = context.document.documentElement;

@@ -30,6 +30,12 @@ const REG_HAS_UNESCAPED_HTML = RegExp(REG_UNESCAPED_HTML.source);
 const REG_IE = /Trident|Edge/;
 const REG_MOBILE_IE = /IEMobile/;
 
+exports.getLastChar = function (node) {
+    const content = node.textContent;
+
+    return content.charAt(content.length - 1);
+};
+
 exports.getSelection = function (nodeEditor) {
     const selection = context.getSelection();
 
