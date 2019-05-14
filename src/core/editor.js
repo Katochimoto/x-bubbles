@@ -20,8 +20,11 @@ const EDITOR_EVENTS = {
     blur: require('./editor/blur'),
     click: require('./editor/click'),
     focus: require('./editor/focus'),
-    keydown: require('./editor/keydown'),
-    keypress: require('./editor/keypress'),
+    keydown: function (event) {
+        require('./editor/keydown')(event);
+        // Событие `keypress` не работает на некоторых версиях Android.
+        require('./editor/keypress')(event);
+    },
     keyup: require('./editor/keyup'),
     paste: require('./editor/paste'),
 };
@@ -29,8 +32,11 @@ const EDITOR_EVENTS = {
 const SELECT_EVENTS = {
     blur: require('./select/blur'),
     click: require('./select/click'),
-    keydown: require('./select/keydown'),
-    keypress: require('./select/keypress'),
+    keydown: function (event) {
+        require('./select/keydown')(event);
+        // Событие `keypress` не работает на некоторых версиях Android.
+        require('./select/keypress')(event);
+    }
 };
 
 const PROXY_EVENTS = {
