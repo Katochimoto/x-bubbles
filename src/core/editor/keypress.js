@@ -1,4 +1,5 @@
 const events = require('../events');
+const utils = require('../utils');
 const bubble = require('../bubble');
 const cursor = require('../cursor');
 const { KEY } = require('../constant');
@@ -19,7 +20,9 @@ module.exports = function (event) {
 
     } else {
         const separator = nodeEditor.options('separator');
-        if (separator && separator.test(String.fromCharCode(code))) {
+        const inputChar = utils.getLastChar(event.target);
+
+        if (separator && (separator.test(String.fromCharCode(code)) || separator.test(inputChar))) {
             const separatorCond = nodeEditor.options('separatorCond');
 
             if (!separatorCond || separatorCond(nodeEditor.inputValue)) {

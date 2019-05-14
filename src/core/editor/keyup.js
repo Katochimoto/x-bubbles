@@ -7,12 +7,13 @@ const { KEY } = require('../constant');
 module.exports = function (event) {
     const nodeEditor = event.currentTarget;
     const code = events.keyCode(event);
+    const inputCharIsSpace = events.inputCharIsSpace(event);
     const isPrintableChar = do {
         if (event.key) {
             event.key.length === 1;
 
         } else {
-            ((code > 47 || code === KEY.Space || code === KEY.Backspace) && code !== KEY.Cmd);
+            ((code > 47 || code === KEY.Space || inputCharIsSpace || code === KEY.Backspace) && code !== KEY.Cmd);
         }
     };
 

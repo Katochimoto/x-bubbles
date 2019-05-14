@@ -9,6 +9,7 @@ const { KEY } = require('../constant');
  */
 module.exports = function (event) {
     const code = events.keyCode(event);
+    const inputCharIsSpace = events.inputCharIsSpace(event);
     const nodeEditor = event.currentTarget;
 
     if (code === KEY.Enter) {
@@ -17,7 +18,7 @@ module.exports = function (event) {
             editBubbleKeyboardEvent(nodeEditor);
         }
 
-    } else if (code === KEY.Space) {
+    } else if (code === KEY.Space || inputCharIsSpace) {
         if (editBubbleKeyboardEvent(nodeEditor)) {
             event.preventDefault();
         }
